@@ -13,6 +13,8 @@ library(corrplot)
 library(Amelia)
 is.odd <- function(x) x %% 2 != 0 
 library(gsheet)
+
+library(RH2)
 #library(Rcmdr)
 #library(reshape)
 
@@ -42,14 +44,16 @@ dfAktivitetsKode<-sqldf("select distinct aktiv_kode, aktivitet from dfAAUGrades"
 dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
 dfEnrolStatusMsc<-read.csv("MedEnrolMScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+#dfEnrolStatusMsc$fradatosn<-as.Date(as.character(dfEnrolStatusMsc$fradatosn) , "%d.%m.%Y")
 dfEnrolStatusMsc$stype<-as.factor("kandidat")
 dfEnrolStatusBsc<-read.csv("MedEnrolBScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 dfEnrolStatusBsc$stype<-as.factor("bachelor")
 dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
 dfEnrolStatus<-rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
-dfEnrolStatus$fradatosn<-as.Date(dfEnrolStatus$fradatosn , "%d.%m.%Y")
-dfEnrolStatus$slutdatosn<-as.Date(dfEnrolStatus$slutdatosn , "%d.%m.%Y")
+
+dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.%Y")
+dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
 dfEnrolStatus$yearOfEnrolment <- dfEnrolStatus$startaar
 dfEnrolStatus$startaar<-as.numeric(as.character(dfEnrolStatus$startaar))
 
@@ -58,8 +62,8 @@ dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fil
 dfKvote<-read.csv("kot_medialogi_2011_2016_kvote.csv",header = TRUE, fill=TRUE, sep = ",")
 dfAAUGrades<-read.csv("MEDgradesTilAug32017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 #OLD data: dfAAUGrades<-read.csv("gradesTil2017Mar.csv",header = TRUE, fill=TRUE, sep = ",")
-dfAAUGrades$bedom_dato<- as.Date(dfAAUGrades$bedom_dato , "%d.%m.%Y")
-dfAAUGrades$reg_dato<- as.Date(dfAAUGrades$reg_dato , "%d.%m.%Y")
+dfAAUGrades$bedom_dato<- as.Date(as.character(dfAAUGrades$bedom_dato) , "%d.%m.%Y")
+dfAAUGrades$reg_dato<- as.Date(as.character(dfAAUGrades$reg_dato) , "%d.%m.%Y")
 
 #match grades with enrolment data
 dfAAUGrades<-merge(dfAAUGrades,dfEnrolStatus[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn")])

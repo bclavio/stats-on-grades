@@ -69,8 +69,11 @@ ectsSumSPbySemAndCT[is.na(ectsSumSPbySemAndCT$elective),]$elective<-0
 #creating the summaries of achieved ECTS per semester 
 #semester, bctdf, ECTSpassed, 
 #create the structure for all
+#create semesters and edutypes
 semesters<-data.frame(seq(1:10));names(semesters)<-c("semester"); eduType<-data.frame(c("bachelor","kandidat"));names(eduType)<-"type"
+#multiply semesteers with edutypes
 semSkeleton<-data.frame(merge(CTdfs,semesters));semSkeleton<-merge(semSkeleton,eduType)
+#used SemEduTYpe multiplication to merge with students Enrolments into Edutypes
 StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("studienr","stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
 
 
@@ -98,6 +101,7 @@ ECTSattainedMelted$bctdf<-gsub("project","Pr",ECTSattainedMelted$bctdf);ECTSatta
 ECTSattainedMelted$bctdf<-factor(ECTSattainedMelted$bctdf, levels = c("T", "NT", "El","Pr"))
 
 ECTSatt<- dcast(ECTSattainedMelted,type+studienr~semester+bctdf,value.var = "ECTS",sum)
+ECTSatmp<-dcast(ECTSattmptedMelted,type+studienr~semester+bctdf,value.var = "ECTS",sum)
 ECTSovw<- dcast(ECTSperf,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
 ECTSovwx<- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
 
@@ -113,3 +117,9 @@ ECTSovwx<- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var 
 # e.g. in projects 20082897
 #e.g. 20125436 is missing second sem proj in marriedGradesFrame
 # 
+testxovw<-merge(ECTSovw[,c("studienr","type")],ECTSovwx[,c("studienr","type")],all.x=TRUE)
+testyovw<-sqldf("select a.studienr, a.type, b.studienr, b.type from ECTSovw as a left outer join ECTSovwx as b using (studienr,type) ")
+
+
+sqldf("select studienr, fradatosn,strftime('%m', fradatosn) from dfEnrolStatus where strftime('%m', fradatosn)<>'09'")
+sqldf("SELECT strftime('%m','now')")
