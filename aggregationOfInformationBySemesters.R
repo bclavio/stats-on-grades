@@ -20,7 +20,7 @@ library(car)
 library(sandwich)
 #library(RcmdrMisc)
 
-################## COMMENT
+################## COMMENT AGAIN
 
 dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
 #used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
