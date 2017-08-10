@@ -17,17 +17,20 @@ local({
   # so it can be accessed by .First and .Last
   rdataPath <- file.path(userDir, ".RData")
   assign(".rdataPath", rdataPath, envir = globalenv())
+  
 })
 
 # load the .RData at startup
 .First <- function() {
   if (file.exists(.rdataPath))
     load(.rdataPath, envir = globalenv())
+  
 }
 
 # save the .RData at exit
 .Last <- function() {
   save.image(.rdataPath)
+  
 }
 
 
