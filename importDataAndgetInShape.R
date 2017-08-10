@@ -50,6 +50,7 @@ dfEnrolStatusBsc<-read.csv("MedEnrolBScThroughJul2017.csv",header = TRUE, fill=T
 dfEnrolStatusBsc$stype<-as.factor("bachelor")
 dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
 dfEnrolStatus<-rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
+dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeldsn=='Afvist på grund af manglende kvalifikationer'),]
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
 
 dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.%Y")
@@ -79,11 +80,10 @@ dfAAUGrades<-merge(dfAAUGrades,distHelp,all.x = TRUE)
 dfAAUGrades$aktivitetText<-as.character(dfAAUGrades$aktivitet)
 dfAAUGrades<-dfAAUGrades[dfAAUGrades$DistFromEnrol==dfAAUGrades$MinDistanceDays,]
 dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
-dfAAUGrades$takenInSem<-ifelse(as.numeric(format(dfAAUGrades$fradatosn,'%m')<6),(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ ceiling((as.numeric(format(dfAAUGrades$bedom_dato,'%m')))/6),
-                               (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))#-ifelse(as.numeric(format(dfAAUGrades$bedom_dato,'%m'))=1,1,0)
+#dfAAUGrades$takenInSem<-ifelse(as.numeric(format(dfAAUGrades$fradatosn,'%m')<6),(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ ceiling((as.numeric(format(dfAAUGrades$bedom_dato,'%m')))/6), (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))#-ifelse(as.numeric(format(dfAAUGrades$bedom_dato,'%m'))=1,1,0)
 
-ifelse(as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==]$fradatosn,'%m')<6),(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ ceiling((as.numeric(format(dfAAUGrades$bedom_dato,'%m')))/6),
-       (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))#-ifelse(as.numeric(format(dfAAUGrades$bedom_dato,'%m'))=1,1,0)
+#ifelse(as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$fradatosn,'%m')<6),(dfAAUGrades[dfAAUGrades$studienr==20136609,]$takenInYear-dfAAUGrades[dfAAUGrades$studienr==20136609,]$startaar)*2+ ceiling((as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$bedom_dato,'%m')))/6),
+ #      (dfAAUGrades[dfAAUGrades$studienr==20136609,]$takenInYear-dfAAUGrades[dfAAUGrades$studienr==20136609,]$startaar)*2+ floor((as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$bedom_dato,'%m'))-2)/6))#-ifelse(as.numeric(format(dfAAUGrades$bedom_dato,'%m'))=1,1,0)
 
 
 dfAAUGrades$monthSemMod<-floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))+1)/6)
@@ -191,8 +191,7 @@ df1stGrades<-sqldf('select studienr, aktivitetShort, gradeNum as `1g` from dfAAU
                    in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
 df2ndGrades<-sqldf('select studienr, aktivitetShort, max(gradeNum) as `2g` from dfAAUGrades where "forsoeg.nr." =2 and aktivitetShort 
                    in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
-dfLastGrades<-sqldf('select studienr, aktivitetShort, gradeNum as Lg, avg(takenInSem) as takenInSem from dfAAUGrades where "Sidste.Fors." = "Ja"  and aktivitetShort 
-                    in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
+#dfLastGrades<-sqldf('select studienr, aktivitetShort, gradeNum as Lg, avg(takenInSem) as takenInSem from dfAAUGrades where "Sidste.Fors." = "Ja"  and aktivitetShort in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
 
 sqldf("select aktivitetShort, avg(takenInSem) from dfLastGrades group by aktivitetshort")
 #head(sqldf('select studienr from dfhard2nd where studienr not in (select studienr from dfhard1st)'))

@@ -18,6 +18,7 @@ library(gsheet)
 
 myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/git/AAU/DropOutProject/analysis/"}
 setwd(myWD1)
+#when downloading from Qlikview remember to remove last three lines and upload download as cvs from google docs
 source('importDataAndgetInShape.R')
 #library(Rcmdr)
 #library(reshape)

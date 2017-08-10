@@ -52,7 +52,11 @@ ectsSumSPbySemAndCT<-sqldf('select a.SPV as SPV,
 dfAAUGradesWODistEnrol<-dfAAUGrades;
 dfAAUGradesWODistEnrol$DistFromEnrol<- NULL
 dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.courseSPVID, b.fromDate, c.fradatosn, b.toDate, a.* from dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c where a.type=c.stype and c.studienr=a.studienr and a.aktivitetText=b.aktivitetText and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
-dfAAUMarriedGrades$takenInSem<-(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatosn,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6)
+dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
+dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$fradatosn,'%m'))<6,
+                                      (dfAAUMarriedGrades$takenInYear-dfAAUMarriedGrades$startaar)*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
+                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatosn,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
+
 dfAAUMarriedGrades2<-merge(dfAAUGradesWODistEnrol,dfECTSstruct,by="aktivitet")
 dfAAUMarriedGrades2<-dfAAUMarriedGrades2[dfAAUMarriedGrades2$fradatosn >= dfAAUMarriedGrades2$fromDate & dfAAUMarriedGrades2$fradatosn <=dfAAUMarriedGrades2$toDate,]
 testdfAAUGrades<-data.frame(dfAAUGrades[,c("DistFromEnrol")])
