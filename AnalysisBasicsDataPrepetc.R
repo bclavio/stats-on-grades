@@ -1,5 +1,6 @@
 library(xlsx)
 library(sqldf)
+# library(RH2)
 library(plyr)
 library(dplyr)
 library(ggplot2)
@@ -14,7 +15,7 @@ library(Amelia)
 is.odd <- function(x) x %% 2 != 0 
 library(gsheet)
 
-library(RH2)
+
 #library(Rcmdr)
 #library(reshape)
 
