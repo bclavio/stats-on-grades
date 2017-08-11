@@ -1,5 +1,6 @@
 library(xlsx)
 library(sqldf)
+library(RH2)
 library(plyr)
 library(dplyr)
 library(ggplot2)
@@ -51,7 +52,11 @@ ectsSumSPbySemAndCT<-sqldf('select a.SPV as SPV,
 dfAAUGradesWODistEnrol<-dfAAUGrades;
 dfAAUGradesWODistEnrol$DistFromEnrol<- NULL
 dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.courseSPVID, b.fromDate, c.fradatosn, b.toDate, a.* from dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c where a.type=c.stype and c.studienr=a.studienr and a.aktivitetText=b.aktivitetText and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
-dfAAUMarriedGrades$takenInSem<-(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatosn,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6)
+dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
+dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$fradatosn,'%m'))<6,
+                                      (dfAAUMarriedGrades$takenInYear-dfAAUMarriedGrades$startaar)*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
+                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatosn,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
+
 dfAAUMarriedGrades2<-merge(dfAAUGradesWODistEnrol,dfECTSstruct,by="aktivitet")
 dfAAUMarriedGrades2<-dfAAUMarriedGrades2[dfAAUMarriedGrades2$fradatosn >= dfAAUMarriedGrades2$fromDate & dfAAUMarriedGrades2$fradatosn <=dfAAUMarriedGrades2$toDate,]
 testdfAAUGrades<-data.frame(dfAAUGrades[,c("DistFromEnrol")])
@@ -69,8 +74,11 @@ ectsSumSPbySemAndCT[is.na(ectsSumSPbySemAndCT$elective),]$elective<-0
 #creating the summaries of achieved ECTS per semester 
 #semester, bctdf, ECTSpassed, 
 #create the structure for all
+#create semesters and edutypes
 semesters<-data.frame(seq(1:10));names(semesters)<-c("semester"); eduType<-data.frame(c("bachelor","kandidat"));names(eduType)<-"type"
+#multiply semesteers with edutypes
 semSkeleton<-data.frame(merge(CTdfs,semesters));semSkeleton<-merge(semSkeleton,eduType)
+#used SemEduTYpe multiplication to merge with students Enrolments into Edutypes
 StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("studienr","stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
 
 
@@ -98,6 +106,7 @@ ECTSattainedMelted$bctdf<-gsub("project","Pr",ECTSattainedMelted$bctdf);ECTSatta
 ECTSattainedMelted$bctdf<-factor(ECTSattainedMelted$bctdf, levels = c("T", "NT", "El","Pr"))
 
 ECTSatt<- dcast(ECTSattainedMelted,type+studienr~semester+bctdf,value.var = "ECTS",sum)
+ECTSatmp<-dcast(ECTSattmptedMelted,type+studienr~semester+bctdf,value.var = "ECTS",sum)
 ECTSovw<- dcast(ECTSperf,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
 ECTSovwx<- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
 
@@ -113,3 +122,9 @@ ECTSovwx<- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var 
 # e.g. in projects 20082897
 #e.g. 20125436 is missing second sem proj in marriedGradesFrame
 # 
+testxovw<-merge(ECTSovw[,c("studienr","type")],ECTSovwx[,c("studienr","type")],all.x=TRUE)
+testyovw<-sqldf("select a.studienr, a.type, b.studienr, b.type from ECTSovw as a left outer join ECTSovwx as b using (studienr,type) ")
+
+
+sqldf("select studienr, fradatosn,strftime('%m', fradatosn) from dfEnrolStatus where strftime('%m', fradatosn)<>'09'")
+sqldf("SELECT strftime('%m','now')")
