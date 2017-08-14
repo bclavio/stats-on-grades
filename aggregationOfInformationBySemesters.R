@@ -35,7 +35,7 @@ dfECTSstruct$aktivitetText<-as.character(dfECTSstruct$aktivitet)
 dfECTSstruct$fromDate<-as.Date(dfECTSstruct$fromDate,"%d/%m/%Y")
 dfECTSstruct$toDate<-as.Date(dfECTSstruct$toDate,"%d/%m/%Y")
 
-ectsSumSPbySemAndCT<-sqldf("select SPV, sem, CTdf, aktivitet, sum(nominalECTS) as nominalECTS from dfECTSstruct group by SPV, sem, CTdf order by SPV, courseType, sem ")
+ectsSumSPbySemAndCT<-sqldf("select SPV, sem, CTdf, aktivitet, sum(nominalECTS) as nominalECTS from dfECTSstruct group by SPV, sem, CTdf, aktivitet  order by SPV, courseType, sem ")
 semStruct<-sqldf("select distinct SPV, sem from dfECTSstruct")
 CTdfs<-sqldf("select distinct CTdf from dfECTSstruct")
 semStruct<-merge(semStruct,CTdfs)
@@ -51,7 +51,7 @@ ectsSumSPbySemAndCT<-sqldf('select a.SPV as SPV,
 #ectsSumSPbySemAndCT<-ddply(ectsSumSPbySemAndCT,.(SPV,CTdf),transform,nominalECTS=cumsum(nominalECTS))
 dfAAUGradesWODistEnrol<-dfAAUGrades;
 dfAAUGradesWODistEnrol$DistFromEnrol<- NULL
-dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.courseSPVID, b.fromDate, c.fradatosn, b.toDate, a.* from dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c where a.type=c.stype and c.studienr=a.studienr and a.aktivitetText=b.aktivitetText and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
+dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.courseSPVID, b.fromDate, c.fradatosn, b.toDate, a.* from dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c where a.type=c.stype and c.studienr=a.studienr and a.aktivitetText=b.aktivitetText and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
 dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
 dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$fradatosn,'%m'))<6,
                                       (dfAAUMarriedGrades$takenInYear-dfAAUMarriedGrades$startaar)*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
@@ -68,7 +68,10 @@ missingRows1<-data.frame(missingRows[missingRows$aktivitetText %in% dfECTSstruct
 missActivitetBefore2010<-sqldf("select reg_dato, aktivitet, fradatosn, startaar from missingRows where startaar<=2009") 
 missingRows1<-missingRows1[!missingRows1$startaar %in% missActivitetBefore2010$startaar, ]
 
+ectsSumSPbySemAndCT$CTdf<-gsub("project","Pr",ectsSumSPbySemAndCT$CTdf);ectsSumSPbySemAndCT$CTdf<-gsub("elective","El",ectsSumSPbySemAndCT$CTdf);
+ectsSumSPbySPVAndCT<-dcast(ectsSumSPbySemAndCT, SPV~sem+CTdf)
 ectsSumSPbySemAndCT<-dcast(ectsSumSPbySemAndCT, SPV+sem~CTdf)
+
 ectsSumSPbySemAndCT[is.na(ectsSumSPbySemAndCT$elective),]$elective<-0
 
 #creating the summaries of achieved ECTS per semester 

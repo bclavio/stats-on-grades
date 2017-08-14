@@ -40,7 +40,7 @@ myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop ou
 setwd(myWD1)
 
 courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-dfAktivitetsKode<-sqldf("select distinct aktiv_kode, aktivitet from dfAAUGrades")
+
 dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
 dfEnrolStatusMsc<-read.csv("MedEnrolMScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
@@ -62,6 +62,7 @@ dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fil
 
 dfKvote<-read.csv("kot_medialogi_2011_2016_kvote.csv",header = TRUE, fill=TRUE, sep = ",")
 dfAAUGrades<-read.csv("MEDgradesTilAug32017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+dfAktivitetsKode<-sqldf("select distinct aktiv_kode, aktivitet from dfAAUGrades")
 #OLD data: dfAAUGrades<-read.csv("gradesTil2017Mar.csv",header = TRUE, fill=TRUE, sep = ",")
 dfAAUGrades$bedom_dato<- as.Date(as.character(dfAAUGrades$bedom_dato) , "%d.%m.%Y")
 dfAAUGrades$reg_dato<- as.Date(as.character(dfAAUGrades$reg_dato) , "%d.%m.%Y")
@@ -276,3 +277,4 @@ dfMed2AalX<-dfMed2Aal[dfMed2Aal$interviewTaken==1 & !is.na(dfMed2Aal$isDropOut) 
 
 myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/git/AAU/DropOutProject/analysis/"}
 setwd(myWD1)
+
