@@ -52,6 +52,7 @@ dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
 dfEnrolStatus<-rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
 dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeldsn=='Afvist på grund af manglende kvalifikationer'),]
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
+dfEnrolStatus$navn<-NULL
 
 dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.%Y")
 dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
