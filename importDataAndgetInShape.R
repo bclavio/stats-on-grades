@@ -23,6 +23,8 @@ library(gsheet)
 #with clickview data import into GoogleSheets go to bottom: REMOVE::::  Selection Status: Uddannelse: Medialogiand 
 # export i.e. download  as CSV and move to folder /Users/hendrik/Google Drive/dropOutInitiative/data/
 #grades B-passed, I-failed, EB - not graded (not allowed to sit exam), U - no show
+#grades B-passed, I-failed, EB - not graded (not allowed to sit exam), U - no show but they specific meanings regarding when you can take the re-exam.
+
 
 #ThisYear=2017
 #dfMed2SS2<-dfMed2SS2[as.numeric(format(as.Date(dfMed2SS2$Timestamp, format="%d/%m/%Y %H:%M:%S"),"%Y"))==ThisYear,]
