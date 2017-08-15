@@ -58,6 +58,7 @@ dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.
 dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
 dfEnrolStatus$yearOfEnrolment <- dfEnrolStatus$startaar
 dfEnrolStatus$startaar<-as.numeric(as.character(dfEnrolStatus$startaar))
+dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) ,NA, ifelse(as.numeric(format(dfEnrolStatus$fradatosn,'%m')<6),(format(dfEnrolStatus$slutdatosn,'%y')-dfEnrolStatus$startaar)*2+ ceiling((as.numeric(format(dfEnrolStatus$slutdatosn,'%m')))/6), (format(dfEnrolStatus$slutdatosn,'%y')-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/6)))
 
 dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fill=TRUE, sep = ",")
 
@@ -92,6 +93,7 @@ dfAAUGrades$monthSemMod<-floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))+
 #EB-couldn't take exam ('hand in blank'), U - not allowed to go to the exam, I - fail, B - pass
 gradesPassedLUVec<-c('02'=1,'4'=1,'7'=1,'10'=1,'12'=1,'00'=0,'-3'=0,'B'=1,'EB'=0,'U'=0,'I'=0)
 gradesToNumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-5,'U'=-8,'B'=2,'I'=0)
+
 
 jobHoursVector<-c('10+ hours a week'=12,'0-5 hours a week'=2.5,'5-10 hours a week'=7.5,'No'=0)
 pensumVector<-c('Need to catch up a little'=-1,'Far behind'=-3,'Following just fine'=0,"I'm way ahead"=2)
@@ -181,6 +183,8 @@ dfEntryGradesAll$DANGradeX<-ifelse(is.na(dfEntryGradesAll$DANGrade),dfEntryGrade
 
 
 dfAAUGrades$gradeNum<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
+dfAAUGrades$GPAgrade<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
+
 dfAAUGrades$isPassed<-gradesPassedLUVec[as.character(dfAAUGrades$KARAKTER)]
 dfAAUGrades$aktivitetShort<-CourseAcronymsLUVec[as.character(dfAAUGrades$aktivitet)]
 #sqldf('select distinct aktivitet, aktiv_kode from dfAAUGrades order by aktivitet')
