@@ -22,7 +22,6 @@ library(gsheet)
 #steps to take - get data from qlikview (grades, enrolStatus) and from Cristina Draghici the kvote and GymData
 #with clickview data import into GoogleSheets go to bottom: REMOVE::::  Selection Status: Uddannelse: Medialogiand 
 # export i.e. download  as CSV and move to folder /Users/hendrik/Google Drive/dropOutInitiative/data/
-#grades B-passed, I-failed, EB - not graded (not allowed to sit exam), U - no show
 #grades B-passed, I-failed, EB - not graded (not allowed to sit exam), U - no show but they specific meanings regarding when you can take the re-exam.
 
 
@@ -30,16 +29,18 @@ library(gsheet)
 #dfMed2SS2<-dfMed2SS2[as.numeric(format(as.Date(dfMed2SS2$Timestamp, format="%d/%m/%Y %H:%M:%S"),"%Y"))==ThisYear,]
 
 
-dfMed1Q999<-gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
-dfMed1Interviews<-gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
-#dfMed1Q999$Name <-NULL
-dfMed1Q999<-dfMed1Q999[,1:7]
+
 
 
 # import all files --------------------------------------------------------
 
-myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/Dropbox/drop out initiative/dataAnalysis/"}
+myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/SVN/01Projects/dropOut/data/"}
 setwd(myWD1)
+
+dfMed1Q999<-gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
+dfMed1Interviews<-gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
+#dfMed1Q999$Name <-NULL
+dfMed1Q999<-dfMed1Q999[,1:7]
 
 courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
