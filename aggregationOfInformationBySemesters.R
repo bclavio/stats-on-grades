@@ -21,19 +21,16 @@ library(car)
 library(sandwich)
 #library(RcmdrMisc)
 
-## some testing
-################## COMMENT AGAIN
-##hk comment
-#hell
 
+myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"}
+setwd(myWD)
+source('importDataAndgetInShape.R')
 
 
 # setup ECTS structure ----------------------------------------------------
 
 
 #Setup the ECTS structure of the studyplans
-dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
-#used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 dfECTSstruct$CourseSPVID<-seq(1:nrow(dfECTSstruct))
 dfECTSstruct$CTdf<-as.factor(dfECTSstruct$CTdf)
 dfECTSstruct$aktivitetText<-as.character(dfECTSstruct$aktivitet)
@@ -87,10 +84,9 @@ missActivitetBefore2010<-sqldf("select reg_dato, aktivitet, fradatosn, startaar 
 missingRows1<-missingRows1[!missingRows1$startaar %in% missActivitetBefore2010$startaar, ]
 
 
-
+### Comment: I get errors
 ectsSumSPbySPVAndCT<-dcast(ectsSumSPbySemAndCT, SPV~sem+CTdf)
 ectsSumSPbySemAndCT<-dcast(ectsSumSPbySemAndCT, SPV+sem~CTdf)
-
 ectsSumSPbySemAndCT[is.na(ectsSumSPbySemAndCT$El_nom),]$El_nom<-0
 
 
@@ -155,6 +151,7 @@ sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SP
 
 write.csv(ForSvante,file = "MedData.csv")
 
+### Comment: Error in FUN(X[[i]], ...) : object 'type' not found
 ECTSovwx<- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
 
 # other aggregate approaches not finished ECTSatt <- ECTSattainedMelted %>%  group_by(Category) %>% 

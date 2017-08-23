@@ -28,20 +28,24 @@ library(gsheet)
 
 #ThisYear=2017
 #dfMed2SS2<-dfMed2SS2[as.numeric(format(as.Date(dfMed2SS2$Timestamp, format="%d/%m/%Y %H:%M:%S"),"%Y"))==ThisYear,]
-
-
-dfMed1Q999<-gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
-dfMed1Interviews<-gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
+#dfMed1Q999<-gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
+#dfMed1Interviews<-gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
 #dfMed1Q999$Name <-NULL
-dfMed1Q999<-dfMed1Q999[,1:7]
 
 
 # import all files --------------------------------------------------------
 
-myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/Dropbox/drop out initiative/dataAnalysis/"}
-setwd(myWD1)
+SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/01Projects/dropOut/data/"}
+setwd(SVNData)
 
-courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
+dfMed1Q999<-dfMed1Q999[,1:7]
+
+### Comment: dfECTSstruct is the updated version of courseStudyPlanStructure
+dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
+#used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8") 
 
 dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
@@ -60,6 +64,8 @@ dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.
 dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
 dfEnrolStatus$yearOfEnrolment <- dfEnrolStatus$startaar
 dfEnrolStatus$startaar<-as.numeric(as.character(dfEnrolStatus$startaar))
+
+#### Comment: I get an error in this line:
 dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) ,NA, ifelse(as.numeric(format(dfEnrolStatus$fradatosn,'%m')<6),(format(dfEnrolStatus$slutdatosn,'%y')-dfEnrolStatus$startaar)*2+ ceiling((as.numeric(format(dfEnrolStatus$slutdatosn,'%m')))/6), (format(dfEnrolStatus$slutdatosn,'%y')-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/6)))
 
 dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fill=TRUE, sep = ",")
@@ -98,7 +104,7 @@ gradesToNumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-5,'U'
 
 
 jobHoursVector<-c('10+ hours a week'=12,'0-5 hours a week'=2.5,'5-10 hours a week'=7.5,'No'=0)
-pensumVector<-c('Need to catch up a little'=-1,'Far behind'=-3,'Following just fine'=0,"I'm way ahead"=2)
+pensumVector<-c('Need to catch up a little'=-1,'Far behind'=-3,'Following just fine'=0,"I'm way ahead"=2) #### Comment: Why do the students ahead have value 2? 
 EduPrioVector<-c('1st priority'=1,'2nd priority'=2)
 EducationLevelVector<-c('Upper secondary school'=13,'Lower secondary school'=10,'Vocational education'=14,'Academic degree'=17)
 
@@ -201,6 +207,7 @@ df2ndGrades<-sqldf('select studienr, aktivitetShort, max(gradeNum) as `2g` from 
                    in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
 #dfLastGrades<-sqldf('select studienr, aktivitetShort, gradeNum as Lg, avg(takenInSem) as takenInSem from dfAAUGrades where "Sidste.Fors." = "Ja"  and aktivitetShort in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
 
+### Comment: I get errors:
 sqldf("select aktivitetShort, avg(takenInSem) from dfLastGrades group by aktivitetshort")
 #head(sqldf('select studienr from dfhard2nd where studienr not in (select studienr from dfhard1st)'))
 
@@ -282,6 +289,6 @@ FirstSemFactorList<-c('isDropOut', "interviewTaken", "DANGradeX","MATGrade","ENG
 
 dfMed2AalX<-dfMed2Aal[dfMed2Aal$interviewTaken==1 & !is.na(dfMed2Aal$isDropOut) &!is.na(dfMed2Aal$ENGGrade) &!is.na(dfMed2Aal$MATGrade) & !is.na(dfMed2Aal$DANGradeX) & !is.na(dfMed2Aal$GPROCatchUp) & !is.na(dfMed2Aal$hoursWorkedPerWeek),FirstSemFactorList]
 
-myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/git/AAU/DropOutProject/analysis/"}
-setwd(myWD1)
+#myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/git/AAU/DropOutProject/analysis/"}
+#setwd(myWD1)
 
