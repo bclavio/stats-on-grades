@@ -32,11 +32,10 @@ library(RcmdrMisc)
 #dfMed2SS2<-dfMed2SS2[as.numeric(format(as.Date(dfMed2SS2$Timestamp, format="%d/%m/%Y %H:%M:%S"),"%Y"))==ThisYear,]
 
 
-<<<<<<< HEAD
 
-=======
+
 # import all files --------------------------------------------------------
->>>>>>> 13465887382d61fd3828402d1d4139196251931a
+
 
 SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/01Projects/dropOut/data/"}
 setwd(SVNData)
@@ -46,7 +45,7 @@ dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TR
 dfMed1Q999<-dfMed1Q999[,1:7]
 #dfMed1Q999$Name <-NULL
 
-<<<<<<< HEAD
+
 myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/SVN/01Projects/dropOut/data/"}
 setwd(myWD1)
 
@@ -59,13 +58,13 @@ dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TR
 dfMed1Q999<-dfMed1Q999[,1:7]
 
 courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-=======
+
 
 #dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
 #used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 #courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8") 
 dfECTSstruct<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
->>>>>>> 13465887382d61fd3828402d1d4139196251931a
+
 
 #dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
