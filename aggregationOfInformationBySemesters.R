@@ -1,26 +1,3 @@
-library(xlsx)
-library(sqldf)
-library(RH2)
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(reshape2)
-library(MASS)
-library(manipulate)
-library(lubridate)
-library(base)
-library(stringr)
-library(corrplot)
-library(Amelia)
-library(gsheet)
-is.odd <- function(x) x %% 2 != 0 
-trim <- function (x) gsub("^\\s+|\\s+$", "", x)
-library(gsheet)
-library(splines)
-library(car)
-library(sandwich)
-#library(RcmdrMisc)
-
 
 myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"}
 setwd(myWD)
@@ -84,8 +61,8 @@ missActivitetBefore2010<-sqldf("select reg_dato, aktivitet, fradatosn, startaar 
 missingRows1<-missingRows1[!missingRows1$startaar %in% missActivitetBefore2010$startaar, ]
 
 
-### Comment: I get errors
 ectsSumSPbySPVAndCT<-dcast(ectsSumSPbySemAndCT, SPV~sem+CTdf)
+### Comment: I get errors, and table is long-format.
 ectsSumSPbySemAndCT<-dcast(ectsSumSPbySemAndCT, SPV+sem~CTdf)
 ectsSumSPbySemAndCT[is.na(ectsSumSPbySemAndCT$El_nom),]$El_nom<-0
 
@@ -152,7 +129,7 @@ sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SP
 write.csv(ForSvante,file = "MedData.csv")
 
 ### Comment: Error in FUN(X[[i]], ...) : object 'type' not found
-ECTSovwx<- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
+ECTSovwx <- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
 
 # other aggregate approaches not finished ECTSatt <- ECTSattainedMelted %>%  group_by(Category) %>% 
 #  summarise(Frequency = sum(Frequency))
@@ -172,3 +149,4 @@ testyovw<-sqldf("select a.studienr, a.type, b.studienr, b.type from ECTSovw as a
 
 sqldf("select studienr, fradatosn,strftime('%m', fradatosn) from dfEnrolStatus where strftime('%m', fradatosn)<>'09'")
 sqldf("SELECT strftime('%m','now')")
+

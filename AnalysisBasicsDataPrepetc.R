@@ -1,20 +1,3 @@
-library(xlsx)
-library(sqldf)
-# library(RH2)
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(reshape2)
-library(MASS)
-library(manipulate)
-library(lubridate)
-library(base)
-library(stringr)
-library(corrplot)
-library(Amelia)
-is.odd <- function(x) x %% 2 != 0 
-library(gsheet)
-
 
 myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"}
 setwd(myWD)
