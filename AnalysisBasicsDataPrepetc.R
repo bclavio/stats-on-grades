@@ -36,7 +36,7 @@ med2DOOverview<-dfMed2Aal[,numCols] %>% group_by(DropOutQ999Combo) %>% summarise
 
 #### OLD 
 
-SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/01Projects/dropOut/data/"}
+SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
 setwd(SVNData)
 
 dfUD1 <-read.csv("RawDataOnlyUD1Engl.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
@@ -411,8 +411,7 @@ dfGPRO<-dfGPRO[!is.na(dfGPRO$mathGrade),]
 
 dfNoShowRisk<-sqldf("select avg(isNoShow), count(mathgrade) as numOfStudents, mathGrade,mathlevel from dfGPRO group by mathgrade, mathlevel");dfNoShowRisk
 ggplot(dfGPRO[dfGPRO$isNoShow==1,], aes(x=mathGrade,colour=mathLevel)) + geom_density()
-
-mathGPROpass<-sqldf("select mathLevel,mathGradeBinnedNum,avg(passed) as probabilityPassingGPROmed1,count(mathgrade) as numOfStudents  from dfGPRO group by mathGradeBinnedNum, mathLevel order by mathlevel, mathGradeBinnedNum")
+mathGPROpass<-sqldf("select mathLevel,mathGradeBinnedNum,avg(passed) as probabilityPassingGPROmed1,count(mathgrade) as numOfStudents  from dfGPRO where isLastAttemptAtExam='Ja' group by mathGradeBinnedNum, mathLevel order by mathlevel, mathGradeBinnedNum")
 mathGPROnoShow<-sqldf("select mathLevel,mathGradeBinnedNum,avg(isNoShow) as probabilityNoShowGPROmed1,count(mathgrade) as numOfStudents from dfGPRO group by mathGradeBinnedNum, mathLevel order by mathlevel, mathGradeBinnedNum")
 
 
