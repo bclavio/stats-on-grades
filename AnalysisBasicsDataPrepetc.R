@@ -1,29 +1,10 @@
-library(xlsx)
-library(sqldf)
-# library(RH2)
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(reshape2)
-library(MASS)
-library(manipulate)
-library(lubridate)
-library(base)
-library(stringr)
-library(corrplot)
-library(Amelia)
-is.odd <- function(x) x %% 2 != 0 
-library(gsheet)
 
-
-myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/git/AAU/DropOutProject/analysis/"}
-setwd(myWD1)
+myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"}
+setwd(myWD)
 #when downloading from Qlikview remember to remove last three lines and upload download as cvs from google docs
 source('importDataAndgetInShape.R')
-#library(Rcmdr)
-#library(reshape)
 
-
+### Comment: I get a warning that SD is 0 and corrplot prints no numbers:
 M <- cor(dfMed2AalX)
 corrplot(M, method="circle")
 
@@ -44,6 +25,7 @@ mean(dfMed2Aal$hoursWorkedPerWeek,na.rm = TRUE)
 mean(dfMed2Aal[dfMed2Aal$DropOutQ999Combo==1,]$hoursWorkedPerWeek,na.rm = TRUE)
 numCols <- sapply(dfMed2Aal, is.numeric)
 
+### R suggests using `summarise_all()`, `summarise_at()` or `summarise_if()` instead.
 med2DOOverview<-dfMed2Aal[,numCols] %>% group_by(DropOutQ999Combo) %>% summarise_each(funs(mean(.,na.rm=T)))
 #predict cohort 2016 (in May 2017 with data up to Feb/Mar)
 #glm()
@@ -54,8 +36,8 @@ med2DOOverview<-dfMed2Aal[,numCols] %>% group_by(DropOutQ999Combo) %>% summarise
 
 #### OLD 
 
-myWD2 <- ifelse(grepl("BiancaClavio", getwd()), 'C:/Users/BiancaClavio/Dropbox/drop out initiative/stats on grades', '~/Dropbox/drop out initiative/stats on grades/')
-setwd(myWD2)
+SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/01Projects/dropOut/data/"}
+setwd(SVNData)
 
 dfUD1 <-read.csv("RawDataOnlyUD1Engl.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 dfUD1$status<-dfUD1$status2015
@@ -96,6 +78,7 @@ dfCG$Kvotient<-NULL
 #XXXXXXXXXXXXXXXXXXX
 # keep figure prduction --------------------------------------------------------------------
 
+### Comment: "geom_path: Each group consists of only one observation. Do you need to adjust the group aesthetic?"
 dropOutByMathGradeByCampusBy<-sqldf("select mathGradeBinned, campus, mathLevel, avg(isDropOut) as dropOutPct, count(campus) as CountOfStudents from dfM where mathLevel<>''  group by  campus, mathLevel,mathGradeBinned")
 ggplot(dropOutByMathGradeByCampusBy,aes(mathGradeBinned,dropOutPct*100,colour=mathLevel))+theme_bw()+scale_y_continuous(limits=c(0,100),breaks=seq(0,100,10)) +geom_point(aes(size=CountOfStudents,alpha=.5))+geom_line()+ylab("% dropped out by 2017")+theme(strip.text.x = element_text(size = 18),legend.position = "bottom",panel.background=element_rect(fill = "white",color = "white"),  axis.text.x  = element_text(size=16),axis.text.y  = element_text(size=16), panel.spacing = unit(2, "lines"),plot.margin=unit(c(0,1,0,0),"lines")  )+guides(alpha=FALSE)+facet_grid(. ~ campus)
 
@@ -103,6 +86,7 @@ ggplot(dropOutByMathGradeByCampusBy,aes(mathGradeBinned,dropOutPct*100,colour=ma
 
 
 # dropModel only for complete years 2011/12/13 ---------------------------------------------------------------
+### Comment: dfM3y not found
 myvars<-names(dfM3y) %in% c("isDropOut","MAT_Niveau", "MATGrade")
 dataForModel<-dfM3y[myvars]
 dfM3y<-dfM[dfM$startaar %in% c(2011,2012,2013) & !is.na(dfM$isDropOut) ,]
@@ -278,6 +262,9 @@ ggplot(dropOutByMathGradeByCampusBy,aes(mathGradeBinned,dropOutPct*100,colour=ma
 dropOutByMathGrade<-sqldf("select mathGradeBinned, mathLevel, avg(isDropOut) as dropOutPct, count(campus) as CountOfStudents from dfMGr where mathLevel<>'' and yearOfEnrolment=2012 group by  mathLevel,mathGradeBinned")
 ggplot(dropOutByMathGrade,aes(mathGradeBinned,dropOutPct*100,colour=mathLevel))+theme_bw()+scale_y_continuous(limits=c(0,100),breaks=seq(0,100,10)) +geom_point(aes(size=CountOfStudents,alpha=.5))+geom_line()+ylab("% of cohort dropped out by 2015")+theme(strip.text.x = element_text(size = 18),legend.position = "bottom",panel.background=element_rect(fill = "white",color = "white"),  axis.text.x  = element_text(size=16),axis.text.y  = element_text(size=16), panel.spacing = unit(2, "lines"),plot.margin=unit(c(0,1,0,0),"lines")  )+guides(alpha=FALSE)
 
+### Comment: Do we want the figure in dropbox or in git?
+#myWD2<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades/output'} else {"~/git/AAU/DropOutProject/analysis/output"}
+#setwd(myWD2)
 myWD3 <- ifelse(grep("BiancaClavio", getwd()), 'C:/Users/BiancaClavio/Dropbox/Apps/ShareLatex/MedialogyBSc re-design/figures', '~/Dropbox/Apps/ShareLatex/MedialogyBSc re-design/figures')
 setwd(myWD3)
 
