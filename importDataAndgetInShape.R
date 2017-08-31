@@ -25,7 +25,6 @@ library(RcmdrMisc)
 #steps to take - get data from qlikview (grades, enrolStatus) and from Cristina Draghici the kvote and GymData
 #with clickview data import into GoogleSheets go to bottom: REMOVE::::  Selection Status: Uddannelse: Medialogiand 
 # export i.e. download  as CSV and move to folder /Users/hendrik/Google Drive/dropOutInitiative/data/
-#grades B-passed, I-failed, EB - not graded (not allowed to sit exam), U - no show
 #grades B-passed, I-failed, EB - not graded (not allowed to sit exam), U - no show but they specific meanings regarding when you can take the re-exam.
 
 
@@ -33,7 +32,10 @@ library(RcmdrMisc)
 #dfMed2SS2<-dfMed2SS2[as.numeric(format(as.Date(dfMed2SS2$Timestamp, format="%d/%m/%Y %H:%M:%S"),"%Y"))==ThisYear,]
 
 
+
+
 # import all files --------------------------------------------------------
+
 
 SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/01Projects/dropOut/data/"}
 setwd(SVNData)
@@ -47,10 +49,25 @@ highSchoolData<-read.csv("RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep 
 
 
 
+myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/SVN/01Projects/dropOut/data/"}
+setwd(myWD1)
+
+dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+  #gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
+dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8",check.names=FALSE)
+    
+  #gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
+#dfMed1Q999$Name <-NULL
+dfMed1Q999<-dfMed1Q999[,1:7]
+
+courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+
+
 #dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
 #used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 #courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8") 
 dfECTSstruct<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+
 
 #dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
@@ -70,7 +87,7 @@ dfEnrolStatus$navn<-NULL
 dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
 dfEnrolStatus$yearOfEnrolment <- dfEnrolStatus$startaar
 dfEnrolStatus$startaar<-as.numeric(as.character(dfEnrolStatus$startaar))
-dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) ,NA, ifelse(as.numeric(format(dfEnrolStatus$fradatosn,'%m')<6),(format(dfEnrolStatus$slutdatosn,'%y')-dfEnrolStatus$startaar)*2+ ceiling((as.numeric(format(dfEnrolStatus$slutdatosn,'%m')))/6), (format(dfEnrolStatus$slutdatosn,'%y')-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/6)))
+dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) ,NA, ifelse(as.numeric(format(dfEnrolStatus$fradatosn,'%m')<6),(as.numeric(format(dfEnrolStatus$slutdatosn,'%y'))-dfEnrolStatus$startaar)*2+ ceiling((as.numeric(format(dfEnrolStatus$slutdatosn,'%m')))/6), (as.numeric(format(dfEnrolStatus$slutdatosn,'%y'))-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/6)))
 
 dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
 
