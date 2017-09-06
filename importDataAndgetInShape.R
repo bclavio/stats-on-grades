@@ -95,9 +95,12 @@ dfKvote<-read.csv("kot_medialogi_2011_2016_kvote.csv",header = TRUE, fill=TRUE, 
 dfAAUGrades<-read.csv("MEDgradesTilAug32017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 dfAAUGrades$isLastTry<- ifelse(dfAAUGrades$`Sidste.Fors.`=="Ja",1,0)
 dfAAUGrades$isProj<- ifelse(dfAAUGrades$ECTS>5,1,0)
+
 dfRetrier<-sqldf("select studienr, max(`Forsoeg.nr.`) as MaxTry from dfAAUGrades group by studienr")
 dfRetrier$isOffender <-ifelse(dfRetrier$MaxTry>3,1,0)
+
 dfAAUGrades<-merge(dfAAUGrades,dfRetrier)
+sqldf("select isOffender, isProj, avg(GPAgrade) from dfAAUGrades where isLastTry=1 group by isOffender, isProj")
 dfAktivitetsKode<-sqldf("select distinct aktiv_kode, aktivitet from dfAAUGrades")
 #OLD data: dfAAUGrades<-read.csv("gradesTil2017Mar.csv",header = TRUE, fill=TRUE, sep = ",")
 dfAAUGrades$bedom_dato<- as.Date(as.character(dfAAUGrades$bedom_dato) , "%d.%m.%Y")
