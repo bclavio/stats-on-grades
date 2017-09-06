@@ -69,7 +69,7 @@ dfUD1$mathLevel<-ifelse(dfUD1$mathLevel %in% c("B","C"),"B","A" )
 #super slow dfUD1 <- read.xlsx("RawDataOnly.xlsx", sheetName="UDDATA-1")
 #dfUD2 <- read.xlsx("RawDataOnly.xlsx", sheetName="UDDATA-2")
 #dfCourseGrades <- read.xlsx("RawDataOnly.xlsx", sheetName="UDDATA-3")
-dfCG <-read.csv("RawDataOnlyUD3-googleDocs.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+dfCG <-read.csv("RawDataOnlyUD3-googleDocs.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8",check.names = FALSE)
 dfCG$Kvotient<-NULL
 
 
@@ -79,8 +79,8 @@ dfCG$Kvotient<-NULL
 # keep figure prduction --------------------------------------------------------------------
 
 ### Comment: "geom_path: Each group consists of only one observation. Do you need to adjust the group aesthetic?"
-dropOutByMathGradeByCampusBy<-sqldf("select mathGradeBinned, campus, mathLevel, avg(isDropOut) as dropOutPct, count(campus) as CountOfStudents from dfM where mathLevel<>''  group by  campus, mathLevel,mathGradeBinned")
-ggplot(dropOutByMathGradeByCampusBy,aes(mathGradeBinned,dropOutPct*100,colour=mathLevel))+theme_bw()+scale_y_continuous(limits=c(0,100),breaks=seq(0,100,10)) +geom_point(aes(size=CountOfStudents,alpha=.5))+geom_line()+ylab("% dropped out by 2017")+theme(strip.text.x = element_text(size = 18),legend.position = "bottom",panel.background=element_rect(fill = "white",color = "white"),  axis.text.x  = element_text(size=16),axis.text.y  = element_text(size=16), panel.spacing = unit(2, "lines"),plot.margin=unit(c(0,1,0,0),"lines")  )+guides(alpha=FALSE)+facet_grid(. ~ campus)
+dropOutByMathGradeByCampusBy<-sqldf("select mathGradeBinned,  mathLevel, avg(isDropOut) as dropOutPct, count(campus) as CountOfStudents from dfM where mathLevel<>''  group by   mathLevel,mathGradeBinned")
+ggplot(dropOutByMathGradeByCampusBy,aes(mathGradeBinned,dropOutPct*100,colour=mathLevel))+theme_bw()+scale_y_continuous(limits=c(0,100),breaks=seq(0,100,10)) +geom_point(aes(size=CountOfStudents,alpha=.5))+geom_line()+ylab("% dropped out by 2017")+theme(strip.text.x = element_text(size = 18),legend.position = "bottom",panel.background=element_rect(fill = "white",color = "white"),  axis.text.x  = element_text(size=16),axis.text.y  = element_text(size=16), panel.spacing = unit(2, "lines"),plot.margin=unit(c(0,1,0,0),"lines")  )+guides(alpha=FALSE)#+facet_grid(. ~ campus)
 
 #p<-predict(dropOutModel,newdata=test,type="response")
 
@@ -262,6 +262,10 @@ ggplot(dropOutByMathGradeByCampusBy,aes(mathGradeBinned,dropOutPct*100,colour=ma
 dropOutByMathGrade<-sqldf("select mathGradeBinned, mathLevel, avg(isDropOut) as dropOutPct, count(campus) as CountOfStudents from dfMGr where mathLevel<>'' and yearOfEnrolment=2012 group by  mathLevel,mathGradeBinned")
 ggplot(dropOutByMathGrade,aes(mathGradeBinned,dropOutPct*100,colour=mathLevel))+theme_bw()+scale_y_continuous(limits=c(0,100),breaks=seq(0,100,10)) +geom_point(aes(size=CountOfStudents,alpha=.5))+geom_line()+ylab("% of cohort dropped out by 2015")+theme(strip.text.x = element_text(size = 18),legend.position = "bottom",panel.background=element_rect(fill = "white",color = "white"),  axis.text.x  = element_text(size=16),axis.text.y  = element_text(size=16), panel.spacing = unit(2, "lines"),plot.margin=unit(c(0,1,0,0),"lines")  )+guides(alpha=FALSE)
 
+
+# data again --------------------------------------------------------------
+
+
 ### Comment: Do we want the figure in dropbox or in git?
 #myWD2<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades/output'} else {"~/git/AAU/DropOutProject/analysis/output"}
 #setwd(myWD2)
@@ -316,6 +320,9 @@ dfMBlowUp<-dfMBlowUp[dfMBlowUp$SemCutOffDate<=as.Date("2017/3/1",format="%Y/%m/%
 #dfMBlowUp<-dfMBlowUp[dfMBlowUp$semesterNum<= (2017-dfMBlowUp$startaar)*2,]
 
 
+# more plotting  ----------------------------------------------------------
+
+
 #grade correlations
 plot(jitter(dfPFI[dfPFI$campus=="Aalborg"]$GPRO_1g,1),jitter(dfPFI[dfPFI$campus=="Aalborg"]$PFI_Lg,1))
 plot(jitter(dfPFI[dfPFI$campus=="Aalborg",]$GPRO_1g,1),jitter(dfPFI[dfPFI$campus=="Aalborg",]$PFI_Lg,1))
@@ -353,7 +360,7 @@ dfDbSem<-sqldf("select  semesternum, mathlevel, mathGradeBinned, avg(IsDropOutIn
 ggplot(dfDbSem[!dfDbSem$mathLevel=="C" ,],aes(semesterNum,dropOutPct*100,colour=mathGradeBinned))+theme_bw()+scale_y_continuous(limits=c(0,60),breaks=seq(0,60,10))+scale_x_continuous(limits=c(0,7)) +geom_point()+geom_line()+ylab("% of cohort dropped out")+theme(strip.text.x = element_text(size = 18),legend.position = "bottom",panel.background=element_rect(fill = "white",color = "white"),  axis.text.x  = element_text(size=16),axis.text.y  = element_text(size=16), panel.spacing = unit(2, "lines"),plot.margin=unit(c(0,1,0,0),"lines")  )+guides(alpha=FALSE) +facet_grid(. ~ mathLevel) 
 ggsave("DropOutBySemesterByMathLevel.png",width=9.71,height=5)
 
-inDistributionByMathLevels<-sqldf("select mathLevel, count(cprnr) from dfM where mathlevel<>'' group by mathLevel")
+inDistributionByMathLevels<-sqldf("select mathLevel, count(studienr) from dfM where mathlevel<>'' group by mathLevel")
 
 MathEnrolmentByCampusByYear<-dfM[dfM$mathLevel!='',] %>% group_by(campus,startaar,mathLevel) %>% summarise (n = n()) %>% mutate(freq = n / sum(n))
 ggplot(MathEnrolmentByCampusByYear,aes(startaar,freq*100,colour=mathLevel))+theme_bw()+theme(panel.spacing = unit(2, "lines"))+scale_y_continuous(limits=c(0,100),breaks=seq(0,100,10))+scale_x_continuous(limits=c(minYear,maxYear),breaks = minYear:maxYear) +geom_point()+geom_line()+ylab("percentage of enrolling students")+facet_grid(. ~ campus)
@@ -384,6 +391,8 @@ dfCG<-merge(dfUD1,dfCG,by="cprnr")
 dfCGM<-dfCG[dfCG$studyDirectionAtUniEnrolment=="Medialogi",]
 
 dfGPRO<-dfCGM[dfCGM$activityName=="Grundlæggende programmering",]
+dfMMA<-dfCGM[dfCGM$activityName=="Matematik til multimedie-applikationer",]
+#dfPFI<-dfCGM[dfCGM$activityName=="Grundlæggende programmering",]
 
 
 dfCGlast<-dfCG[dfCG$isLastAttemptAtExam=="Ja",-(15:22)]
@@ -412,6 +421,8 @@ dfGPRO<-dfGPRO[!is.na(dfGPRO$mathGrade),]
 dfNoShowRisk<-sqldf("select avg(isNoShow), count(mathgrade) as numOfStudents, mathGrade,mathlevel from dfGPRO group by mathgrade, mathlevel");dfNoShowRisk
 ggplot(dfGPRO[dfGPRO$isNoShow==1,], aes(x=mathGrade,colour=mathLevel)) + geom_density()
 mathGPROpass<-sqldf("select mathLevel,mathGradeBinnedNum,avg(passed) as probabilityPassingGPROmed1,count(mathgrade) as numOfStudents  from dfGPRO where isLastAttemptAtExam='Ja' group by mathGradeBinnedNum, mathLevel order by mathlevel, mathGradeBinnedNum")
+#mathPFIpass<-sqldf("select mathLevel,mathGradeBinnedNum,avg(passed) as probabilityPassingGPROmed1,count(mathgrade) as numOfStudents  from dfAAUGrades where isLastAttemptAtExam='Ja' group by mathGradeBinnedNum, mathLevel order by mathlevel, mathGradeBinnedNum")
+
 mathGPROnoShow<-sqldf("select mathLevel,mathGradeBinnedNum,avg(isNoShow) as probabilityNoShowGPROmed1,count(mathgrade) as numOfStudents from dfGPRO group by mathGradeBinnedNum, mathLevel order by mathlevel, mathGradeBinnedNum")
 
 
