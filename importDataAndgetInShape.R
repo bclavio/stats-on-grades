@@ -125,6 +125,7 @@ dfAAUGrades$startMonth <-ifelse(as.numeric(format(dfAAUGrades$fradatosn,'%m'))>4
 dfAAUGrades$examMonth<-as.numeric(format(dfAAUGrades$bedom_dato,'%m'))
 dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
 
+#HKtodo: need to work on people who did not start in september
 dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))              
