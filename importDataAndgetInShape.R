@@ -121,8 +121,27 @@ distHelp<-sqldf("select studienr, aktiv_kode, bedom_dato, min(bedom_dato-fradato
 dfAAUGrades<-merge(dfAAUGrades,distHelp,all.x = TRUE)
 dfAAUGrades$aktivitetText<-as.character(dfAAUGrades$aktivitet)
 dfAAUGrades<-dfAAUGrades[dfAAUGrades$DistFromEnrol==dfAAUGrades$MinDistanceDays,]
+dfAAUGrades$startMonth <-ifelse(as.numeric(format(dfAAUGrades$fradatosn,'%m'))>4,9,2)
+dfAAUGrades$examMonth<-as.numeric(format(dfAAUGrades$bedom_dato,'%m'))
 dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
-dfAAUGrades$takenInSem<-ifelse(as.numeric(format(dfAAUGrades$fradatosn,'%m')<6),(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ ceiling((as.numeric(format(dfAAUGrades$bedom_dato,'%m')))/6), (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))#-ifelse(as.numeric(format(dfAAUGrades$bedom_dato,'%m'))=1,1,0)
+
+dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
+                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
+                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))              
+,0)
+                               #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
+                                                                 
+#1+(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2) 
+#as.numeric(format(dfAAUGrades$bedom_dato,'%Y')) ,2)
+
+#dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) ,NA, ifelse(as.numeric(format(dfEnrolStatus$fradatosn,'%m')<6),
+#                            (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2+ ceiling((as.numeric(format(dfEnrolStatus$slutdatosn,'%m')))/6), 
+#                             (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/6)))
+
+                               
+#dfAAUGrades$takenInSem<-ifelse(as.numeric(format(dfAAUGrades$fradatosn,'%m')<6),
+#                               (dfAAUGrades$takenInYear-dfAAUGrad201es$startaar)*2+ ceiling((as.numeric(format(dfAAUGrades$bedom_dato,'%m')))/6),
+#                               (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))#-ifelse(as.numeric(format(dfAAUGrades$bedom_dato,'%m'))=1,1,0)
 
 #ifelse(as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$fradatosn,'%m')<6),(dfAAUGrades[dfAAUGrades$studienr==20136609,]$takenInYear-dfAAUGrades[dfAAUGrades$studienr==20136609,]$startaar)*2+ ceiling((as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$bedom_dato,'%m')))/6),
  #      (dfAAUGrades[dfAAUGrades$studienr==20136609,]$takenInYear-dfAAUGrades[dfAAUGrades$studienr==20136609,]$startaar)*2+ floor((as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$bedom_dato,'%m'))-2)/6))#-ifelse(as.numeric(format(dfAAUGrades$bedom_dato,'%m'))=1,1,0)

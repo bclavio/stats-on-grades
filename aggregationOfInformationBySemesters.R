@@ -1,5 +1,5 @@
 
-myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"}
+myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"} "~/Documents/R/stats-on-grades"
 setwd(myWD)
 source('importDataAndgetInShape.R')
 
@@ -51,9 +51,13 @@ gradesToGPAPFVec<-c('EB'=NA,'U'=NA,'B'=NA,'I'=NA)
 dfAAUMarriedGrades$fradatoSNsemCalc<-as.Date(format(as.POSIXct(as.numeric(dfAAUMarriedGrades$fradatoSNsemCalc*3600*24), origin='1970-01-01') , format="%Y-%m-%d"))
 dfAAUMarriedGrades$GPAgrade<-ifelse(dfAAUMarriedGrades$gradeType=="PF",gradesToGPAPFVec[as.character(dfAAUMarriedGrades$KARAKTER)],gradesToGPANumsVec[as.character(dfAAUMarriedGrades$KARAKTER)])
 dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
-dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))<6,
-                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
-                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
+
+#HK the below overwrites the data already prepared in getin shape --- need to check this again most likely this is about people taking exams in master that should be taken in BSc and therefore added as e.g. sem 7
+#dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))<6,
+#                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
+#                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
+
+
 #dfSPVSNR<-distinct(dfAAUMarriedGrades, SPV, enrolID)
 dfSPVSNR<-sqldf('select distinct b.SPV as SPV, c.enrolID as enrolID from dfECTSstruct as b, dfEnrolStatus as c where b.type=c.stype and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
 
@@ -87,7 +91,13 @@ StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("enrolID","stype")]),semSkelet
 #StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("studienr", "stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
 
 ECTSattainedMelted<- merge(dfAAUMarriedGrades[dfAAUMarriedGrades$isPassed==1,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
-ECTSattmptedMelted<- merge(dfAAUMarriedGrades[,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
+
+maxECTSTakenByCourseBySemester<-sqldf('select bctdf, enrolID, takenInSem, aktivitet, max(ECTS) as ECTS from dfAAUMarriedGrades group by bctdf, enrolID, takenInSem, aktivitet')
+
+#ECTSattmptedMelted<- merge(dfAAUMarriedGrades[,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
+
+ECTSattmptedMelted<- merge(maxECTSTakenByCourseBySemester[,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
+
 
 ECTSattainedMelted$what<-"atnBy"
 ECTSattmptedMelted$what<-"atpIn"
@@ -135,11 +145,17 @@ sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SP
 
 dfKvote1<-sqldf('select studienr, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
 dfM1<-sqldf('select studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
+<<<<<<< HEAD
 highSchoolData1<-sqldf('select navn, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
 highSchoolVariables<-unique(merge(dfKvote1,dfM1), by = "studienr")
 highSchoolVariables<-merge(highSchoolVariables,highSchoolData1)
 ForSvante1<-merge(ForSvante,highSchoolVariables)
 #ForSvante3<-unique(merge(ForSvante2,ForSvante1), by = "enrolID")
+=======
+ForSvante1<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
+ForSvante2<-unique(merge(ForSvante,ForSvante1), by = "enrolID")
+ForSvante2$studienr<-NULL
+>>>>>>> 8e78610cea1fc08463696b2463a7a4ed529ac8dd
 
 ForSvante$studienr<-NULL
 ForSvante3$studienr<-NULL
