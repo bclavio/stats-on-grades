@@ -87,7 +87,9 @@ dfEnrolStatus$navn<-NULL
 dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
 dfEnrolStatus$yearOfEnrolment <- dfEnrolStatus$startaar
 dfEnrolStatus$startaar<-as.numeric(as.character(dfEnrolStatus$startaar))
-dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) ,NA, ifelse(as.numeric(format(dfEnrolStatus$fradatosn,'%m')<6),(as.numeric(format(dfEnrolStatus$slutdatosn,'%y'))-dfEnrolStatus$startaar)*2+ ceiling((as.numeric(format(dfEnrolStatus$slutdatosn,'%m')))/6), (as.numeric(format(dfEnrolStatus$slutdatosn,'%y'))-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/6)))
+dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) ,NA, ifelse(as.numeric(format(dfEnrolStatus$fradatosn,'%m')<6),
+                                                                              (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2+ ceiling((as.numeric(format(dfEnrolStatus$slutdatosn,'%m')))/6), 
+                                                                              (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/6)))
 
 dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
 
