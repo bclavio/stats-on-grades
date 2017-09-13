@@ -145,25 +145,28 @@ sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SP
 
 dfKvote1<-sqldf('select studienr, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
 dfM1<-sqldf('select studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
-<<<<<<< HEAD
+ForSvante4<-merge(ForSvante,dfKvote1)
+ForSvante1<-merge(dfKvote1,dfM1)
+ForSvante2<-merge(ForSvante,ForSvante1)
+
 highSchoolData1<-sqldf('select navn, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
 highSchoolVariables<-unique(merge(dfKvote1,dfM1), by = "studienr")
 highSchoolVariables<-merge(highSchoolVariables,highSchoolData1)
-ForSvante1<-merge(ForSvante,highSchoolVariables)
-#ForSvante3<-unique(merge(ForSvante2,ForSvante1), by = "enrolID")
-=======
-ForSvante1<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
-ForSvante2<-unique(merge(ForSvante,ForSvante1), by = "enrolID")
-ForSvante2$studienr<-NULL
->>>>>>> 8e78610cea1fc08463696b2463a7a4ed529ac8dd
+ForSvante3<-unique(merge(highSchoolVariables,ForSvante2), by = "enrolID")
 
 ForSvante$studienr<-NULL
+ForSvante2$studienr<-NULL
 ForSvante3$studienr<-NULL
+ForSvante4$studienr<-NULL
 ForSvante$navn<-NULL
+ForSvante2$navn<-NULL
 ForSvante3$navn<-NULL
+ForSvante4$navn<-NULL
   
-write.csv(ForSvante,file = "MedData.csv")
-write.csv(ForSvante3,file = "MedData1.csv")
+write.csv(ForSvante,file = "MedData.csv") # 2292 rows 133 variables
+write.csv(ForSvante2,file = "MedData1.csv") # 2244 rows 145 variables
+write.csv(ForSvante3,file = "MedData2.csv") # 1122 rows 150 variables
+write.csv(ForSvante4,file = "MedData3.csv") # 1853 rows 139 variables
 
 ### Comment: Error in FUN(X[[i]], ...) : object 'type' not found
 ECTSovwx <- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
