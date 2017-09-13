@@ -100,7 +100,7 @@ dfRetrier<-sqldf("select studienr, max(`Forsoeg.nr.`) as MaxTry from dfAAUGrades
 dfRetrier$isOffender <-ifelse(dfRetrier$MaxTry>3,1,0)
 
 dfAAUGrades<-merge(dfAAUGrades,dfRetrier)
-sqldf("select isOffender, isProj, avg(GPAgrade) from dfAAUGrades where isLastTry=1 group by isOffender, isProj")
+#sqldf("select isOffender, isProj, avg(GPAgrade) from dfAAUGrades where isLastTry=1 group by isOffender, isProj")
 dfAktivitetsKode<-sqldf("select distinct aktiv_kode, aktivitet from dfAAUGrades")
 #OLD data: dfAAUGrades<-read.csv("gradesTil2017Mar.csv",header = TRUE, fill=TRUE, sep = ",")
 dfAAUGrades$bedom_dato<- as.Date(as.character(dfAAUGrades$bedom_dato) , "%d.%m.%Y")
