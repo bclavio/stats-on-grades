@@ -133,10 +133,14 @@ ForSvante<-ForSvante[ForSvante$startaar>2009,]
 ForSvante<-merge(ForSvante,GPAavgagg)
 sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
 
-dfKvote<-sqldf('select studienr, kvotient, kvote, land, Campus from dfKvote ')
-ForSvante1<-merge(ForSvante,dfKvote) # need to remove studienr duplicates
+dfKvote1<-sqldf('select studienr, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
+dfM1<-sqldf('select studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
+ForSvante1<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
+ForSvante2<-unique(merge(ForSvante,ForSvante1), by = "enrolID")
+ForSvante2$studienr<-NULL
 
 write.csv(ForSvante,file = "MedData.csv")
+write.csv(ForSvante2,file = "MedData1.csv")
 
 ### Comment: Error in FUN(X[[i]], ...) : object 'type' not found
 ECTSovwx <- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
