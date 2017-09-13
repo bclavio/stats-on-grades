@@ -137,6 +137,7 @@ dfKvote1<-sqldf('select studienr, priop, UDD_KODE, kvotient, kvote, land, Campus
 dfM1<-sqldf('select studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
 ForSvante1<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
 ForSvante2<-unique(merge(ForSvante,ForSvante1), by = "enrolID")
+ForSvante$studienr<-NULL
 ForSvante2$studienr<-NULL
 
 write.csv(ForSvante,file = "MedData.csv")
