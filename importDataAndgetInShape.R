@@ -46,7 +46,7 @@ dfMed1Q999<-dfMed1Q999[,1:7]
 #dfMed1Q999$Name <-NULL
 
 highSchoolData<-read.csv("RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-
+colnames(highSchoolData)[colnames(highSchoolData)=="FullName"] <- "navn"
 
 
 #myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/SVN/01Projects/dropOut/data/"}
@@ -81,7 +81,7 @@ dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
 dfEnrolStatus<-rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
 dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeldsn=='Afvist på grund af manglende kvalifikationer'),]
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
-dfEnrolStatus$navn<-NULL
+#Comment-out: dfEnrolStatus$navn<-NULL
 
 #dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.%Y")
 dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")

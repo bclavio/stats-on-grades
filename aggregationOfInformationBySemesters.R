@@ -135,13 +135,19 @@ sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SP
 
 dfKvote1<-sqldf('select studienr, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
 dfM1<-sqldf('select studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
-ForSvante1<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
-ForSvante2<-unique(merge(ForSvante,ForSvante1), by = "enrolID")
-ForSvante$studienr<-NULL
-ForSvante2$studienr<-NULL
+highSchoolData1<-sqldf('select navn, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
+highSchoolVariables<-unique(merge(dfKvote1,dfM1), by = "studienr")
+highSchoolVariables<-merge(highSchoolVariables,highSchoolData1)
+ForSvante1<-merge(ForSvante,highSchoolVariables)
+#ForSvante3<-unique(merge(ForSvante2,ForSvante1), by = "enrolID")
 
+ForSvante$studienr<-NULL
+ForSvante3$studienr<-NULL
+ForSvante$navn<-NULL
+ForSvante3$navn<-NULL
+  
 write.csv(ForSvante,file = "MedData.csv")
-write.csv(ForSvante2,file = "MedData1.csv")
+write.csv(ForSvante3,file = "MedData1.csv")
 
 ### Comment: Error in FUN(X[[i]], ...) : object 'type' not found
 ECTSovwx <- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
@@ -162,6 +168,6 @@ testxovw<-merge(ECTSovw[,c("studienr","type")],ECTSovwx[,c("studienr","type")],a
 testyovw<-sqldf("select a.studienr, a.type, b.studienr, b.type from ECTSovw as a left outer join ECTSovwx as b using (studienr,type) ")
 
 
-sqldf("select studienr, fradatosn,strftime('%m', fradatosn) from dfEnrolStatus where strftime('%m', fradatosn)<>'09'")
-sqldf("SELECT strftime('%m','now')")
+#sqldf("select studienr, fradatosn,strftime('%m', fradatosn) from dfEnrolStatus where strftime('%m', fradatosn)<>'09'")
+#sqldf("SELECT strftime('%m','now')")
 
