@@ -53,7 +53,7 @@ dfAAUMarriedGrades$fradatoSNsemCalc<-as.Date(format(as.POSIXct(as.numeric(dfAAUM
 dfAAUMarriedGrades$GPAgrade<-ifelse(dfAAUMarriedGrades$gradeType=="PF",gradesToGPAPFVec[as.character(dfAAUMarriedGrades$KARAKTER)],gradesToGPANumsVec[as.character(dfAAUMarriedGrades$KARAKTER)])
 dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
 
-# HK the below overwrites the data already prepared in getin shape --- 
+# HKTODO the below overwrites the data already prepared in getin shape --- 
 # need to check this again most likely this is about people taking exams in master that should be taken in BSc and therefore added as e.g. sem 7
 #dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))<6,
 #                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
