@@ -19,6 +19,7 @@ CTdfs<-sqldf("select distinct CTdf from dfECTSstruct")
 semStruct<-merge(semStruct,CTdfs)
 sem<-join(semStruct,ectsSumSPbySemAndCT,by=c("SPV","sem","CTdf"), type="left")
 sem$nominalECTS[is.na(sem$nominalECTS)]<-0
+#create the structure of ECTS per study plan version of BSc/MSc by semester and courseTypes (project, elective, technical, non-technical)
 ectsSumSPbySemAndCT<-sqldf('select a.SPV as SPV, 
                            a.sem as sem, a.CTdf as CTdf, sum(b.nominalECTS+0) as nominalECTS
                            from semStruct as a, sem as b
@@ -52,7 +53,8 @@ dfAAUMarriedGrades$fradatoSNsemCalc<-as.Date(format(as.POSIXct(as.numeric(dfAAUM
 dfAAUMarriedGrades$GPAgrade<-ifelse(dfAAUMarriedGrades$gradeType=="PF",gradesToGPAPFVec[as.character(dfAAUMarriedGrades$KARAKTER)],gradesToGPANumsVec[as.character(dfAAUMarriedGrades$KARAKTER)])
 dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
 
-#HK the below overwrites the data already prepared in getin shape --- need to check this again most likely this is about people taking exams in master that should be taken in BSc and therefore added as e.g. sem 7
+# HK the below overwrites the data already prepared in getin shape --- 
+# need to check this again most likely this is about people taking exams in master that should be taken in BSc and therefore added as e.g. sem 7
 #dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))<6,
 #                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
 #                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
@@ -81,12 +83,12 @@ ectsSumSPbySemAndCT[is.na(ectsSumSPbySemAndCT$El_nom),]$El_nom<-0
 
 #creating the summaries of achieved ECTS per semester 
 #semester, bctdf, ECTSpassed, 
-#create the structure for all
+#create the structure for all 
 #create semesters and edutypes
 semesters<-data.frame(seq(1:10));names(semesters)<-c("semester"); eduType<-data.frame(c("bachelor","kandidat"));names(eduType)<-"type"
-#multiply semesteers with edutypes
+#multiply semesters with eduTypes
 semSkeleton<-data.frame(merge(CTdfs,semesters));semSkeleton<-merge(semSkeleton,eduType)
-#used SemEduTYpe multiplication to merge with students Enrolments into Edutypes
+#used SemEduTYye multiplication to merge with students Enrolments into Edutypes
 StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("enrolID","stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
 #StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("studienr", "stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
 
