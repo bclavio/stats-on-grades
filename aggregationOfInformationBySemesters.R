@@ -55,14 +55,19 @@ dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
 
 # HKTODO the below overwrites the data already prepared in getin shape --- 
 # need to check this again most likely this is about people taking exams in master that should be taken in BSc and therefore added as e.g. sem 7
-#dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))<6,
-#                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
-#                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
+dfAAUMarriedGrades$takenInSem<- (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ 
+                              floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/7)
 
+<<<<<<< HEAD
 dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))<6,
                                       (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
                                       (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
 
+=======
+#dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
+#                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
+#                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/7))  
+>>>>>>> eceaaf915854769fd63a1fa0cf25b69622c4eb0d
 
 #dfSPVSNR<-distinct(dfAAUMarriedGrades, SPV, enrolID)
 dfSPVSNR<-sqldf('select distinct b.SPV as SPV, c.enrolID as enrolID from dfECTSstruct as b, dfEnrolStatus as c where b.type=c.stype and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
@@ -134,6 +139,8 @@ GPAavg<- merge(dfAAUMarriedGrades[,c("bctdf", "enrolID","takenInSem", "GPAgrade"
 #GPAavg<- dfAAUMarriedGrades[!is.na(dfAAUMarriedGrades$GPAgrade),c("bctdf", "enrolID","takenInSem", "GPAgrade","semester")]
 GPAavg<-GPAavg[order(GPAavg$enrolID, GPAavg$bctdf, GPAavg$semester,GPAavg$takenInSem),]
 GPAavg<-GPAavg[GPAavg$takenInSem<=GPAavg$semester|is.na(GPAavg$takenInSem),]
+
+#TODO maybe consider using the median instead of the mean ---
 GPAavgagg<-sqldf("select enrolID, bctdf, semester, avg(GPAgrade) as GPAavg from GPAavg group by enrolID, bctdf, semester")
 GPAavgagg$bctdf<-gsub("project","Pr",GPAavgagg$bctdf);GPAavgagg$bctdf<-gsub("elective","El",GPAavgagg$bctdf);
 GPAavgagg$bctdf<-paste(GPAavgagg$bctdf,"mGPA",sep = "_")
