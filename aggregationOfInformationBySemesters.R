@@ -59,16 +59,11 @@ dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
 dfAAUMarriedGrades$takenInSem<- (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ 
                               floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/7)
 
-<<<<<<< HEAD
-dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))<6,
-                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
-                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
 
-=======
 #dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/7))  
->>>>>>> eceaaf915854769fd63a1fa0cf25b69622c4eb0d
+
 
 #dfSPVSNR<-distinct(dfAAUMarriedGrades, SPV, enrolID)
 dfSPVSNR<-sqldf('select distinct b.SPV as SPV, c.enrolID as enrolID from dfECTSstruct as b, dfEnrolStatus as c where b.type=c.stype and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
