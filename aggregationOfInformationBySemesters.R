@@ -1,5 +1,6 @@
 
-myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"} "~/Documents/R/stats-on-grades"
+myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"} 
+#"~/Documents/R/stats-on-grades"
 setwd(myWD)
 source('importDataAndgetInShape.R')
 
