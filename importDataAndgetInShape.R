@@ -83,9 +83,11 @@ dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeldsn=='Afvist på grund af mang
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
 dfEnrolStatus$startMonth <-as.numeric(format(dfEnrolStatus$fradatosn,'%m'))
 #Comment-out: dfEnrolStatus$navn<-NULL
+dfEnrolStatus$startMonth[!(dfEnrolStatus$startMonth=9)]
+
 #a quick check on drop outs of the students not starting regularly (not in september) 
-table(dfEnrolStatus$startMonth)
-table(dfEnrolStatus[!(dfEnrolStatus$startMonth==9),]$statussn)
+#table(dfEnrolStatus$startMonth)
+#table(dfEnrolStatus[!(dfEnrolStatus$startMonth==9),]$statussn)
 #we therefore can exclude these students from the analysis since they are only 1.4% of the student population and 13.6% of them drop out - well below the average dropout rate. 
 
 #dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.%Y")

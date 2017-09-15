@@ -59,9 +59,16 @@ dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
 dfAAUMarriedGrades$takenInSem<- (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ 
                               floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/7)
 
+<<<<<<< HEAD
+dfAAUMarriedGrades$takenInSem<-ifelse(as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))<6,
+                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ ceiling((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m')))/6) ,
+                                      (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%m'))-2)/6))
+
+=======
 #dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/7))  
+>>>>>>> eceaaf915854769fd63a1fa0cf25b69622c4eb0d
 
 #dfSPVSNR<-distinct(dfAAUMarriedGrades, SPV, enrolID)
 dfSPVSNR<-sqldf('select distinct b.SPV as SPV, c.enrolID as enrolID from dfECTSstruct as b, dfEnrolStatus as c where b.type=c.stype and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
@@ -141,6 +148,10 @@ GPAavgagg$bctdf<-paste(GPAavgagg$bctdf,"mGPA",sep = "_")
 #GPAavgagg<-ddply(GPAavg, .(enrolID, bctdf,semester),  GPAavg=mean(GPAgrade))
 GPAavgagg<-dcast(GPAavgagg,enrolID~semester+bctdf,value.var = "GPAavg",sum)
 
+
+
+
+
 #need to verify we have all the students in ECTSovw TODO
 ectsAggsAll<-merge(ECTSovw,ectsSumSPbySPVAndCT, by="SPV")
 
@@ -161,14 +172,14 @@ highSchoolVariables<-unique(merge(dfKvote1,dfM1), by = "studienr")
 highSchoolVariables<-merge(highSchoolVariables,highSchoolData1)
 ForSvante3<-unique(merge(highSchoolVariables,ForSvante2), by = "enrolID")
 
-ForSvante$studienr<-NULL
-ForSvante2$studienr<-NULL
-ForSvante3$studienr<-NULL
-ForSvante4$studienr<-NULL
-ForSvante$navn<-NULL
-ForSvante2$navn<-NULL
-ForSvante3$navn<-NULL
-ForSvante4$navn<-NULL
+#ForSvante$studienr<-NULL
+#ForSvante2$studienr<-NULL
+#ForSvante3$studienr<-NULL
+#ForSvante4$studienr<-NULL
+#ForSvante$navn<-NULL
+#ForSvante2$navn<-NULL
+#ForSvante3$navn<-NULL
+#ForSvante4$navn<-NULL
   
 write.csv(ForSvante,file = "MedData.csv") # 2294 rows 133 variables
 write.csv(ForSvante2,file = "MedData1.csv") # 1826 rows 145 variables
