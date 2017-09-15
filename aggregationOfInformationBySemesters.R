@@ -55,7 +55,7 @@ dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
 
 # HKTODO the below overwrites the data already prepared in getin shape --- 
 # need to check this again most likely this is about people taking exams in master that should be taken in BSc and therefore added as e.g. sem 7
-dfAAUMarriedGrades$takenInSem<- (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%y')))*2+ 
+dfAAUMarriedGrades$takenInSem<- (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%Y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%Y')))*2+ 
                               floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato-14,'%m'))-2)/7)
 
 
