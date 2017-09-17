@@ -81,7 +81,10 @@ dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
 dfEnrolStatus<-rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
 dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeldsn=='Afvist på grund af manglende kvalifikationer'),]
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
-dfEnrolStatus$navn<-NULL
+#dfEnrolStatus$navn<-NULL
+
+#remove all students who did not start in september 
+dfEnrolStatus<-dfEnrolStatus[as.numeric(format(dfEnrolStatus$fradatosn,'%m'))==9,]
 
 #dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.%Y")
 dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
@@ -150,7 +153,7 @@ dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$exa
 
 dfAAUGrades$monthSemMod<-floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))+1)/6)
 #EB-couldn't take exam ('hand in blank'), U - not allowed to go to the exam, I - fail, B - pass
-gradesPassedLUVec<-c('02'=1,'4'=1,'7'=1,'10'=1,'12'=1,'00'=0,'-3'=0,'B'=1,'EB'=0,'U'=0,'I'=0)
+gradesPassedLUVec<-c('02'=1,'4'=1,'7'=1,'10'=1,'12'=1,'00'=0,'-3'=0,'B'=2,'EB'=0,'U'=0,'I'=0)
 gradesToNumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-5,'U'=-8,'B'=2,'I'=0)
 
 
