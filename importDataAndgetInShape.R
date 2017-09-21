@@ -129,6 +129,7 @@ dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
 dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))              
+                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7))              
 ,0)
                                #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
                                                                  
