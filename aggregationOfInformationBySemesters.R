@@ -69,8 +69,8 @@ dfAAUMarriedGrades$takenInSem<- (as.numeric(format(dfAAUMarriedGrades$bedom_dato
 #dfSPVSNR<-distinct(dfAAUMarriedGrades, SPV, enrolID)
 dfSPVSNR<-sqldf('select distinct b.SPV as SPV, c.enrolID as enrolID from dfECTSstruct as b, dfEnrolStatus as c where b.type=c.stype and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
 
-dfAAUMarriedGrades2<-merge(dfAAUGradesWODistEnrol,dfECTSstruct,by="aktivitet")
-dfAAUMarriedGrades2<-dfAAUMarriedGrades2[dfAAUMarriedGrades2$fradatosn >= dfAAUMarriedGrades2$fromDate & dfAAUMarriedGrades2$fradatosn <=dfAAUMarriedGrades2$toDate,]
+#dfAAUMarriedGrades2<-merge(dfAAUGradesWODistEnrol,dfECTSstruct,by="aktivitet")
+#dfAAUMarriedGrades2<-dfAAUMarriedGrades2[dfAAUMarriedGrades2$fradatosn >= dfAAUMarriedGrades2$fromDate & dfAAUMarriedGrades2$fradatosn <=dfAAUMarriedGrades2$toDate,]
 testdfAAUGrades<-data.frame(dfAAUGrades[,c("DistFromEnrol")])
 
 missingRows<- dfAAUGradesWODistEnrol[!dfAAUGradesWODistEnrol$rowID %in% dfAAUMarriedGrades$rowID ,]
@@ -100,7 +100,7 @@ StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("enrolID","stype")]),semSkelet
 
 ECTSattainedMelted<- merge(dfAAUMarriedGrades[dfAAUMarriedGrades$isPassed==1,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
 
-maxECTSTakenByCourseBySemester<-sqldf('select bctdf, enrolID, takenInSem, aktivitet, max(ECTS) as ECTS from dfAAUMarriedGrades group by bctdf, enrolID, takenInSem, aktivitet')
+maxECTSTakenByCourseBySemester<-sqldf('select bctdf, enrolID, takenInSem, aktivitet, type, max(ECTS) as ECTS from dfAAUMarriedGrades group by bctdf, enrolID, takenInSem, aktivitet, type')
 
 #ECTSattmptedMelted<- merge(dfAAUMarriedGrades[,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
 
@@ -151,17 +151,22 @@ ForSvante<-ForSvante[ForSvante$startaar>2009,]
 ForSvante<-merge(ForSvante,GPAavgagg)
 sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
 
-dfKvote1<-sqldf('select studienr, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
-dfM1<-sqldf('select studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
-ForSvante1<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
-ForSvante2<-unique(merge(ForSvante,ForSvante1), by = "enrolID")
-ForSvante2$studienr<-NULL
+dfKvote1<-sqldf('select distinct studienr, aar as startaar, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
+
+dfM1<-sqldf('select distinct studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
+KvoteHSGrades<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
+ForSvante2<-merge(ForSvante,KvoteHSGrades, by = c('studienr','startaar'))
+
+highSchoolData1<-sqldf('select fullname as navn, yearOfEnrolment as startaar, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
+highSchoolVariables<-unique(merge(dfKvote1,dfM1, by = "studienr"))
+
+ForSvante3<-merge(highSchoolVariables,ForSvante2)
+
+ForSvante3<-merge(highSchoolData1,ForSvante3,by = c("navn","startaar"))
+#ForSvante3<-merge(ForSvante3,highSchoolData1,by = c("navn","startaar"),all.x = TRUE)
 
 
-highSchoolData1<-sqldf('select navn, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
-highSchoolVariables<-unique(merge(dfKvote1,dfM1), by = "studienr")
-highSchoolVariables<-merge(highSchoolVariables,highSchoolData1)
-ForSvante3<-unique(merge(highSchoolVariables,ForSvante2), by = "enrolID")
+# anonymize ---------------------------------------------------------------
 
 ForSvante$studienr<-NULL
 ForSvante2$studienr<-NULL
@@ -171,15 +176,23 @@ ForSvante$navn<-NULL
 ForSvante2$navn<-NULL
 ForSvante3$navn<-NULL
 ForSvante4$navn<-NULL
-  
+
+
+# write stuff out ---------------------------------------------------------
+
+
+ForSvante<-ForSvante[!duplicated(ForSvante), ]
+ForSvante2<-ForSvante2[!duplicated(ForSvante2), ]
+
 write.csv(ForSvante,file = "MedData.csv") # 2294 rows 133 variables
 write.csv(ForSvante2,file = "MedData1.csv") # 1826 rows 145 variables
 write.csv(ForSvante3,file = "MedData2.csv") # 1122 rows 150 variables
 write.csv(ForSvante4,file = "MedData3.csv") # 1852 rows 139 variables
 
-studenCntKand<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='kandidat' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
-studenCntBach<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='bachelor' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
-
+#studenCntKand<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='kandidat' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
+#studenCntBach<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='bachelor' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
+#the below is much faster than the above calls a
+studentCnts<-sqldf("select startaar, stype, count(startaar) from ForSvante2 group by startaar, stype order by stype, startaar")
 
 ### Comment: Error in FUN(X[[i]], ...) : object 'type' not found
 ECTSovwx <- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var = "ECTS",sum)
