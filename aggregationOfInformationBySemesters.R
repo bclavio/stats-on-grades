@@ -151,19 +151,17 @@ ForSvante<-ForSvante[ForSvante$startaar>2009,]
 ForSvante<-merge(ForSvante,GPAavgagg)
 sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
 
-dfKvote1<-sqldf('select distinct studienr, aar as startaar, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
+dfKvote1<-sqldf('select distinct studienr, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
 
 dfM1<-sqldf('select distinct studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
 KvoteHSGrades<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
-ForSvante2<-merge(ForSvante,KvoteHSGrades, by = c('studienr','startaar'))
+ForSvante2<-merge(ForSvante,KvoteHSGrades, by = "studienr")
 
-highSchoolData1<-sqldf('select fullname as navn, yearOfEnrolment as startaar, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
+highSchoolData1<-sqldf('select fullname as navn, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
 highSchoolVariables<-unique(merge(dfKvote1,dfM1, by = "studienr"))
 
 ForSvante3<-merge(highSchoolVariables,ForSvante2)
-
-ForSvante3<-merge(highSchoolData1,ForSvante3,by = c("navn","startaar"))
-#ForSvante3<-merge(ForSvante3,highSchoolData1,by = c("navn","startaar"),all.x = TRUE)
+ForSvante3<-merge(highSchoolData1,ForSvante3,by = c("navn"))
 
 
 # anonymize ---------------------------------------------------------------

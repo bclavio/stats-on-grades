@@ -90,9 +90,17 @@ dfEnrolStatus<-dfEnrolStatus[as.numeric(format(dfEnrolStatus$fradatosn,'%m'))==9
 dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
 dfEnrolStatus$yearOfEnrolment <- dfEnrolStatus$startaar
 dfEnrolStatus$startaar<-as.numeric(as.character(dfEnrolStatus$startaar))
-dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) ,NA, ifelse(as.numeric(format(dfEnrolStatus$fradatosn,'%m')<6),
-                                                                              (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2+ ceiling((as.numeric(format(dfEnrolStatus$slutdatosn,'%m')))/6), 
-                                                                              (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/6)))
+dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) , NA,
+                                    ifelse(as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))>1 & as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))<9,
+                                           (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2, 
+                                           
+                                           (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/7)
+                                           )
+                                  )                                  
+
+#dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
+#                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
+#                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7))  
 
 dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
 
@@ -131,8 +139,7 @@ dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
 #HKtodo: need to work on people who did not start in september
 dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
-                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7))              
-,0)
+                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
                                #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
                                                                  
 #1+(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2) 
