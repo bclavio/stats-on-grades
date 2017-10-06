@@ -1,0 +1,29 @@
+---
+output: pdf_document
+---
+ 
+```{r echo=FALSE}
+personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
+campus <- personalized_info$Campus[i]
+firstname <- personalized_info$FirstName[i]
+surname <- personalized_info$SurName[i]
+
+library("knitr")
+opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
+```
+
+Campus: `r campus`
+Student: `r firstname` `r surname`
+
+# Results from the Study Verification Test
+
+```{r}
+
+```
+
+
+
+
+
+
+ 
