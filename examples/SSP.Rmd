@@ -1,0 +1,377 @@
+---
+title: "Study Verification Test (SSP) Results"
+output:
+  html_notebook: default
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+The study verification test (SSP) was conducted 15th of September 2017 for 1 hour on all MED1 student, in Aalborg at 9 am and in Copenhagen at 12:30 am.
+The immediate result of the test showed that a few students (around 7) did not show for the test, as they had dropped out in MED1. These dropouts will be replaced with new students. All active students took the test as requested.
+
+
+The goals of analysing SSP:
+
+A) Detecting students with high risk of dropping out. We will inform the student counselors who is the high-risk dropout students so they can take action. The student counselors need the results from SSP as an overview for each high-risk dropout students, e.g. a percentile rank for each category as in https://www.ruffalonl.com/complete-enrollment-management/student-success/rnl-retention-management-system-plus/samples.
+B) Creating a tool for predicting dropouts (low priority).
+
+
+TODOS:
+
+* Compute different types of data analysis to describe the dropout rate (with aggegation of variables)
+* Mail merge: https://www.r-bloggers.com/mail-merge-with-rmarkdown/
+* Import remaining data from Moodle of the newcoming students?
+
+
+This markdown script imports, cleans, and analyses the data from SSP.
+
+```{r setup, include=FALSE}
+library(xlsx)
+library(sqldf)
+library(plyr)
+library(dplyr)
+library(reshape2)
+library(MASS)
+library(manipulate)
+library(stringr)
+library(CTT)
+#library(gsubfn)
+library(Hmisc)
+library(psych)
+library(ggplot2)
+
+# Setting the directory for knitr, as the dir is reset after running a code chunk.
+library("knitr")
+opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP")
+```
+
+
+
+### Importing and Cleaning Data 
+
+
+Setting the working directory to the SVN folder.
+```{r}
+SVNData<-if(grepl("BiancaClavio", getwd())){
+  'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP/'} else {"~/SVN/01Projects/SSP/"}
+setwd(SVNData)
+```
+
+
+Importing a csv file that gives and overview of quiz, questions, possible answers, and grading for each answer (We might not use this in Rstudio, but it is still useful). The document is created in Excel manually based on the SSP Moodle quiz, as the quiz questions from Moodle can be exported to anything useful outside Moodle.
+```{r}
+dfQAGrades<-read.csv("QuestionsOverview.csv",
+  header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+```
+
+
+Importing SSP grades and answers via Moodle in Aalborg and Copenhagen. All text strings for the grading attributes are converted to NA's, e.g. Moodle write "-" when a student skipped a question. The data analysis further down ignores NA's in the computations.
+```{r}
+dfSSPgradesCPH<-read.csv("SSPgradesTestCPH 02-10.csv",
+  header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+dfSSPgradesAAL<-read.csv("SSPgradesTestAAL 02-10.csv",
+  header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+dfSSPanswersCPH<-read.csv("SSPanswersTestCPH 28-09.csv",
+  header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+dfSSPanswersAAL<-read.csv("SSPanswersTestAAL 28-09.csv",
+  header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+```
+
+
+This snippet changes some answer types in AAL data set to match the ones in CPH. The answer types from questions 24-32 in AAL (No influence, Limited influence, Some influence, Decisive influence) are converted to the ones in CHP (Not at all true, Slightly true, Somewhat true, Completely true).
+```{r}
+dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) 
+  gsub("No influence","Not at all true",dfSSPanswersAAL))
+dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) 
+  gsub("Limited influence","Slightly true",dfSSPanswersAAL))
+dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) 
+  gsub("Some influence","Some influence",dfSSPanswersAAL))
+dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) 
+  gsub("Decisive influence","Completely true",dfSSPanswersAAL))
+```
+
+```{r, include=FALSE}
+# Trash: can't get this line to work
+dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsubfn(".", list("No influence"="Not at all true", "Limited influence"="Slightly true", "Some influence"="Some influence", "Decisive influence"="Completely true"), dfSSPanswersAAL))
+```
+
+
+Adds the campus variable:
+```{r}
+dfSSPgradesCPH["Campus"]<-"CPH"
+dfSSPgradesAAL["Campus"]<-"AAL"
+dfSSPanswersCPH["Campus"]<-"CPH"
+dfSSPanswersAAL["Campus"]<-"AAL"
+```
+
+
+Removes the last row for the dataset with grades (called overall).
+```{r}
+dfSSPgradesAAL <- dfSSPgradesAAL[-nrow(dfSSPgradesAAL),]
+dfSSPgradesCPH <- dfSSPgradesCPH[-nrow(dfSSPgradesCPH),]
+```
+
+
+Combines data from AAL and CPH. The two variables should have the same number of observations, otherwise something went wrong in the previous steps.
+```{r}
+names(dfSSPgradesAAL) <- names(dfSSPgradesCPH) # debugging: weird column names 
+dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
+dfSSPanswers <- rbind(dfSSPanswersCPH,dfSSPanswersAAL)
+```
+
+
+Combines Surname with First name
+```{r}
+dfSSPgrades["Name"] <- paste(dfSSPgrades$'First name', dfSSPgrades$Surname)
+dfSSPanswers["Name"] <- paste(dfSSPanswers$'First name', dfSSPanswers$Surname)
+```
+
+
+```{r, include=FALSE}
+# Trash 
+# Removes unnecessary variables, i.e. Surname, First name, Institution, and Department columns:
+dfSSPgrades <- dfSSPgrades[ ,-c(1:4)]
+dfSSPanswers <- dfSSPanswers[ ,-c(1:4)]
+```
+
+Replaces all values with NA for questions about study/working hours:
+```{r}
+dfSSPgrades$Q..93..0.09 <- NA
+dfSSPgrades$Q..95..0.09 <- NA
+dfSSPgrades$Q..96..0.09 <- NA
+```
+
+Removes outliers that did not complete the quiz (in this case it was a teacher who tried the test)
+```{r}
+dfSSPgrades <- dfSSPgrades[!grepl("In progress", dfSSPgrades$State),]
+```
+
+
+Replaces skipped questions with zero:
+```{r}
+dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
+```
+
+
+### Data Analysis 
+
+Creates a data frame with only the grades and computes the average grades for each student:
+```{r}
+
+dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[7:117], function(x) as.numeric(as.character(x))) )
+#dfSSPgradesStat["rowID"] <- seq(1:nrow(dfSSPgradesStat))
+dfSSPgradesStat["Mean"] <- rowMeans(dfSSPgradesStat[1:4], na.rm=TRUE)
+```
+
+#### Overview of SSP Dataset
+
+Plotting a histogram with normal curve (blue) and the distribution (red) of the average grades:
+```{r, include=FALSE}
+# Trash 
+fqGrades <- cut(dfSSPgradesStat$Mean, seq((min(dfSSPgradesStat$Mean)), (max(dfSSPgradesStat$Mean)), by=0.001))
+fqGrades <- data.frame(table(fqGrades))
+hist(dfSSPgradesStat$Mean, seq(0.0, 0.1, by=0.005))
+```
+
+```{r}
+x <- dfSSPgradesStat$Mean
+h<-hist(x, breaks=(nrow(dfSSPgradesStat))/10, col="grey", xlab="Average Grade", 
+  main="Histogram of Average Grades", xlim=c((min(dfSSPgradesStat$Mean)-0.02), 
+  (max(dfSSPgradesStat$Mean)+0.02)), ylim=c(0,50)) 
+xfit<-seq(min(x),max(x),length=40) 
+yfit<-dnorm(xfit,mean=mean(x),sd=sd(x)) 
+yfit <- yfit*diff(h$mids[1:2])*length(x) 
+lines(xfit, yfit, col="darkblue", lwd=2)
+rug(dfSSPgradesStat$Mean,col="blue")
+points(density(dfSSPgradesStat$Mean),type="l",col="red", lwd=2)
+```
+
+Descriptive statistics of average grade (including variables (vars), number of valid cases (n), mean, standard deviation (sd), median, trimmed, median absolute deviation (mad), minimum (min), maximum (max), skew, kurtosis, standard error (se)):
+```{r}
+#summary(dfSSPgradesStat$Mean)
+kable(describe(dfSSPgradesStat$Mean), digits=2)
+```
+
+
+QQ-plot of the average grades:
+```{r}
+qqnorm(dfSSPgradesStat$Mean, main="Normal QQ-plot of Average Grades")
+```
+
+
+
+
+Plotting a histogram with normal curve of the mean grade computed by Moodle (in comparison):
+```{r, eval=FALSE}
+x <- dfSSPgrades$Grade.10.00
+h<-hist(x, breaks=(190/10), col="grey", xlab="Moodle Grade", main="Histogram of Moodle Grades", 
+  ylim=c(0,40), xlim=c((min(dfSSPgrades$Grade.10.00)-0.8), (max(dfSSPgrades$Grade.10.00)+0.8))) 
+xfit<-seq(min(x),max(x),length=40) 
+yfit <-dnorm(xfit,mean=mean(x),sd=sd(x)) 
+yfit <- yfit*diff(h$mids[1:2])*length(x) 
+lines(xfit, yfit, col="darkblue", lwd=2)
+rug(dfSSPgrades$`Grade/10.00`,col="blue")
+#points(density(dfSSPgrades$`Grade/10.00`),type="l",col="red")
+```
+Descriptive statistics of average grade(including variables (vars), number of valid cases (n), mean, standard deviation (sd), median, trimmed, median absolute deviation (mad), minimum (min), maximum (max), skew, kurtosis, standard error (se)):
+```{r, eval=FALSE}
+#summary(dfSSPgrades$`Grade/10.00`)
+kable(describe(dfSSPgrades$Grade.10.00), digits=2)
+```
+
+QQ-plot of the Moodle grades:
+```{r, eval=FALSE}
+qqnorm(dfSSPgrades$Grade.10.00, main="Normal QQ-plot of Moodle Grades")
+```
+
+
+
+#### Individual Student
+
+Creates a new dataset for manipulating data of the individual student:
+```{r}
+dfSSPgradesStat1 <- dfSSPgradesStat
+#dfSSPgradesStat1['Name'] <- dfSSPgrades$Name
+dfSSPgradesStat1 <- dfSSPgradesStat1[, -c(112)]
+```
+
+
+Categorizing each question:
+```{r, eval=FALSE}
+dfSSPgradesStat1 <- rbind(dfSSPgradesStat1, "Category")
+
+dfSSPgradesStat1[1:9] <- apply(dfSSPgradesStat1[1:9],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Demographics",dfSSPgradesStat1))
+dfSSPgradesStat1[10:15] <- apply(dfSSPgradesStat1[10:15],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Attitude.Towards.Education",dfSSPgradesStat1))
+dfSSPgradesStat1[16:23] <- apply(dfSSPgradesStat1[1:9],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Reasons.for.Going.to.University",dfSSPgradesStat1))
+dfSSPgradesStat1[24:33] <- apply(dfSSPgradesStat1[24:33],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Education.Choice.Factors",dfSSPgradesStat1))
+dfSSPgradesStat1[34:45] <- apply(dfSSPgradesStat1[34:45],2, function(dfSSPgradesStat1) 
+  gsub("Category", "High.School.Behaviour",dfSSPgradesStat1))
+dfSSPgradesStat1[46:50] <- apply(dfSSPgradesStat1[46:50],2, function(dfSSPgradesStat1) 
+  gsub("Category", "High.School.Trust",dfSSPgradesStat1))
+dfSSPgradesStat1[51:56] <- apply(dfSSPgradesStat1[51:56],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Belonging.Uncertainty",dfSSPgradesStat1))
+dfSSPgradesStat1[57:61] <- apply(dfSSPgradesStat1[57:61],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Grit",dfSSPgradesStat1))
+dfSSPgradesStat1[62:64] <- apply(dfSSPgradesStat1[62:64],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Growth.Mindset",dfSSPgradesStat1))
+dfSSPgradesStat1[65:74] <- apply(dfSSPgradesStat1[65:74],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Self-control",dfSSPgradesStat1))
+dfSSPgradesStat1[75:87] <- apply(dfSSPgradesStat1[75:87],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Personal.Trait.Comparison",dfSSPgradesStat1))
+dfSSPgradesStat1[88:92] <- apply(dfSSPgradesStat1[88:92],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Perceived.Academic.Abilities",dfSSPgradesStat1))
+dfSSPgradesStat1[93:97] <- apply(dfSSPgradesStat1[93:97],2, function(dfSSPgradesStat1) 
+  gsub("Category", "Studying-Working.Hours",dfSSPgradesStat1))
+dfSSPgradesStat1[98:111] <- apply(dfSSPgradesStat1[98:111],2, function(dfSSPgradesStat1) 
+  gsub("Category", "View.on.Medialogy",dfSSPgradesStat1))
+
+```
+
+
+Computes the percentages of a student's answer for each question:
+```{r}
+dfSSPgradesStat2 <- prop.table(as.matrix(dfSSPgradesStat), margin=2)*100
+```
+
+
+
+
+
+TODO: change this code into something useful:
+```{r}
+# Trash
+# the last two lines are ok, but they compute the percentile rank per row instead of column
+#quantile(dfSSPgradesStat1, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm=TRUE)
+perc.rank <- function(x) trunc(rank(x))/length(x)
+
+# for loop for each question + change the peergrade[i+1]
+
+percGrades <- dfSSPgradesStat[1]
+percGrades <- within(percGrades, xr <- prop.table(perc.rank(dfSSPgradesStat$Q..1..0.09))*100)
+
+
+
+```
+
+
+```{r, include=FALSE, eval = FALSE}
+# Trash
+
+length(dfSSPgradesStat1$'Q..2..0.09'[dfSSPgradesStat1$'Q..2..0.09' 
+  <= 0.02])/ length(dfSSPgradesStat1$'Q..2..0.09') * 100
+
+quantile(dfSSPgradesStat1$'Q..2..0.09')
+```
+
+
+```{r, include=FALSE, eval = FALSE}
+# Trash
+
+# Computes average grades for each category for every student:
+dfSSPgradesStat1["DemographicsMean"] <- rowMeans(dfSSPgradesStat1[1:9], na.rm=TRUE)
+dfSSPgradesStat1["AttitudeMean"] <- rowMeans(dfSSPgradesStat1[10:15], na.rm=TRUE)
+dfSSPgradesStat1["ReasonsMean"] <- rowMeans(dfSSPgradesStat1[16:23], na.rm=TRUE)
+dfSSPgradesStat1["ChoiceMean"] <- rowMeans(dfSSPgradesStat1[24:33], na.rm=TRUE)
+dfSSPgradesStat1["HSBehaveMean"] <- rowMeans(dfSSPgradesStat1[34:45], na.rm=TRUE)
+dfSSPgradesStat1["HSTrustMean"] <- rowMeans(dfSSPgradesStat1[46:50], na.rm=TRUE)
+dfSSPgradesStat1["BelongingMean"] <- rowMeans(dfSSPgradesStat1[51:56], na.rm=TRUE)
+dfSSPgradesStat1["GritMean"] <- rowMeans(dfSSPgradesStat1[57:61], na.rm=TRUE)
+dfSSPgradesStat1["GrowthMean"] <- rowMeans(dfSSPgradesStat1[62:64], na.rm=TRUE)
+dfSSPgradesStat1["ControlMean"] <- rowMeans(dfSSPgradesStat1[65:74], na.rm=TRUE)
+dfSSPgradesStat1["TraitsMean"] <- rowMeans(dfSSPgradesStat1[75:87], na.rm=TRUE)
+dfSSPgradesStat1["AcademicMean"] <- rowMeans(dfSSPgradesStat1[88:92], na.rm=TRUE)
+dfSSPgradesStat1["HoursMean"] <- rowMeans(dfSSPgradesStat1[93:97], na.rm=TRUE)
+dfSSPgradesStat1["MedialogyMean"] <- rowMeans(dfSSPgradesStat1[98:111], na.rm=TRUE)
+
+dfSSPgradesClassMeans <- sqldf("select DemographicsMean, AttitudeMean, ReasonsMean, 
+  ChoiceMean, HSBehaveMean, HSTrustMean, BelongingMean, GritMean, GrowthMean, ControlMean, 
+  TraitsMean, AcademicMean, HoursMean, MedialogyMean from dfSSPgradesStat")
+```
+
+
+```{r, include=FALSE, eval = FALSE}
+# Trash
+
+#Categorizing the questions in new datasets (will we use this??):
+dfSSP_Demographics <- dfSSPgradesStat[1:9]
+dfSSP_Attitude <- dfSSPgradesStat[10:15]
+dfSSP_Reasons <- dfSSPgradesStat[16:23]
+dfSSP_Choice <- dfSSPgradesStat[24:33]
+dfSSP_HSBehave <- dfSSPgradesStat[34:45]
+dfSSP_HSTrust <- dfSSPgradesStat[46:50]
+dfSSP_Belonging <- dfSSPgradesStat[51:56]
+dfSSP_Grit <- dfSSPgradesStat[57:61]
+dfSSP_Growth <- dfSSPgradesStat[62:64]
+dfSSP_Control <- dfSSPgradesStat[65:74]
+dfSSP_Traits <- dfSSPgradesStat[75:87]
+dfSSP_Academic <- dfSSPgradesStat[88:92]
+dfSSP_Hours <- dfSSPgradesStat[93:97]
+dfSSP_Medialogy <- dfSSPgradesStat[98:111]
+```
+
+
+
+
+
+TODO: Individual summary compared to the cohort. 
+
+
+
+Writing data frame with *** into a csv file:
+```{r}
+write.csv(percGrades,file = "SSPgrades.csv")
+```
+
+
+
+
+
+
+
+
+

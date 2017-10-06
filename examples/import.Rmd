@@ -11,7 +11,7 @@ This script loads all the R libraries and imports all data from SVN.
 It also converts the data to the correct formats. 
 This script is sourced to the other scripts in the project, and thus, it always runs.
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 library(plyr)
 library(xlsx)
 library(sqldf)
