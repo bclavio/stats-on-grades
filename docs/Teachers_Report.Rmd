@@ -1,9 +1,9 @@
 ---
 title: "Study Verification Test"
 output:
+  pdf_document: default
   html_notebook: default
   html_document: default
-  pdf_document: default
   word_document: default
 ---
  
@@ -32,7 +32,7 @@ opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP/")
 ## Teacher Report
 
  
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 dfQAGrades<-read.csv("QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
 dfSSPgradesCPH<-read.csv("SSPgradesTestCPH 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
 dfSSPgradesAAL<-read.csv("SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
@@ -104,18 +104,18 @@ dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeri
 # computes avg grade for each category and for each student
 avgGrades <- NULL
 avgGrades['View on Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:111]))
-avgGrades['Studying and Working Hours'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
-avgGrades['Perceived Academic Abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
-avgGrades['Personal Trait Comparison'] <- list(rowMeans(dfSSPgradesStat[75:87]))
+avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
+avgGrades['Academic Abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
+avgGrades['Personal Trait'] <- list(rowMeans(dfSSPgradesStat[75:87]))
 avgGrades['Self-control'] <- list(rowMeans(dfSSPgradesStat[65:74]))
 avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
 avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
 avgGrades['Belonging Uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
 avgGrades['High School Trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
 avgGrades['High School Behaviour'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-avgGrades['Education Choice Factors'] <- list(rowMeans(dfSSPgradesStat[24:33]))
-avgGrades['Reasons for Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
-avgGrades['Attitude Towards Education'] <- list(rowMeans(dfSSPgradesStat[10:15]))
+avgGrades['Education Choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
+avgGrades['Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
+avgGrades['Education Attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
 avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
 
@@ -139,12 +139,12 @@ scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 
 This analysis gives an overview of the SSP. 
 
-```{r, echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 # Kernel density estimate is a smoothed version of the histogram
 ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + 
   geom_density() +
-  labs(title = "Kernel density estimate", x = "Total score for each student") + 
-  scale_x_continuous(breaks=seq(6,11,1), limits = c(6,11)) 
+  labs(title = "Kernel density estimate", x = "Summed test scores") + 
+  scale_x_continuous(breaks=seq(5,11,1), limits = c(5,11)) 
 
 dfSSPgradesSum <- data.frame(rowID = scaled.avgGrades$rowID, campus = scaled.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
 
@@ -156,7 +156,7 @@ highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highR
 ```
 
 
-```{r, echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 scaled.avgGradesMelt <- melt(scaled.avgGrades, id.vars = c("rowID", "Campus"))
 scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0) 
 
@@ -165,23 +165,24 @@ ggplot(scaled.avgGradesMelt,aes(x = value)) +
   facet_wrap(~variable,scales = "free_x") + 
   geom_density() + 
   scale_x_continuous(breaks=seq(-4,4,1), limits = c(-4,4)) +
-  labs(title = "Kernel density estimates", x = "Scaled average scores")
+  labs(title = "Kernel density estimates", x = "Scaled average of test scores")
 ```
 
 
-```{r, echo=FALSE}
-# scaled data with facet of AAL and CPH common for all students
-# ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
+```{r echo=FALSE, warning=FALSE}
+#scaled data with facet of AAL and CPH common for all students
+# ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) +
 #   geom_boxplot(aes(fill=Campus)) +
 #   scale_y_continuous(breaks=seq(-4,4,1)) +
+#   labs(title = "Scaled averages of student scores", y = "Standard deviations from the mean") +
 #   coord_flip() +
-#   theme_bw() + 
+#   theme_bw() +
 #   facet_grid(Campus ~ .) +
 #   theme(axis.title.y=element_blank(),
 #         #axis.text.y=element_blank(),
 #         axis.ticks.y=element_blank(),
 #         axis.title.x=element_blank(),
-#         #panel.border = element_blank(), 
+#         #panel.border = element_blank(),
 #         panel.grid.major = element_blank(),
 #         panel.grid.minor = element_blank(),
 #         legend.position="none"
@@ -191,27 +192,20 @@ ggplot(scaled.avgGradesMelt,aes(x = value)) +
 ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
   geom_boxplot(aes(fill=Campus)) +
   scale_y_continuous(breaks=seq(-4,4,1)) +
-  labs(title = "Scaled averages of student scores", y = "Standard deviations from the mean") +
-  geom_hline(yintercept = 0, color = "grey", size = 1) +
+  labs(title = "Scaled averages of test scores", y = "Standard deviations from the mean") +
+  geom_hline(yintercept = 0, color = "grey") +
   coord_flip() +
-  labs(title = "Scaled averages of student scores",y = "Standard deviations from the mean") +
   theme_bw() + 
-  #facet_grid(Campus ~ .) +
-  theme(axis.title.y=element_blank(),
-        #axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.title.x=element_blank(),
-        #panel.border = element_blank(), 
+  theme(axis.title.y=element_blank(), 
         panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        #legend.position="none"
+        panel.grid.minor = element_blank()
   )
 
 ```
 
 
-```{r, echo=FALSE}
-kable(studyHoursTable, "html", caption = "Distribution of study hours in a week") %>% kable_styling(bootstrap_options = "striped", full_width = F)
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+kable(studyHoursTable, caption = "Distribution of study hours a week") %>% kable_styling(bootstrap_options = "striped", full_width = F)
 ```
 
 

@@ -1,9 +1,9 @@
 ---
 title: "Study Verification Test"
 output:
+  pdf_document: default
   html_notebook: default
   html_document: default
-  pdf_document: default
   word_document: default
 ---
  
@@ -24,13 +24,14 @@ library(psych)
 library(ggplot2)
 
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
-library("knitr")
+library(knitr)
+library(kableExtra)
 opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
 ```
 
+
  
- 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
 score_info <- read.csv("studentData1.csv", stringsAsFactors = FALSE)
 highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
@@ -52,12 +53,12 @@ Student: `r firstname` `r surname`
 
 This is an interpretive report of your responses to the Study Verification Test. Its purpose is to help you identify your student profile within specific topics. 
 
-The percentile ranks show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the percentage of students whose scores are equal to or less than yours. The percentile is also indicated with a dot in the boxplots where the x-axis show the number of standard deviations away from the mean (m = 0).
+The percentile ranks show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the percentage of students whose scores are equal to or less than yours. The percentile is also indicated with a dot in the boxplots where the x-axis show the number of standard deviations away from the mean (indicated with a grey line at 0).
 
 As the report is based on questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or counselor will help you understand your scores and find the services you desire.
 
 
-```{r, echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 score_info$variable <- as.character(score_info$variable)
 score_info$variable <- factor(score_info$variable, levels=unique(score_info$variable))
 
@@ -80,8 +81,9 @@ score_info$variable <- factor(score_info$variable, levels=unique(score_info$vari
 student <- subset(score_info, score_info$rowID %in% personalized_info$rowID[i])
 ggplot(score_info, aes(x=variable, y=value)) +
   scale_y_continuous(breaks=seq(-4,4,1)) +
+  labs(title = "Scaled averages of test scores", y = "Standard deviations from the mean") +
   geom_boxplot() +
-  geom_hline(yintercept = 0, color = "grey", size = 1) +
+  geom_hline(yintercept = 0, color = "grey") +
   coord_flip() +
   geom_dotplot(data = student,
                aes(x=variable, y=value, fill = "red"),
@@ -91,17 +93,29 @@ ggplot(score_info, aes(x=variable, y=value)) +
   theme_bw() +
   theme(axis.title.y=element_blank(),
         axis.ticks.y=element_blank(),
-        axis.title.x=element_blank(),
+        #axis.title.x=element_blank(),
         panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
         legend.position="none")
-
-
-
 
 ```
 
 
 
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+studentTable <- melt(subset(personalized_info[,-c(1:5)], personalized_info$rowID %in% personalized_info$rowID[i]))
+
+studentTable1 <- data.frame(c(studentTable[-c(15:28),-c(1)]), apply(studentTable[-c(1:14),], 2, rev))
+studentTable1 <- studentTable1[, c(2,3,1)]
+names(studentTable1)[2]<-"Scaled avg. score"
+names(studentTable1)[3]<-"Percentile rank"
+row.names(studentTable1) <- NULL
+
+studentTable1[3]<- c(0)
+
+kable(studentTable1) %>% kable_styling(bootstrap_options = "striped", full_width = F)
+
+```
 
 
 
