@@ -29,15 +29,16 @@ dfSSPgradesAAL<-read.csv("SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE,
 
 ####################################
 ###### the answers are not in use
-dfSSPanswersCPH<-read.csv("SSPanswersTestCPH 28-09.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersAAL<-read.csv("SSPanswersTestAAL 28-09.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("No influence","Not at all true",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Limited influence","Slightly true",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Some influence","Some influence",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Decisive influence","Completely true",dfSSPanswersAAL))
+dfSSPanswersCPH<-read.csv("SSPanswersTestCPH 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPanswersAAL<-read.csv("SSPanswersTestAAL 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+#dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("No influence","Not at all true",dfSSPanswersAAL))
+#dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Limited influence","Slightly true",dfSSPanswersAAL))
+#dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Some influence","Some influence",dfSSPanswersAAL))
+#dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Decisive influence","Completely true",dfSSPanswersAAL))
 dfSSPanswersCPH["Campus"]<-"CPH"
 dfSSPanswersAAL["Campus"]<-"AAL"
 dfSSPanswers <- rbind(dfSSPanswersCPH,dfSSPanswersAAL) 
+#dfSSPanswers[c('Response 93','Response 95','Response 96')] <- data.frame(lapply(dfSSPanswers[c('Response 93','Response 95','Response 96')], function(x) { gsub("-", 0, x) }))
 ###################################
 
 dfSSPgradesCPH["Campus"]<-"CPH"
@@ -47,25 +48,65 @@ dfSSPgradesCPH <- dfSSPgradesCPH[-nrow(dfSSPgradesCPH),]
 
 dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
 dfSSPgrades <- dfSSPgrades[!grepl("In progress", dfSSPgrades$State),]
+dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
+
+# computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
+# Problem Q93, Q95 and Q96 contained strings, so I had to change them manually:
+# Q93 (study hours): 0 > x < 29 (0%) ; 30 > x < 34 (30%) ; 35 > x < 40 (60%) ; 41 > x (100%)
+dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(0,30)) == 1L] <- 0
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.3
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.6
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.9
+
+# Q95 (related work): 0 = x (0%) ; 1 > x < 4 (30%) ; 5 > x < 9 (60%) ; 10 > x (100%)
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.3
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.6
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0.9
+
+# Q95 (unrelated work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.9
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.6
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.3
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) == 1L] <- 0
+
+# counts study hours for the campi
+studyHoursTable <- data.frame(
+    c(
+    "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "AAL", ]),
+    "30-34" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.3 & dfSSPgrades$Campus == "AAL", ]),
+    "35-40" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.6 & dfSSPgrades$Campus == "AAL", ]),
+    "41+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "AAL", ]),
+    "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "AAL", ])),
+    c(
+    "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "CPH", ]),
+    "30-34" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.3 & dfSSPgrades$Campus == "CPH", ]),
+    "35-40" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.6 & dfSSPgrades$Campus == "CPH", ]),
+    "41+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "CPH", ]),
+    "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "CPH", ])))
+names(studyHoursTable)[1]<-"AAL"
+names(studyHoursTable)[2]<-"CPH"
+
+
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
 
 # computes avg grade for each category and for each student
 avgGrades <- NULL
-avgGrades['avgDemographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
-avgGrades['avgAttitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
-avgGrades['avgReasons'] <- list(rowMeans(dfSSPgradesStat[16:23]))
-avgGrades['avgChoice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
-avgGrades['avgHSBehave'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-avgGrades['avgHSTrust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
-avgGrades['avgBelonging'] <- list(rowMeans(dfSSPgradesStat[51:56]))
-avgGrades['avgGrit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
-avgGrades['avgGrowth'] <- list(rowMeans(dfSSPgradesStat[62:64]))
-avgGrades['avgControl'] <- list(rowMeans(dfSSPgradesStat[65:74]))
-avgGrades['avgTraits'] <- list(rowMeans(dfSSPgradesStat[75:87]))
-avgGrades['avgAcademic'] <- list(rowMeans(dfSSPgradesStat[88:92]))
-avgGrades['avgHours'] <- list(rowMeans(dfSSPgradesStat[c(94,97)])) # I have removed 3 questions
-avgGrades['avgMedialogy'] <- list(rowMeans(dfSSPgradesStat[98:111]))
+avgGrades['View on Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:111]))
+avgGrades['Studying and Working Hours'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
+avgGrades['Perceived Academic Abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
+avgGrades['Personal Trait Comparison'] <- list(rowMeans(dfSSPgradesStat[75:87]))
+avgGrades['Self-control'] <- list(rowMeans(dfSSPgradesStat[65:74]))
+avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
+avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
+avgGrades['Belonging Uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
+avgGrades['High School Trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
+avgGrades['High School Behaviour'] <- list(rowMeans(dfSSPgradesStat[34:45]))
+avgGrades['Education Choice Factors'] <- list(rowMeans(dfSSPgradesStat[24:33]))
+avgGrades['Reasons for Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
+avgGrades['Attitude Towards Education'] <- list(rowMeans(dfSSPgradesStat[10:15]))
+avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
 
 # normalizes avg grades
@@ -78,20 +119,65 @@ scaled.avgGrades[1:14] <- scale(avgGrades[1:14])
 colMeans(scaled.avgGrades)
 apply(scaled.avgGrades, 2, sd)
 
-# TODO: find the lowest 10% students for each category: https://statistics.laerd.com/statistical-guides/standard-score-3.php
-
-
-
-
-
-
-
 scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
 scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
+
+ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
+  scale_x_discrete(breaks=seq(7,11,1), name ="Total score")
+
+
+dfSSPgradesSum <- data.frame(rowID = scaled.avgGrades$rowID, campus = scaled.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
+
+ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_histogram()
+
+highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
+highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
+scaled.avgGradesMelt <- melt(scaled.avgGrades, id.vars = c("rowID", "Campus"))
+scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
+
+# The histogram for each category shows that the scaled averages are not normal distributed:
+ggplot(scaled.avgGradesMelt,aes(x = value)) + 
+  facet_wrap(~variable,scales = "free_x") + 
+  geom_histogram(binwidth = 0.1)
+
+
+
+# sumGrades <- NULL
+# sumGrades['avgDemographics'] <- list(rowSums(dfSSPgradesStat[1:9]))
+# sumGrades['avgAttitude'] <- list(rowSums(dfSSPgradesStat[10:15]))
+# sumGrades['avgReasons'] <- list(rowSums(dfSSPgradesStat[16:23]))
+# sumGrades['avgChoice'] <- list(rowSums(dfSSPgradesStat[24:33]))
+# sumGrades['avgHSBehave'] <- list(rowSums(dfSSPgradesStat[34:45]))
+# sumGrades['avgHSTrust'] <- list(rowSums(dfSSPgradesStat[46:50]))
+# sumGrades['avgBelonging'] <- list(rowSums(dfSSPgradesStat[51:56]))
+# sumGrades['avgGrit'] <- list(rowSums(dfSSPgradesStat[57:61]))
+# sumGrades['avgGrowth'] <- list(rowSums(dfSSPgradesStat[62:64]))
+# sumGrades['avgControl'] <- list(rowSums(dfSSPgradesStat[65:74]))
+# sumGrades['avgTraits'] <- list(rowSums(dfSSPgradesStat[75:87]))
+# sumGrades['avgAcademic'] <- list(rowSums(dfSSPgradesStat[88:92]))
+# sumGrades['avgHours'] <- list(rowSums(dfSSPgradesStat[c(94,97)])) # I have removed 3 questions
+# sumGrades['avgMedialogy'] <- list(rowSums(dfSSPgradesStat[98:111]))
+# sumGrades <- data.frame( lapply(sumGrades, function(x) as.numeric(as.character(x))) )
+# 
+# scaled.sumGrades <- sumGrades
+# scaled.sumGrades[1:14] <- scale(sumGrades[1:14])
+# scaled.sumGrades["Campus"] <- dfSSPgrades$Campus
+# scaled.sumGrades["rowID"] <- seq(1:nrow(scaled.sumGrades))
+# scaled.sumGradesMelt <- melt(scaled.sumGrades, id.vars = c("rowID", "Campus"))
+# scaled.sumGradesMelt['highRisk'] <- ifelse(scaled.sumGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
+# 
+# # The histogram for each category shows that the scaled averages are not normal distributed (the same as the above):
+# ggplot(scaled.sumGradesMelt,aes(x = value)) + 
+#   facet_wrap(~variable,scales = "free_x") + 
+#   geom_histogram(binwidth = 0.1)
+
+
+
 
 # scaled data with facet of AAL and CPH common for all students
 ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
   geom_boxplot(aes(fill=Campus)) +
+  scale_y_continuous(breaks=seq(-4,4,1)) +
   coord_flip() +
   theme_bw() + 
   facet_grid(Campus ~ .) +
@@ -105,216 +191,148 @@ ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=va
         legend.position="none"
         )
 
-ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()
-dfSSPgradesStat
-
-
-
-
-
-# TODO: reshape the dataset 
-i <- 1
-scaled.avgGrades1 <- scaled.avgGrades
-
-
-
-# scaled data common for all students
-ggplot(melt(scaled.avgGrades, id.var="rowID"), aes(x=variable, y=value)) + 
-  geom_boxplot(data= melt(scaled.avgGrades[1:14])) +
+# Campi side-by-side
+ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
+  geom_boxplot(aes(fill=Campus)) +
+  scale_y_continuous(breaks=seq(-4,4,1)) +
+  labs(title = "Scaled averages of student scores",y = "Standard deviations from the mean") +
   coord_flip() +
   theme_bw() + 
   #facet_grid(Campus ~ .) +
   theme(axis.title.y=element_blank(),
         #axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
-        axis.title.x=element_blank(),
+        #axis.title.x=element_blank(),
         #panel.border = element_blank(), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        legend.position="none") +
-geom_point(scaled.avgGrades, aes(x=rowID[1], y=scaled.avgGrades), 
-           color=ifelse(scaled.avgGrades$rowID==1, "blue","white"),
-           cex=ifelse(scaled.avgGrades$rowID==1, 5, 0),
-           alpha=ifelse(scaled.avgGrades$rowID==1, 1, 0)) 
-
-#geom_point(avgGrades, aes(x=rowID[i], y=avgGrades), 
-#           color=ifelse(avgGrades$rowID==i, "blue","white"),
-#           cex=ifelse(avgGrades$rowID==i, 5, 0),
-#           alpha=ifelse(avgGrades$rowID==i, 1, 0)) 
-
-
-
-
-
-
-scaled.avgGrades[2]< -2 |ggplot(avgGrades, aes(x=variable, y=value)) + 
-  geom_boxplot(data= melt(avgGrades[1:14])) +
-  coord_flip() +
-  theme_bw() + 
-  #facet_grid(Campus ~ .) +
-  theme(axis.title.y=element_blank(),
-        #axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.title.x=element_blank(),
-        #panel.border = element_blank(), 
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        legend.position="none"
+        #legend.position="none"
   )
 
 
-# Data points for each individual student
-p2 +  geom_point(aes(x=rowID[i], y=avgGrades[2]), 
-                 color=ifelse(avgGrades$rowID==i, "blue","white"),
-                 cex=ifelse(avgGrades$rowID==i, 5, 0),
-                 alpha=ifelse(avgGrades$rowID==i, 1, 0)) 
-
-
-i <- 3 # rowID
-j <- 1 # category
-
-# plots the boxplot of a category
-p <- ggplot(data = avgGrades,aes(x=rowID[i], y=avgGrades[j])) +
+# all high risk students with color diff - dots on top of each other
+ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) + 
   geom_boxplot() + 
   coord_flip() +
-  ggtitle(paste0("Category ",j)) +
-  geom_boxplot(outlier.colour="black", outlier.shape=8, outlier.size=2) + 
+  #facet_grid(Campus ~ .) +
+  geom_dotplot(data = subset(scaled.avgGradesMelt, scaled.avgGradesMelt$highRisk ==1), 
+               aes(fill = factor(rowID)), 
+               binaxis='y',
+               stackdir='center',
+               #position = "jitter",
+               #alpha = 0.5,
+               binwidth = 0.1) +
+  #facet_grid(Campus ~ .) +
   theme(axis.title.y=element_blank(),
-  axis.text.y=element_blank(),
-  axis.ticks.y=element_blank(),
-  axis.title.x=element_blank())
-p
-# plots the data point of the student
-p +  geom_point(color=ifelse(avgGrades$rowID==i, "blue","red"),
-                cex=ifelse(avgGrades$rowID==i, 7, 0),
-                alpha=ifelse(avgGrades$rowID==i, 1, 0)) 
- 
-
-avgGrades.melted <- melt(avgGrades, id='rowID')
-
-#then plot
-p2 <- ggplot(avgGrades.melted, aes(x=factor(avgGrades),y=rowID))+
-  geom_boxplot() + labs(title="CMP") +facet_wrap(~variable)
-p2
-
-
-
-
-# plots the boxplot of a category
-p <- ggplot(avgGrades,aes(x=rowID[i], y=avgGrades)) +
-  geom_boxplot() + 
-  coord_flip() +
-  ggtitle(paste0("Category ",j)) +
-  geom_boxplot(outlier.colour="black", outlier.shape=8, outlier.size=2) + 
-  theme(axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
+        #axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
-        axis.title.x=element_blank())
-p
-# plots the data point of the student
-p +  geom_point(color=ifelse(avgGrades$rowID==i, "blue","red"),
-                cex=ifelse(avgGrades$rowID==i, 7, 0),
-                alpha=ifelse(avgGrades$rowID==i, 1, 0)) 
+        axis.title.x=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank() )
 
-
-
-
-
-# mm = melt(df, id=c('id','factor.col'))
-# ggplot(mm)+geom_boxplot(aes(x=paste(variable,factor.col,sep="_"), y=value))
-
-
-avgGrades.melted <- melt(avgGrades, id='rowID')
-ggplot(avgGrades.melted)+geom_boxplot(aes(x=paste(variable,sep="_"), y=avgGrades))
-
-p <- ggplot(data=avgGrades,aes(x=rowID[i], y=avgGrades[c(1)])) +
+# all high risk students
+ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) + 
   geom_boxplot() + 
+  scale_y_continuous(breaks=seq(-4,4,1)) +
   coord_flip() +
-  ggtitle(paste0("Category ",j)) +
-  geom_boxplot(outlier.colour="black", outlier.shape=8, outlier.size=2) + 
+  #facet_grid(Campus ~ .) +
+  geom_dotplot(data = subset(scaled.avgGradesMelt, scaled.avgGradesMelt$highRisk ==1), 
+               aes(fill = factor(rowID==1)), 
+               binaxis='y',
+               stackdir='center',
+               #position = position_dodge(width = 1),
+               binwidth = 0.1) +
+  #facet_grid(Campus ~ .) +
   theme(axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
+        #axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
-        axis.title.x=element_blank())
-p
+        axis.title.x=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position="none")
 
-p +  geom_point(color=ifelse(avgGrades$rowID==i, "blue","red"),
-                cex=ifelse(avgGrades$rowID==i, 7, 0),
-                alpha=ifelse(avgGrades$rowID==i, 1, 0)) 
+# individual high risk student (used in the markdown file)
+# ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) +
+#   geom_boxplot() +
+#   coord_flip() +
+#   geom_dotplot(data = subset(scaled.avgGradesMelt, scaled.avgGradesMelt$highRisk ==1),
+#                aes(fill = rowID %in% highRiskStudents$rowID[i],
+#                  #fill = ifelse(rowID == highRiskStudents$rowID[i],"blue", "white"),
+#                    #color = ifelse(rowID == highRiskStudents$rowID[i], "blue", "white"),
+#                    alpha = ifelse(rowID %in% highRiskStudents$rowID[i], 1, 0)),
+#                binaxis='y',
+#                stackdir='center',
+#                binwidth = 0.11) +
+#   theme_bw() +
+#   #facet_grid(Campus ~ .) +
+#   theme(axis.title.y=element_blank(),
+#         #axis.text.y=element_blank(),
+#         axis.ticks.y=element_blank(),
+#         axis.title.x=element_blank(),
+#         #panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank(),
+#         legend.position="none")
 
-
-
-
-
-# perhaps we want to show the specific analysis of the lowest score of each student?
-
-
-
-# TODO percentile for each category and for each student??
-perc.rank <- function(x) trunc(rank(x))/length(x)
-# my.df <- data.frame(x=rnorm(200))
-# my.df <- within(my.df, xr <- perc.rank(x))
-
-i <- 1
-j <- 1
-percGrades <- 0
-percGrades <- dfSSPgradesStat[1:9]
-percGrades <- within(percGrades, xr1 <- prop.table(perc.rank(dfSSPgradesStat))*100) #prop.table?
-j <- i+1
-
-percGrades <- within(percGrades, xr1 <- prop.table(perc.rank(dfSSPgradesStat[1]))*100)
-
-
-percGrades['Q1'] <- dfSSPgradesStat[1]
-percGrades['Q2'] <- within(percGrades$Q1, xr <- prop.table(perc.rank(dfSSPgradesStat[1]))*100)
-
-
-perc.rank(dfSSPgradesStat[1])
-
-percGrades <- NULL
-for (i in 1:nrow(dfSSPgradesStat)){
-    percGrades[i] <- within(percGrades, xr <- prop.table(perc.rank(dfSSPgradesStat[i]))*100)
-}
-
-
-####################################
-
-percGrades <- 0
-for (i in 1:nrow(dfSSPgradesStat)){
-    percGrades[,i] <- dfSSPgradesStat[,i]
-    percGrades <- within(percGrades, xr <- prop.table(perc.rank(dfSSPgradesStat[,i]))*100)
-}
+i <- 1 # from 1-20
+student <- subset(scaled.avgGradesMelt, scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
+ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) +
+  geom_boxplot() + 
+  scale_y_continuous(breaks=seq(-4,4,1)) +
+  coord_flip() +
+  geom_dotplot(data = student,
+               aes(x=variable, y=value, fill = "green"),
+               binaxis='y',
+               stackdir='center',
+               binwidth = 0.2) +
+  theme_bw() +
+  #facet_grid(Campus ~ .) +
+  theme(axis.title.y=element_blank(),
+        #axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.x=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position="none")
 
 
+#######################################################################
 
-# find out how many students are under -2 SD for each question
-highRisk <- subset(scaled.avgGrades, scaled.avgGrades[1]< -2 |
-                     scaled.avgGrades[2]< -2 |
-                     scaled.avgGrades[3]< -2 |
-                     scaled.avgGrades[4]< -2 |
-                     scaled.avgGrades[5]< -2 |
-                     scaled.avgGrades[6]< -2 |
-                     scaled.avgGrades[7]< -2 |
-                     scaled.avgGrades[8]< -2 |
-                     scaled.avgGrades[9]< -2 |
-                     scaled.avgGrades[10]< -2 |
-                     scaled.avgGrades[11]< -2 |
-                     scaled.avgGrades[12]< -2 |
-                     scaled.avgGrades[13]< -2 |
-                     scaled.avgGrades[14]< -2 )
+studentData <- NULL
+studentData1 <- NULL
 
-
-
-
-
-studentData <- sqldf('Select rowId,Campus from dfSSPgrades')
+studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
 studentData['FirstName'] <- dfSSPgrades[,2]
 studentData['SurName'] <- dfSSPgrades[,1]
-studentData <- merge(studentData, scaled.avgGrades, by= "rowID")
+
+# computes the percentile for each category and for each student
+perc.rank <- function(x) trunc(rank(x))/length(x)
+studentData["perc_Demographics"] <- list(prop.table(perc.rank(scaled.avgGrades[1]))*100)
+studentData["perc_Attitude"] <- list(prop.table(perc.rank(scaled.avgGrades[2]))*100)
+studentData["perc_Reasons"] <- list(prop.table(perc.rank(scaled.avgGrades[3]))*100)
+studentData["perc_Choice"] <- list(prop.table(perc.rank(scaled.avgGrades[4]))*100)
+studentData["perc_HSBehave"] <- list(prop.table(perc.rank(scaled.avgGrades[5]))*100)
+studentData["perc_HSTrust"] <- list(prop.table(perc.rank(scaled.avgGrades[6]))*100)
+studentData["perc_Belonging"] <- list(prop.table(perc.rank(scaled.avgGrades[7]))*100)
+studentData["perc_Grit"] <- list(prop.table(perc.rank(scaled.avgGrades[8]))*100)
+studentData["perc_Growth"] <- list(prop.table(perc.rank(scaled.avgGrades[9]))*100)
+studentData["perc_Control"] <- list(prop.table(perc.rank(scaled.avgGrades[10]))*100)
+studentData["perc_Traits"] <- list(prop.table(perc.rank(scaled.avgGrades[11]))*100)
+studentData["perc_Academic"] <- list(prop.table(perc.rank(scaled.avgGrades[12]))*100)
+studentData["perc_Hours"] <- list(prop.table(perc.rank(scaled.avgGrades[13]))*100)
+studentData["perc_Medialogy"] <- list(prop.table(perc.rank(scaled.avgGrades[14]))*100)
+
+studentData1 <- merge(studentData, scaled.avgGradesMelt, by= "rowID")
+studentData1 <- studentData1[order(studentData1$variable), ]
+studentData <- merge(studentData, scaled.avgGrades, by= c("rowID","Campus"))
+studentData <- subset(studentData, studentData$rowID %in% highRiskStudents$rowID)
 
 setwd('C:/Users/BiancaClavio/Documents/stats-on-grades/docs')
 write.csv(studentData,file = "studentData.csv")
+write.csv(studentData1,file = "studentData1.csv")
+write.csv(highRiskStudents,file = "highRiskStudents.csv")
 personalized_info <- read.csv(file = "studentData.csv")
+score_info <- read.csv(file = "studentData1.csv")
+highRiskStudents <- read.csv(file = "highRiskStudents.csv")
 
 ## Loop
 for (i in 1:nrow(personalized_info)){
