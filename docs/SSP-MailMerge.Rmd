@@ -1,9 +1,9 @@
 ---
 title: "Study Verification Test"
 output:
-  pdf_document: default
   html_notebook: default
   html_document: default
+  pdf_document: default
   word_document: default
 ---
  
@@ -22,6 +22,7 @@ library(CTT)
 library(Hmisc)
 library(psych)
 library(ggplot2)
+library(pander)
 
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
@@ -56,6 +57,8 @@ This is an interpretive report of your responses to the Study Verification Test.
 The percentile ranks show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the percentage of students whose scores are equal to or less than yours. The percentile is also indicated with a dot in the boxplots where the x-axis show the number of standard deviations away from the mean (indicated with a grey line at 0).
 
 As the report is based on questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or counselor will help you understand your scores and find the services you desire.
+
+
 
 
 ```{r echo=FALSE, warning=FALSE}
@@ -105,17 +108,21 @@ ggplot(score_info, aes(x=variable, y=value)) +
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 studentTable <- melt(subset(personalized_info[,-c(1:5)], personalized_info$rowID %in% personalized_info$rowID[i]))
 
-studentTable1 <- data.frame(c(studentTable[-c(15:28),-c(1)]), apply(studentTable[-c(1:14),], 2, rev))
+studentTable1 <- data.frame(c(studentTable[-c(15:28),-c(1)]), apply(studentTable[-c(1:14), ], 2, rev))
 studentTable1 <- studentTable1[, c(2,3,1)]
 names(studentTable1)[2]<-"Scaled avg. score"
 names(studentTable1)[3]<-"Percentile rank"
 row.names(studentTable1) <- NULL
-
 studentTable1[3]<- c(0)
+studentTable1$`Scaled avg. score` <- as.numeric(levels(studentTable1$`Scaled avg. score`))[studentTable1$`Scaled avg. score`]
+studentTable1 <- studentTable1[,-c(1)]
 
-kable(studentTable1) %>% kable_styling(bootstrap_options = "striped", full_width = F)
+
+
+kable(studentTable1, digits = 4) %>% kable_styling(bootstrap_options = "striped", full_width = F)
 
 ```
+
 
 
 

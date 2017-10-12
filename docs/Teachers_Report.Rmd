@@ -136,10 +136,7 @@ scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 
 
 
-
-This analysis gives an overview of the SSP. 
-
-```{r echo=FALSE, warning=FALSE}
+```{r echo=FALSE, warning=FALSE, out.width='.49\\linewidth', fig.width=4, fig.height=6,fig.show='hold',fig.align='center'}
 # Kernel density estimate is a smoothed version of the histogram
 ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + 
   geom_density() +
@@ -153,10 +150,6 @@ dfSSPgradesSum <- data.frame(rowID = scaled.avgGrades$rowID, campus = scaled.avg
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
 highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
 
-```
-
-
-```{r echo=FALSE, warning=FALSE}
 scaled.avgGradesMelt <- melt(scaled.avgGrades, id.vars = c("rowID", "Campus"))
 scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0) 
 
@@ -164,9 +157,12 @@ scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highR
 ggplot(scaled.avgGradesMelt,aes(x = value)) + 
   facet_wrap(~variable,scales = "free_x") + 
   geom_density() + 
-  scale_x_continuous(breaks=seq(-4,4,1), limits = c(-4,4)) +
+  scale_x_continuous(breaks=seq(-4,4,2), limits = c(-4,4)) +
   labs(title = "Kernel density estimates", x = "Scaled average of test scores")
+
+
 ```
+
 
 
 ```{r echo=FALSE, warning=FALSE}
@@ -237,9 +233,6 @@ kable(studyHoursTable, caption = "Distribution of study hours a week") %>% kable
 
 
 ```
-
-
-
 
 
 
