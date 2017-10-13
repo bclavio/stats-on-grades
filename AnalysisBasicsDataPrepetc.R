@@ -269,7 +269,7 @@ ggplot(dropOutByMathGrade,aes(mathGradeBinned,dropOutPct*100,colour=mathLevel))+
 ### Comment: Do we want the figure in dropbox or in git?
 #myWD2<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades/output'} else {"~/git/AAU/DropOutProject/analysis/output"}
 #setwd(myWD2)
-myWD3 <- ifelse(grep("BiancaClavio", getwd()), 'C:/Users/BiancaClavio/Dropbox/Apps/ShareLatex/MedialogyBSc re-design/figures', '~/Dropbox/Apps/ShareLatex/MedialogyBSc re-design/figures')
+myWD3 <- ifelse(grepl("BiancaClavio", getwd()), 'C:/Users/BiancaClavio/Dropbox/Apps/ShareLatex/MedialogyBSc re-design/figures', '~/Dropbox/Apps/ShareLatex/MedialogyBSc re-design/figures')
 setwd(myWD3)
 
 
