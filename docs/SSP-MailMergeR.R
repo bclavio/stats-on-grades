@@ -115,9 +115,10 @@ normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
 }
 norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
+norm.avgGrades["Campus"] <- dfSSPgrades$Campus
+norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
 
-
-
+####################################
 # Students with averages above 1 are most likely to continue Medialogy while
 # students with averages below -1 are most likely to dropout.
 scaled.avgGrades <- avgGrades
@@ -130,24 +131,34 @@ apply(scaled.avgGrades, 2, sd)
 scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
 scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 
+####################################
+
 ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
   scale_x_discrete(breaks=seq(7,11,1), name ="Total score")
 
 
-dfSSPgradesSum <- data.frame(rowID = scaled.avgGrades$rowID, campus = scaled.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
+#dfSSPgradesSum <- data.frame(rowID = scaled.avgGrades$rowID, campus = scaled.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
+dfSSPgradesSum <- data.frame(rowID = norm.avgGrades$rowID, campus = norm.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
 
 ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_histogram()
 
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
 highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
-scaled.avgGradesMelt <- melt(scaled.avgGrades, id.vars = c("rowID", "Campus"))
-scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
+
+#scaled.avgGradesMelt <- melt(scaled.avgGrades, id.vars = c("rowID", "Campus"))
+#scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
+norm.avgGradesMelt <- melt(norm.avgGrades, id.vars = c("rowID", "Campus"))
+norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
+
 
 # The histogram for each category shows that the scaled averages are not normal distributed:
-ggplot(scaled.avgGradesMelt,aes(x = value)) + 
+# ggplot(scaled.avgGradesMelt,aes(x = value)) + 
+#   facet_wrap(~variable,scales = "free_x") + 
+#   geom_histogram(binwidth = 0.1)
+
+ggplot(norm.avgGradesMelt,aes(x = value)) + 
   facet_wrap(~variable,scales = "free_x") + 
   geom_histogram(binwidth = 0.1)
-
 
 
 # sumGrades <- NULL
@@ -282,16 +293,15 @@ ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) +
 #         legend.position="none")
 
 i <- 1 # from 1-20
-student <- subset(scaled.avgGradesMelt, scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
-ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) +
+student <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
+ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
   geom_boxplot() + 
-  scale_y_continuous(breaks=seq(-4,4,1)) +
   coord_flip() +
   geom_dotplot(data = student,
                aes(x=variable, y=value, fill = "green"),
                binaxis='y',
                stackdir='center',
-               binwidth = 0.2) +
+               binwidth = 0.02) +
   theme_bw() +
   #facet_grid(Campus ~ .) +
   theme(axis.title.y=element_blank(),
@@ -305,34 +315,30 @@ ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) +
 
 #######################################################################
 
-studentData <- NULL
-studentData1 <- NULL
-
-
 
 studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
 studentData['FirstName'] <- dfSSPgrades[,2]
 studentData['SurName'] <- dfSSPgrades[,1]
 
 # computes the percentile for each category and for each student
-avgPer <- scaled.avgGrades
-avgPer <- scaled.avgGrades %>%
-  mutate(perc_Demographics=rank(scaled.avgGrades[1])/length(scaled.avgGrades)) %>%
-  mutate(perc_Attitude=rank(scaled.avgGrades[2])/length(scaled.avgGrades)) %>%
-  mutate(perc_Reasons=rank(scaled.avgGrades[3])/length(scaled.avgGrades)) %>%
-  mutate(perc_Choice=rank(scaled.avgGrades[4])/length(scaled.avgGrades)) %>%
-  mutate(perc_HSBehave=rank(scaled.avgGrades[5])/length(scaled.avgGrades)) %>%
-  mutate(perc_HSTrust=rank(scaled.avgGrades[6])/length(scaled.avgGrades)) %>%
-  mutate(perc_Belonging=rank(scaled.avgGrades[7])/length(scaled.avgGrades)) %>%
-  mutate(perc_Grit=rank(scaled.avgGrades[8])/length(scaled.avgGrades)) %>%
-  mutate(perc_Growth=rank(scaled.avgGrades[9])/length(scaled.avgGrades)) %>%
-  mutate(perc_Control=rank(scaled.avgGrades[10])/length(scaled.avgGrades)) %>%
-  mutate(perc_Traits=rank(scaled.avgGrades[11])/length(scaled.avgGrades)) %>%
-  mutate(perc_Academic=rank(scaled.avgGrades[12])/length(scaled.avgGrades)) %>%
-  mutate(perc_Hours=rank(scaled.avgGrades[13])/length(scaled.avgGrades)) %>%
-  mutate(perc_Medialogy=rank(scaled.avgGrades[14])/length(scaled.avgGrades))
+avgPer <- norm.avgGrades
+avgPer <- norm.avgGrades %>%
+  mutate(perc_Demographics=rank(norm.avgGrades[1])/length(norm.avgGrades)) %>%
+  mutate(perc_Attitude=rank(norm.avgGrades[2])/length(norm.avgGrades)) %>%
+  mutate(perc_Reasons=rank(norm.avgGrades[3])/length(norm.avgGrades)) %>%
+  mutate(perc_Choice=rank(norm.avgGrades[4])/length(norm.avgGrades)) %>%
+  mutate(perc_HSBehave=rank(norm.avgGrades[5])/length(norm.avgGrades)) %>%
+  mutate(perc_HSTrust=rank(norm.avgGrades[6])/length(norm.avgGrades)) %>%
+  mutate(perc_Belonging=rank(norm.avgGrades[7])/length(norm.avgGrades)) %>%
+  mutate(perc_Grit=rank(norm.avgGrades[8])/length(norm.avgGrades)) %>%
+  mutate(perc_Growth=rank(norm.avgGrades[9])/length(norm.avgGrades)) %>%
+  mutate(perc_Control=rank(norm.avgGrades[10])/length(norm.avgGrades)) %>%
+  mutate(perc_Traits=rank(norm.avgGrades[11])/length(norm.avgGrades)) %>%
+  mutate(perc_Academic=rank(norm.avgGrades[12])/length(norm.avgGrades)) %>%
+  mutate(perc_Hours=rank(norm.avgGrades[13])/length(norm.avgGrades)) %>%
+  mutate(perc_Medialogy=rank(norm.avgGrades[14])/length(norm.avgGrades))
 
-studentData1 <- merge(studentData, scaled.avgGradesMelt, by= "rowID")
+studentData1 <- merge(studentData, norm.avgGradesMelt, by= "rowID")
 studentData1 <- studentData1[order(studentData1$variable), ]
 studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
 studentData <- subset(studentData, studentData$rowID %in% highRiskStudents$rowID)
