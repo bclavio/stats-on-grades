@@ -120,7 +120,7 @@ studyHoursTable <- data.frame(
     nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.675 & dfSSPgrades$Campus == "CPH", ]),
     nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "CPH", ]),
     "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "CPH", ])))
-names(studyHoursTable)[1]<-"Study"
+names(studyHoursTable)[1]<-"Studying"
 names(studyHoursTable)[2]<-"AAL"
 names(studyHoursTable)[3]<-"CPH"
 
@@ -137,7 +137,7 @@ work1Table <- data.frame(
     nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.6 & dfSSPgrades$Campus == "CPH", ]),
     nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.3 & dfSSPgrades$Campus == "CPH", ]),
     nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.0 & dfSSPgrades$Campus == "CPH", ])))
-names(work1Table)[1]<-"Related"
+names(work1Table)[1]<-"Study Related Activities"
 names(work1Table)[2]<-"AAL"
 names(work1Table)[3]<-"CPH"
 
@@ -154,7 +154,7 @@ work2Table <- data.frame(
     nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.6 & dfSSPgrades$Campus == "CPH", ]),
     nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.3 & dfSSPgrades$Campus == "CPH", ]),
     nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.0 & dfSSPgrades$Campus == "CPH", ])))
-names(work2Table)[1]<-"Non-related"
+names(work2Table)[1]<-"Non-Study Related Activities"
 names(work2Table)[2]<-"AAL"
 names(work2Table)[3]<-"CPH"
 
@@ -177,7 +177,7 @@ avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
 #avgGrades['Belonging Uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
 #avgGrades['High School Trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
 avgGrades['Study Habits'] <- list(rowMeans(dfSSPgradesStat[65:68]))
-avgGrades['High School Study Habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
+avgGrades['High School Habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
 #avgGrades['Education Choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
 #avgGrades['Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
 #avgGrades['Education Attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
@@ -255,7 +255,7 @@ ggplot(avgGradesMelt,aes(x = value)) +
   facet_wrap(~variable,scales = "free_x") + 
   geom_density() + 
   scale_x_continuous(breaks=seq(0,0.1,0.05), limits = c(0,0.11)) +
-  scale_y_continuous(breaks=seq(0,60,20), limits = c(0,70)) +
+  scale_y_continuous(breaks=seq(0,50,20), limits = c(0,50)) +
   labs(title = "Kernel density estimates", x = "Average of test scores")
 
 #ggarrange(pdensity, fcDensities, ncol = 2, nrow = 1)
@@ -303,7 +303,7 @@ ggplot(avgGradesMelt,aes(x = value)) +
 # Campi side-by-side
 ggplot(data= melt(avgGrades[1:7], id.var="Campus"), aes(x=variable, y=value)) + 
   geom_boxplot(aes(fill=Campus)) +
-  scale_y_continuous(breaks=seq(0,1,0.1)) +
+  scale_y_continuous(breaks=seq(0,0.1,0.01)) +
   labs(title = "Averages of test scores", y = "Averages scores") +
   #geom_hline(yintercept = 0, color = "grey") +
   coord_flip() +
