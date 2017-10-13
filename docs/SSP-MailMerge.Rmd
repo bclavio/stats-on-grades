@@ -1,5 +1,5 @@
 ---
-title: "Study Verification Test"
+title: Study Verification Test
 output:
   html_notebook: default
   html_document: default
@@ -22,15 +22,18 @@ library(CTT)
 library(Hmisc)
 library(psych)
 library(ggplot2)
+library(ggpubr)
+library(cowplot)
 
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
-library("knitr")
+library(knitr)
+library(kableExtra)
 opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
 ```
 
+
  
- 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
 score_info <- read.csv("studentData1.csv", stringsAsFactors = FALSE)
 highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
@@ -44,20 +47,23 @@ rowID <- personalized_info$rowID[i]
 # Percentile for each category
 ```
 
-Campus: `r campus`
 
-Student: `r firstname` `r surname`
 
-## Student Report
+**`r firstname` `r surname`**   
+*1st semester Medialogy, `r campus`*   
+*October 2017*
+
 
 This is an interpretive report of your responses to the Study Verification Test. Its purpose is to help you identify your student profile within specific topics. 
 
-The percentile ranks show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the percentage of students whose scores are equal to or less than yours. The percentile is also indicated with a dot in the boxplots where the x-axis show the number of standard deviations away from the mean (m = 0).
+The boxplots show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average score of all students in 14 different topics, and your score for each topic is indicated with red dots. An average score less than zero means that you scored lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Based on these results we have created specific recommendations for you to get more comfortable in the Medialogy study environment. 
 
 As the report is based on questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or counselor will help you understand your scores and find the services you desire.
 
 
-```{r, echo=FALSE}
+
+
+```{r echo=FALSE, warning=FALSE}
 score_info$variable <- as.character(score_info$variable)
 score_info$variable <- factor(score_info$variable, levels=unique(score_info$variable))
 
@@ -78,29 +84,57 @@ score_info$variable <- factor(score_info$variable, levels=unique(score_info$vari
 #         legend.position="none")
 
 student <- subset(score_info, score_info$rowID %in% personalized_info$rowID[i])
-ggplot(score_info, aes(x=variable, y=value)) +
+pScore <- ggplot(score_info, aes(x=variable, y=value)) +
   scale_y_continuous(breaks=seq(-4,4,1)) +
+  labs(title = " ", y = "Standard deviations from the mean") +
   geom_boxplot() +
-  geom_hline(yintercept = 0, color = "grey", size = 1) +
+  geom_hline(yintercept = 0, color = "grey") +
   coord_flip() +
   geom_dotplot(data = student,
                aes(x=variable, y=value, fill = "red"),
                binaxis='y',
                stackdir='center',
-               binwidth = 0.2) +
+               binwidth = 0.3) +
   theme_bw() +
   theme(axis.title.y=element_blank(),
-        axis.ticks.y=element_blank(),
         axis.title.x=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.ticks.x=element_blank(),
+        #axis.text.y=element_blank(),
         panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
         legend.position="none")
 
-
-
-
+#pScore
 ```
 
 
+
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
+#, fig.height=4.5
+studentTable <- melt(subset(personalized_info[,-c(1:5)], personalized_info$rowID %in% personalized_info$rowID[i]))
+
+studentTable1 <- data.frame(c(studentTable[-c(15:28),-c(1)]), apply(studentTable[-c(1:14), ], 2, rev))
+studentTable1 <- studentTable1[, c(2,3,1)]
+names(studentTable1)[2]<-"Average score"
+names(studentTable1)[3]<-"Percentile rank"
+row.names(studentTable1) <- NULL
+studentTable1[3]<- c(0)
+studentTable1$`Average score` <- as.numeric(levels(studentTable1$`Average score`))[studentTable1$`Average score`]
+studentTable1 <- studentTable1[,-c(1)]
+studentTable1 <- rbind(studentTable1, c(" "))
+
+
+
+is.num <- sapply(studentTable1, is.numeric)
+studentTable1[is.num] <- sapply(studentTable1[is.num], round, 2)
+
+#kable(studentTable1, digits = 4) %>% kable_styling(bootstrap_options = "striped", full_width = F)
+tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme("blank"))
+showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(1.6,1))
+
+showAnalysis
+```
 
 
 
