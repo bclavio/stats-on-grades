@@ -253,8 +253,8 @@ dfEntryGradesAll$DANGradeX<-ifelse(is.na(dfEntryGradesAll$DANGrade),dfEntryGrade
 
 dfAAUGrades$gradeNum<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
 dfAAUGrades$GPAgrade<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
-
 dfAAUGrades$isPassed<-gradesPassedLUVec[as.character(dfAAUGrades$KARAKTER)]
+dfAAUGrades$CourseLocation<-substr(dfAAUGrades$aktiv_kode,3,3)
 dfAAUGrades$aktivitetShort<-CourseAcronymsLUVec[as.character(dfAAUGrades$aktivitet)]
 sqldf('select distinct aktivitet, aktiv_kode from dfAAUGrades order by aktivitet')
 
