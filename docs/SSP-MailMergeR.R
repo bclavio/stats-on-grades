@@ -88,6 +88,7 @@ names(studyHoursTable)[1]<-"AAL"
 names(studyHoursTable)[2]<-"CPH"
 
 
+
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
 
@@ -110,6 +111,13 @@ avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
 
 # normalizes avg grades
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
+
+
+
 # Students with averages above 1 are most likely to continue Medialogy while
 # students with averages below -1 are most likely to dropout.
 scaled.avgGrades <- avgGrades
@@ -300,30 +308,33 @@ ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) +
 studentData <- NULL
 studentData1 <- NULL
 
+
+
 studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
 studentData['FirstName'] <- dfSSPgrades[,2]
 studentData['SurName'] <- dfSSPgrades[,1]
 
 # computes the percentile for each category and for each student
-perc.rank <- function(x) trunc(rank(x))/length(x)
-studentData["perc_Demographics"] <- list(prop.table(perc.rank(scaled.avgGrades[1]))*100)
-studentData["perc_Attitude"] <- list(prop.table(perc.rank(scaled.avgGrades[2]))*100)
-studentData["perc_Reasons"] <- list(prop.table(perc.rank(scaled.avgGrades[3]))*100)
-studentData["perc_Choice"] <- list(prop.table(perc.rank(scaled.avgGrades[4]))*100)
-studentData["perc_HSBehave"] <- list(prop.table(perc.rank(scaled.avgGrades[5]))*100)
-studentData["perc_HSTrust"] <- list(prop.table(perc.rank(scaled.avgGrades[6]))*100)
-studentData["perc_Belonging"] <- list(prop.table(perc.rank(scaled.avgGrades[7]))*100)
-studentData["perc_Grit"] <- list(prop.table(perc.rank(scaled.avgGrades[8]))*100)
-studentData["perc_Growth"] <- list(prop.table(perc.rank(scaled.avgGrades[9]))*100)
-studentData["perc_Control"] <- list(prop.table(perc.rank(scaled.avgGrades[10]))*100)
-studentData["perc_Traits"] <- list(prop.table(perc.rank(scaled.avgGrades[11]))*100)
-studentData["perc_Academic"] <- list(prop.table(perc.rank(scaled.avgGrades[12]))*100)
-studentData["perc_Hours"] <- list(prop.table(perc.rank(scaled.avgGrades[13]))*100)
-studentData["perc_Medialogy"] <- list(prop.table(perc.rank(scaled.avgGrades[14]))*100)
+avgPer <- scaled.avgGrades
+avgPer <- scaled.avgGrades %>%
+  mutate(perc_Demographics=rank(scaled.avgGrades[1])/length(scaled.avgGrades)) %>%
+  mutate(perc_Attitude=rank(scaled.avgGrades[2])/length(scaled.avgGrades)) %>%
+  mutate(perc_Reasons=rank(scaled.avgGrades[3])/length(scaled.avgGrades)) %>%
+  mutate(perc_Choice=rank(scaled.avgGrades[4])/length(scaled.avgGrades)) %>%
+  mutate(perc_HSBehave=rank(scaled.avgGrades[5])/length(scaled.avgGrades)) %>%
+  mutate(perc_HSTrust=rank(scaled.avgGrades[6])/length(scaled.avgGrades)) %>%
+  mutate(perc_Belonging=rank(scaled.avgGrades[7])/length(scaled.avgGrades)) %>%
+  mutate(perc_Grit=rank(scaled.avgGrades[8])/length(scaled.avgGrades)) %>%
+  mutate(perc_Growth=rank(scaled.avgGrades[9])/length(scaled.avgGrades)) %>%
+  mutate(perc_Control=rank(scaled.avgGrades[10])/length(scaled.avgGrades)) %>%
+  mutate(perc_Traits=rank(scaled.avgGrades[11])/length(scaled.avgGrades)) %>%
+  mutate(perc_Academic=rank(scaled.avgGrades[12])/length(scaled.avgGrades)) %>%
+  mutate(perc_Hours=rank(scaled.avgGrades[13])/length(scaled.avgGrades)) %>%
+  mutate(perc_Medialogy=rank(scaled.avgGrades[14])/length(scaled.avgGrades))
 
 studentData1 <- merge(studentData, scaled.avgGradesMelt, by= "rowID")
 studentData1 <- studentData1[order(studentData1$variable), ]
-studentData <- merge(studentData, scaled.avgGrades, by= c("rowID","Campus"))
+studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
 studentData <- subset(studentData, studentData$rowID %in% highRiskStudents$rowID)
 
 setwd('C:/Users/BiancaClavio/Documents/stats-on-grades/docs')
