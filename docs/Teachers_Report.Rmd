@@ -143,26 +143,26 @@ dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeri
 # computes avg grade for each category and for each student
 avgGrades <- NULL
 avgGrades['View on Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:111]))
-avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
-avgGrades['Academic Abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
-avgGrades['Personal Trait'] <- list(rowMeans(dfSSPgradesStat[75:87]))
+avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
+avgGrades['Academic abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
+avgGrades['Personal traits'] <- list(rowMeans(dfSSPgradesStat[75:87]))
 avgGrades['Self-control'] <- list(rowMeans(dfSSPgradesStat[65:74]))
 avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
 avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
-avgGrades['Belonging Uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
-avgGrades['High School Trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
-avgGrades['High School Behaviour'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-avgGrades['Education Choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
-avgGrades['Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
-avgGrades['Education Attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
+avgGrades['Belonging uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
+avgGrades['High school trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
+avgGrades['High school behaviour'] <- list(rowMeans(dfSSPgradesStat[34:45]))
+avgGrades['Education choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
+avgGrades['Going to university'] <- list(rowMeans(dfSSPgradesStat[16:23]))
+avgGrades['Education attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
 avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
-avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
+avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))),check.names = FALSE )
 
 # normalizes avg grades
 normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
 }
-norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
+norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize),check.names=FALSE)
 norm.avgGrades["Campus"] <- dfSSPgrades$Campus
 norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
 
@@ -217,17 +217,17 @@ ggplot(scaled.avgGradesMelt,aes(x = value)) +
 ```
 
 
-```{r echo=FALSE, warning=FALSE}
+```{r echo=FALSE, warning=FALSE, fig.height=12,fig.width=12}
 norm.avgGradesMelt <- melt(norm.avgGrades, id.vars = c("rowID", "Campus"))
 norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0) 
 
-# The histogram for each category shows that the scaled averages are not normal distributed:
+# The histogram for each category shows that the scaled averages are not normally distributed:
 ggplot(norm.avgGradesMelt,aes(x = value)) + 
-  facet_wrap(~variable,scales = "free_x") + 
+  facet_wrap(~variable,scales = "free_x", ncol = 3) + 
   geom_density() + 
   scale_x_continuous(breaks=seq(0,1,0.5), limits = c(-0.1,1.1)) +
   scale_y_continuous(breaks=seq(0,3,1.5), limits = c(0,3)) +
-  labs(title = "Kernel density estimates", x = "Normalized average of test scores")
+  labs(title = "Kernel density estimates", x = "Normalized average of test scores")+coord_fixed(1)
 
 #ggarrange(pdensity, fcDensities, ncol = 2, nrow = 1)
 

@@ -30,7 +30,8 @@ library(ggpubr)
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
 library(kableExtra)
-opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP/")
+homeDir<-Sys.getenv("HOME")
+opts_knit$set(root.dir = paste(homeDir,"/SVN/01Projects/SSP/", sep = ""))
 ```
 
 ## Teacher Report
@@ -168,21 +169,21 @@ dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeri
 
 # computes avg grade for each category and for each student
 avgGrades <- NULL
-avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:105]))
-#avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
-#avgGrades['Academic Abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
-#avgGrades['Personal Trait'] <- list(rowMeans(dfSSPgradesStat[75:87]))
-avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
-avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
-#avgGrades['Belonging Uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
-#avgGrades['High School Trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
-avgGrades['Study Habits'] <- list(rowMeans(dfSSPgradesStat[65:68]))
-avgGrades['High School Habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-#avgGrades['Education Choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
-#avgGrades['Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
-#avgGrades['Education Attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
-avgGrades['Social Support for Studying'] <- list(rowMeans(dfSSPgradesStat[2:8]))
-avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
+avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:105])/.09)
+#avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
+#avgGrades['Academic abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
+#avgGrades['Personal trait'] <- list(rowMeans(dfSSPgradesStat[75:87]))
+avgGrades['Growth mindset'] <- list(rowMeans(dfSSPgradesStat[62:64])/.09)
+avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61])/.09)
+#avgGrades['Belonging uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
+#avgGrades['High school trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
+avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:68])/.09)
+avgGrades['High school habits'] <- list(rowMeans(dfSSPgradesStat[34:45])/.09)
+#avgGrades['Education choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
+#avgGrades['Going to university'] <- list(rowMeans(dfSSPgradesStat[16:23]))
+#avgGrades['Education attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
+avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[2:8])/.09)
+avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))),check.names=FALSE )
 avgGrades["Campus"] <- dfSSPgrades$Campus
 avgGrades["rowID"] <- seq(1:nrow(avgGrades))
 
@@ -252,11 +253,11 @@ avgGradesMelt['highRisk'] <- ifelse(avgGradesMelt$rowID %in% highRiskStudents$ro
 
 # The histogram for each category shows that the normalized averages are not normal distributed:
 ggplot(avgGradesMelt,aes(x = value)) + 
-  facet_wrap(~variable,scales = "free_x") + 
+  facet_wrap(~variable,scales = "free_x", ncol = 2) + 
   geom_density() + 
-  scale_x_continuous(breaks=seq(0,0.1,0.05), limits = c(0,0.11)) +
-  scale_y_continuous(breaks=seq(0,50,20), limits = c(0,50)) +
-  labs(title = "Kernel density estimates", x = "Average of test scores")
+  scale_x_continuous(breaks=seq(0,1,0.5), limits = c(-0.1,1.1)) +
+  #scale_y_continuous(breaks=seq(0,50,20), limits = c(0,50)) +
+  labs(title = "Kernel density estimates", x = "Average of test scores - 0 = very low, 1 = very high")
 
 #ggarrange(pdensity, fcDensities, ncol = 2, nrow = 1)
 
@@ -303,7 +304,8 @@ ggplot(avgGradesMelt,aes(x = value)) +
 # Campi side-by-side
 ggplot(data= melt(avgGrades[1:7], id.var="Campus"), aes(x=variable, y=value)) + 
   geom_boxplot(aes(fill=Campus)) +
-  scale_y_continuous(breaks=seq(0,0.1,0.01)) +
+  scale_y_continuous(breaks=seq(0,1,0.5)) + expand_limits(y = 0)+
+  #scale_x_continuous(breaks=seq(0,1,0.5)) +
   labs(title = "Averages of test scores", y = "Averages scores") +
   #geom_hline(yintercept = 0, color = "grey") +
   coord_flip() +
@@ -320,8 +322,10 @@ ggplot(data= melt(avgGrades[1:7], id.var="Campus"), aes(x=variable, y=value)) +
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 #tbStudy <- kable(studyHoursTable, caption = "Distribution of study hours a week") %>% kable_styling(bootstrap_options = "striped", full_width = F)
 
-ggtexttable(studyHoursTable, rows = NULL)
-ggtexttable(work1Table, rows = NULL)
+ggtexttable(studyHoursTable, rows = NULL)  \s\s
+
+ggtexttable(work1Table, rows = NULL)  
+
 ggtexttable(work2Table, rows = NULL)
 
 #ggarrange(bxScores, stable, ncol = 2, nrow = 1)

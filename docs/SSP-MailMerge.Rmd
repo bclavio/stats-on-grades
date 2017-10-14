@@ -1,8 +1,8 @@
 ---
 output:
+  pdf_document: default
   html_notebook: default
   html_document: default
-  pdf_document: default
   word_document: default
 ---
  
@@ -27,7 +27,10 @@ library(cowplot)
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
 library(kableExtra)
-opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
+#opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
+homeDir<-Sys.getenv("HOME")
+opts_knit$set(root.dir = paste(homeDir,"/git/AAU/dropOutProject/analysis/docs", sep = ""))
+
 ```
 
 
@@ -36,7 +39,7 @@ opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
 score_info <- read.csv("studentData1.csv", stringsAsFactors = FALSE)
 highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
-
+#HKtest i=1
 campus <- personalized_info$Campus[i]
 firstname <- personalized_info$FirstName[i]
 surname <- personalized_info$SurName[i]
