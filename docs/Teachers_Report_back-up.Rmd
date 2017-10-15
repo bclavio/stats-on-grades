@@ -322,7 +322,7 @@ ggplot(data= melt(avgGrades[1:7], id.var="Campus"), aes(x=variable, y=value)) +
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 #tbStudy <- kable(studyHoursTable, caption = "Distribution of study hours a week") %>% kable_styling(bootstrap_options = "striped", full_width = F)
 
-ggtexttable(studyHoursTable, rows = NULL)  \s\s
+ggtexttable(studyHoursTable, rows = NULL) 
 
 ggtexttable(work1Table, rows = NULL)  
 
