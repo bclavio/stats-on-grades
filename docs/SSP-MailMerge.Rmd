@@ -1,9 +1,8 @@
 ---
-title: Study Verification Test
 output:
+  pdf_document: default
   html_notebook: default
   html_document: default
-  pdf_document: default
   word_document: default
 ---
  
@@ -28,7 +27,10 @@ library(cowplot)
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
 library(kableExtra)
-opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
+#opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
+homeDir<-Sys.getenv("HOME")
+opts_knit$set(root.dir = paste(homeDir,"/git/AAU/dropOutProject/analysis/docs", sep = ""))
+
 ```
 
 
@@ -37,7 +39,7 @@ opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
 score_info <- read.csv("studentData1.csv", stringsAsFactors = FALSE)
 highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
-
+#HKtest i=1
 campus <- personalized_info$Campus[i]
 firstname <- personalized_info$FirstName[i]
 surname <- personalized_info$SurName[i]
@@ -48,15 +50,17 @@ rowID <- personalized_info$rowID[i]
 ```
 
 
+STUDY VERIFIACTION TEST
 
 **`r firstname` `r surname`**   
-*1st semester Medialogy, `r campus`*   
-*October 2017*
+1st semester Medialogy, `r campus`   
+October 2017
 
+### Student Report
 
 This is an interpretive report of your responses to the Study Verification Test. Its purpose is to help you identify your student profile within specific topics. 
 
-The boxplots show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average score of all students in 14 different topics, and your score for each topic is indicated with red dots. An average score less than zero means that you scored lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Based on these results we have created specific recommendations for you to get more comfortable in the Medialogy study environment. 
+The boxplots show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average score of all students in 14 different topics, and your score for each topic is indicated with red dots. A value less than 0.5 means that you scored lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Based on these results we have created specific recommendations for you to get more comfortable in the Medialogy study environment. 
 
 As the report is based on questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or counselor will help you understand your scores and find the services you desire.
 
@@ -83,37 +87,56 @@ score_info$variable <- factor(score_info$variable, levels=unique(score_info$vari
 #         panel.grid.minor = element_blank(),
 #         legend.position="none")
 
-student <- subset(score_info, score_info$rowID %in% personalized_info$rowID[i])
-pScore <- ggplot(score_info, aes(x=variable, y=value)) +
-  scale_y_continuous(breaks=seq(-4,4,1)) +
-  labs(title = " ", y = "Standard deviations from the mean") +
-  geom_boxplot() +
-  geom_hline(yintercept = 0, color = "grey") +
+# student <- subset(score_info, score_info$rowID %in% personalized_info$rowID[i])
+# pScore <- ggplot(score_info, aes(x=variable, y=value)) +
+#   scale_y_continuous(breaks=seq(-4,4,1)) +
+#   labs(title = " ", y = "Standard deviations from the mean") +
+#   geom_boxplot() +
+#   geom_hline(yintercept = 0, color = "grey") +
+#   coord_flip() +
+#   geom_dotplot(data = student,
+#                aes(x=variable, y=value, fill = "red"),
+#                binaxis='y',
+#                stackdir='center',
+#                binwidth = 0.3) +
+#   theme_bw() +
+#   theme(axis.title.y=element_blank(),
+#         axis.title.x=element_blank(),
+#         axis.ticks.y=element_blank(),
+#         axis.ticks.x=element_blank(),
+#         #axis.text.y=element_blank(),
+#         panel.grid.minor = element_blank(),
+#         panel.grid.major = element_blank(),
+#         legend.position="none")
+
+
+student <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
+pScore <- ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
+  geom_boxplot() + 
   coord_flip() +
   geom_dotplot(data = student,
-               aes(x=variable, y=value, fill = "red"),
+               aes(x=variable, y=value, fill = "green"),
                binaxis='y',
                stackdir='center',
-               binwidth = 0.3) +
+               binwidth = 0.04) +
   theme_bw() +
+  #facet_grid(Campus ~ .) +
   theme(axis.title.y=element_blank(),
-        axis.title.x=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.ticks.x=element_blank(),
         #axis.text.y=element_blank(),
-        panel.grid.minor = element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.x=element_blank(),
         panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         legend.position="none")
 
 #pScore
 ```
 
 
-
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
 #, fig.height=4.5
 studentTable <- melt(subset(personalized_info[,-c(1:5)], personalized_info$rowID %in% personalized_info$rowID[i]))
-
+studentTable1<- NULL
 studentTable1 <- data.frame(c(studentTable[-c(15:28),-c(1)]), apply(studentTable[-c(1:14), ], 2, rev))
 studentTable1 <- studentTable1[, c(2,3,1)]
 names(studentTable1)[2]<-"Average score"

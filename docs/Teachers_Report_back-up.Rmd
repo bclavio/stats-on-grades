@@ -25,13 +25,13 @@ library(ggplot2)
 library(ggpubr)
 library(gtable)
 library(cowplot)
+library(ggpubr)
 
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
 library(kableExtra)
 homeDir<-Sys.getenv("HOME")
 opts_knit$set(root.dir = paste(homeDir,"/SVN/01Projects/SSP/", sep = ""))
-
 ```
 
 ## Teacher Report
@@ -46,11 +46,10 @@ dfSSPgradesAAL<-read.csv("SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE,
 ###### the answers are not in use
 dfSSPanswersCPH<-read.csv("SSPanswersTestCPH 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
 dfSSPanswersAAL<-read.csv("SSPanswersTestAAL 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("No 
-.influence","Not at all true",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Limited influence","Slightly true",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Some influence","Some influence",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Decisive influence","Completely true",dfSSPanswersAAL))
+#dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("No influence","Not at all true",dfSSPanswersAAL))
+#dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Limited influence","Slightly true",dfSSPanswersAAL))
+#dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Some influence","Some influence",dfSSPanswersAAL))
+#dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Decisive influence","Completely true",dfSSPanswersAAL))
 dfSSPanswersCPH["Campus"]<-"CPH"
 dfSSPanswersAAL["Campus"]<-"AAL"
 dfSSPanswers <- rbind(dfSSPanswersCPH,dfSSPanswersAAL) 
@@ -75,16 +74,16 @@ dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,45)) == 
 dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(45,50)) == 1L] <- 0.675
 dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(50,1000)) == 1L] <- 0.9
 
-# Q95 (unrelated work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0.9
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.6
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.3
+# Q95 (related work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,1)) == 1L] <- 0.9
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(1,5)) == 1L] <- 0.6
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,10)) == 1L] <- 0.3
 dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0
 
 # Q96 (unrelated work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.9
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.6
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.3
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,1)) == 1L] <- 0.9
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(1,5)) == 1L] <- 0.6
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,10)) == 1L] <- 0.3
 dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) == 1L] <- 0
 
 # counts study hours for the campi
@@ -127,10 +126,38 @@ names(studyHoursTable)[2]<-"AAL"
 names(studyHoursTable)[3]<-"CPH"
 
 
+work1Table <- data.frame(
+    c("0 hours", "1-4 hours", "5-9 hours", "More than 10 hours"),
+    c(
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.9 & dfSSPgrades$Campus == "AAL", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.6 & dfSSPgrades$Campus == "AAL", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.3 & dfSSPgrades$Campus == "AAL", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.0 & dfSSPgrades$Campus == "AAL", ])),
+    c(
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.9 & dfSSPgrades$Campus == "CPH", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.6 & dfSSPgrades$Campus == "CPH", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.3 & dfSSPgrades$Campus == "CPH", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 95 /0.09` == 0.0 & dfSSPgrades$Campus == "CPH", ])))
+names(work1Table)[1]<-"Study Related Activities"
+names(work1Table)[2]<-"AAL"
+names(work1Table)[3]<-"CPH"
 
 
-
-
+work2Table <- data.frame(
+    c("0 hours", "1-4 hours", "5-9 hours", "More than 10 hours"),
+    c(
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.9 & dfSSPgrades$Campus == "AAL", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.6 & dfSSPgrades$Campus == "AAL", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.3 & dfSSPgrades$Campus == "AAL", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.0 & dfSSPgrades$Campus == "AAL", ])),
+    c(
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.9 & dfSSPgrades$Campus == "CPH", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.6 & dfSSPgrades$Campus == "CPH", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.3 & dfSSPgrades$Campus == "CPH", ]),
+    nrow(dfSSPgrades[dfSSPgrades$`Q. 96 /0.09` == 0.0 & dfSSPgrades$Campus == "CPH", ])))
+names(work2Table)[1]<-"Non-Study Related Activities"
+names(work2Table)[2]<-"AAL"
+names(work2Table)[3]<-"CPH"
 
 
 
@@ -142,42 +169,44 @@ dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeri
 
 # computes avg grade for each category and for each student
 avgGrades <- NULL
-avgGrades['View on Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:111]))
-avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
-avgGrades['Academic abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
-avgGrades['Personal traits'] <- list(rowMeans(dfSSPgradesStat[75:87]))
-avgGrades['Self-control'] <- list(rowMeans(dfSSPgradesStat[65:74]))
-avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
-avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
-avgGrades['Belonging uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
-avgGrades['High school trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
-avgGrades['High school behaviour'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-avgGrades['Education choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
-avgGrades['Going to university'] <- list(rowMeans(dfSSPgradesStat[16:23]))
-avgGrades['Education attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
-avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
-avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))),check.names = FALSE )
+avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:105])/.09)
+#avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
+#avgGrades['Academic abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
+#avgGrades['Personal trait'] <- list(rowMeans(dfSSPgradesStat[75:87]))
+avgGrades['Growth mindset'] <- list(rowMeans(dfSSPgradesStat[62:64])/.09)
+avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61])/.09)
+#avgGrades['Belonging uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
+#avgGrades['High school trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
+avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:68])/.09)
+avgGrades['High school habits'] <- list(rowMeans(dfSSPgradesStat[34:45])/.09)
+#avgGrades['Education choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
+#avgGrades['Going to university'] <- list(rowMeans(dfSSPgradesStat[16:23]))
+#avgGrades['Education attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
+avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[2:8])/.09)
+avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))),check.names=FALSE )
+avgGrades["Campus"] <- dfSSPgrades$Campus
+avgGrades["rowID"] <- seq(1:nrow(avgGrades))
 
 # normalizes avg grades
-normalize <- function(x) {
-  return ((x - min(x)) / (max(x) - min(x)))
-}
-norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize),check.names=FALSE)
-norm.avgGrades["Campus"] <- dfSSPgrades$Campus
-norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
+# normalize <- function(x) {
+#   return ((x - min(x)) / (max(x) - min(x)))
+# }
+# norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
+# norm.avgGrades["Campus"] <- dfSSPgrades$Campus
+# norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
 
 
 # Students with averages above 1 are most likely to continue Medialogy while
 # students with averages below -1 are most likely to dropout.
-scaled.avgGrades <- avgGrades
-scaled.avgGrades[1:14] <- scale(avgGrades[1:14])
+# scaled.avgGrades <- avgGrades
+# scaled.avgGrades[1:14] <- scale(avgGrades[1:14])
 
 # checks that we get mean of 0 and sd of 1
 #colMeans(scaled.avgGrades)
 #apply(scaled.avgGrades, 2, sd)
 
-scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
-scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
+# scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
+# scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 
 ```
 
@@ -188,9 +217,10 @@ scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + 
   geom_density() +
   labs(title = "Kernel density estimate", x = "Summed test scores") + 
-  scale_x_continuous(breaks=seq(5,11,1), limits = c(5,10)) 
+  scale_y_continuous(breaks=seq(0,0.6,0.1), limits = c(0,0.6)) +
+  scale_x_continuous(breaks=seq(5,11,1), limits = c(4.5,10.5)) 
 
-dfSSPgradesSum <- data.frame(rowID = scaled.avgGrades$rowID, campus = scaled.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
+dfSSPgradesSum <- data.frame(rowID = avgGrades$rowID, campus = avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
 
 #ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_histogram(binwidth = 0.05)
 
@@ -201,33 +231,33 @@ highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highR
 
 
 ```{r include=FALSE, echo=FALSE, warning=FALSE}
-scaled.avgGradesMelt <- melt(scaled.avgGrades, id.vars = c("rowID", "Campus"))
-scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0) 
-
-# The histogram for each category shows that the scaled averages are not normal distributed:
-ggplot(scaled.avgGradesMelt,aes(x = value)) + 
-  facet_wrap(~variable,scales = "free_x") + 
-  geom_density() + 
-  scale_x_continuous(breaks=seq(-4,4,1), limits = c(-4,4)) +
-  scale_y_continuous(breaks=seq(0,1,0.4), limits = c(0,0.8)) +
-  labs(title = "Kernel density estimates", x = "Scaled average of test scores")
-
-#ggarrange(pdensity, fcDensities, ncol = 2, nrow = 1)
+# scaled.avgGradesMelt <- melt(scaled.avgGrades, id.vars = c("rowID", "Campus"))
+# scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0) 
+# 
+# # The histogram for each category shows that the scaled averages are not normal distributed:
+# ggplot(scaled.avgGradesMelt,aes(x = value)) + 
+#   facet_wrap(~variable,scales = "free_x") + 
+#   geom_density() + 
+#   scale_x_continuous(breaks=seq(-4,4,1), limits = c(-4,4)) +
+#   scale_y_continuous(breaks=seq(0,1,0.4), limits = c(0,0.8)) +
+#   labs(title = "Kernel density estimates", x = "Scaled average of test scores")
+# 
+# #ggarrange(pdensity, fcDensities, ncol = 2, nrow = 1)
 
 ```
 
 
-```{r echo=FALSE, warning=FALSE, fig.height=12,fig.width=12}
-norm.avgGradesMelt <- melt(norm.avgGrades, id.vars = c("rowID", "Campus"))
-norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0) 
+```{r echo=FALSE, warning=FALSE}
+avgGradesMelt <- melt(avgGrades, id.vars = c("rowID", "Campus"))
+avgGradesMelt['highRisk'] <- ifelse(avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0) 
 
-# The histogram for each category shows that the scaled averages are not normally distributed:
-ggplot(norm.avgGradesMelt,aes(x = value)) + 
-  facet_wrap(~variable,scales = "free_x", ncol = 3) + 
+# The histogram for each category shows that the normalized averages are not normal distributed:
+ggplot(avgGradesMelt,aes(x = value)) + 
+  facet_wrap(~variable,scales = "free_x", ncol = 2) + 
   geom_density() + 
   scale_x_continuous(breaks=seq(0,1,0.5), limits = c(-0.1,1.1)) +
-  scale_y_continuous(breaks=seq(0,3,1.5), limits = c(0,3)) +
-  labs(title = "Kernel density estimates", x = "Normalized average of test scores")+coord_fixed(1)
+  #scale_y_continuous(breaks=seq(0,50,20), limits = c(0,50)) +
+  labs(title = "Kernel density estimates", x = "Average of test scores - 0 = very low, 1 = very high")
 
 #ggarrange(pdensity, fcDensities, ncol = 2, nrow = 1)
 
@@ -255,45 +285,28 @@ ggplot(norm.avgGradesMelt,aes(x = value)) +
 #         )
 
 # Campi side-by-side
-ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
-  geom_boxplot(aes(fill=Campus)) +
-  scale_y_continuous(breaks=seq(-4,4,1)) +
-  labs(title = "Scaled averages of test scores", y = "Standard deviations from the mean") +
-  geom_hline(yintercept = 0, color = "grey") +
-  coord_flip() +
-  theme_bw() + 
-  theme(axis.title.y=element_blank(), 
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()
-  )
+# ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
+#   geom_boxplot(aes(fill=Campus)) +
+#   scale_y_continuous(breaks=seq(-4,4,1)) +
+#   labs(title = "Scaled averages of test scores", y = "Standard deviations from the mean") +
+#   geom_hline(yintercept = 0, color = "grey") +
+#   coord_flip() +
+#   theme_bw() + 
+#   theme(axis.title.y=element_blank(), 
+#         panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank()
+#   )
 
 ```
 
 
 ```{r echo=FALSE, warning=FALSE}
-#scaled data with facet of AAL and CPH common for all students
-# ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) +
-#   geom_boxplot(aes(fill=Campus)) +
-#   scale_y_continuous(breaks=seq(-4,4,1)) +
-#   labs(title = "Scaled averages of student scores", y = "Standard deviations from the mean") +
-#   coord_flip() +
-#   theme_bw() +
-#   facet_grid(Campus ~ .) +
-#   theme(axis.title.y=element_blank(),
-#         #axis.text.y=element_blank(),
-#         axis.ticks.y=element_blank(),
-#         axis.title.x=element_blank(),
-#         #panel.border = element_blank(),
-#         panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank(),
-#         legend.position="none"
-#         )
-
 # Campi side-by-side
-ggplot(data= melt(norm.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
+ggplot(data= melt(avgGrades[1:7], id.var="Campus"), aes(x=variable, y=value)) + 
   geom_boxplot(aes(fill=Campus)) +
-  scale_y_continuous(breaks=seq(0,1,0.1)) +
-  labs(title = "Normalized averages of test scores", y = "Normalized averages scores") +
+  scale_y_continuous(breaks=seq(0,1,0.5)) + expand_limits(y = 0)+
+  #scale_x_continuous(breaks=seq(0,1,0.5)) +
+  labs(title = "Averages of test scores", y = "Averages scores") +
   #geom_hline(yintercept = 0, color = "grey") +
   coord_flip() +
   theme_bw() + 
@@ -309,7 +322,11 @@ ggplot(data= melt(norm.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=valu
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 #tbStudy <- kable(studyHoursTable, caption = "Distribution of study hours a week") %>% kable_styling(bootstrap_options = "striped", full_width = F)
 
-ggtexttable(studyHoursTable, rows = NULL)
+ggtexttable(studyHoursTable, rows = NULL) 
+
+ggtexttable(work1Table, rows = NULL)  
+
+ggtexttable(work2Table, rows = NULL)
 
 #ggarrange(bxScores, stable, ncol = 2, nrow = 1)
 ```
