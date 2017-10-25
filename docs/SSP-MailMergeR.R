@@ -16,6 +16,8 @@ library(psych)
 library(ggplot2)
 library(reshape2)
 
+library(ecdfHT)
+
 
 
 ### Import SSP data
@@ -94,20 +96,28 @@ dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeri
 
 # computes avg grade for each category and for each student
 avgGrades <- NULL
-avgGrades['View on Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:111]))
-avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
-avgGrades['Academic Abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
-avgGrades['Personal Trait'] <- list(rowMeans(dfSSPgradesStat[75:87]))
-avgGrades['Self-control'] <- list(rowMeans(dfSSPgradesStat[65:74]))
+# avgGrades['View on Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:111]))
+# avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
+# avgGrades['Academic Abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
+# avgGrades['Personal Trait'] <- list(rowMeans(dfSSPgradesStat[75:87]))
+# avgGrades['Self-control'] <- list(rowMeans(dfSSPgradesStat[65:74]))
+# avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
+# avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
+# avgGrades['Belonging Uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
+# avgGrades['High School Trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
+# avgGrades['High School Behaviour'] <- list(rowMeans(dfSSPgradesStat[34:45]))
+# avgGrades['Education Choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
+# avgGrades['Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
+# avgGrades['Education Attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
+# avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
+
+avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:111)]))
+avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[93:97]))
 avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
 avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
-avgGrades['Belonging Uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
-avgGrades['High School Trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
-avgGrades['High School Behaviour'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-avgGrades['Education Choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
-avgGrades['Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
-avgGrades['Education Attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
-avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
+avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:74]))
+avgGrades['High School Habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
+avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[2:8])) # removed 2
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
 
 # normalizes avg grades
@@ -230,17 +240,17 @@ ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=va
 
 
 # all high risk students with color diff - dots on top of each other
-ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) + 
+ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) + 
   geom_boxplot() + 
   coord_flip() +
   #facet_grid(Campus ~ .) +
-  geom_dotplot(data = subset(scaled.avgGradesMelt, scaled.avgGradesMelt$highRisk ==1), 
+  geom_dotplot(data = subset(norm.avgGradesMelt, norm.avgGradesMelt$highRisk ==1), 
                aes(fill = factor(rowID)), 
                binaxis='y',
                stackdir='center',
                #position = "jitter",
                #alpha = 0.5,
-               binwidth = 0.1) +
+               binwidth = 0.025) +
   #facet_grid(Campus ~ .) +
   theme(axis.title.y=element_blank(),
         #axis.text.y=element_blank(),
@@ -315,40 +325,25 @@ ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
 
 #######################################################################
 
-
 studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
 studentData['FirstName'] <- dfSSPgrades[,2]
 studentData['SurName'] <- dfSSPgrades[,1]
 
-# computes the percentile for each category and for each student
-avgPer <- norm.avgGrades
-avgPer <- norm.avgGrades %>%
-  mutate(perc_Demographics=rank(norm.avgGrades[1])/length(norm.avgGrades)) %>%
-  mutate(perc_Attitude=rank(norm.avgGrades[2])/length(norm.avgGrades)) %>%
-  mutate(perc_Reasons=rank(norm.avgGrades[3])/length(norm.avgGrades)) %>%
-  mutate(perc_Choice=rank(norm.avgGrades[4])/length(norm.avgGrades)) %>%
-  mutate(perc_HSBehave=rank(norm.avgGrades[5])/length(norm.avgGrades)) %>%
-  mutate(perc_HSTrust=rank(norm.avgGrades[6])/length(norm.avgGrades)) %>%
-  mutate(perc_Belonging=rank(norm.avgGrades[7])/length(norm.avgGrades)) %>%
-  mutate(perc_Grit=rank(norm.avgGrades[8])/length(norm.avgGrades)) %>%
-  mutate(perc_Growth=rank(norm.avgGrades[9])/length(norm.avgGrades)) %>%
-  mutate(perc_Control=rank(norm.avgGrades[10])/length(norm.avgGrades)) %>%
-  mutate(perc_Traits=rank(norm.avgGrades[11])/length(norm.avgGrades)) %>%
-  mutate(perc_Academic=rank(norm.avgGrades[12])/length(norm.avgGrades)) %>%
-  mutate(perc_Hours=rank(norm.avgGrades[13])/length(norm.avgGrades)) %>%
-  mutate(perc_Medialogy=rank(norm.avgGrades[14])/length(norm.avgGrades))
+avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, dfSSPanswers[, c(104,106:107)])
 
-studentData1 <- merge(studentData, norm.avgGradesMelt, by= "rowID")
-studentData1 <- studentData1[order(studentData1$variable), ]
+#studentData1 <- merge(studentData, norm.avgGradesMelt, by= "rowID")
+#studentData1 <- studentData1[order(studentData1$variable), ]
 studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
 studentData <- subset(studentData, studentData$rowID %in% highRiskStudents$rowID)
+studentData$rowID <- as.numeric(levels(studentData$rowID))[studentData$rowID]
+studentData <- studentData[with(studentData, order(studentData$rowID)),]
 
 setwd('C:/Users/BiancaClavio/Documents/stats-on-grades/docs')
 write.csv(studentData,file = "studentData.csv")
-write.csv(studentData1,file = "studentData1.csv")
+#write.csv(studentData1,file = "studentData1.csv")
 write.csv(highRiskStudents,file = "highRiskStudents.csv")
 personalized_info <- read.csv(file = "studentData.csv")
-score_info <- read.csv(file = "studentData1.csv")
+#score_info <- read.csv(file = "studentData1.csv")
 highRiskStudents <- read.csv(file = "highRiskStudents.csv")
 
 ## Loop

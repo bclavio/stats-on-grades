@@ -1,8 +1,8 @@
 ---
 output:
-  pdf_document: default
   html_notebook: default
   html_document: default
+  pdf_document: default
   word_document: default
 ---
  
@@ -22,20 +22,21 @@ library(Hmisc)
 library(psych)
 library(ggplot2)
 library(ggpubr)
+library(gtable)
 library(cowplot)
 
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
 library(kableExtra)
-#opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
+opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
 homeDir<-Sys.getenv("HOME")
-opts_knit$set(root.dir = paste(homeDir,"/git/AAU/dropOutProject/analysis/docs", sep = ""))
+#opts_knit$set(root.dir = paste(homeDir,"/git/AAU/dropOutProject/analysis/docs", sep = ""))
 
 ```
 
 
  
-```{r echo=FALSE, warning=FALSE}
+```{r include=FALSE, warning=FALSE}
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
 score_info <- read.csv("studentData1.csv", stringsAsFactors = FALSE)
 highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
@@ -44,6 +45,8 @@ campus <- personalized_info$Campus[i]
 firstname <- personalized_info$FirstName[i]
 surname <- personalized_info$SurName[i]
 rowID <- personalized_info$rowID[i]
+
+#personalized_info <- personalized_info[,-c(1)]
 
 # average normalized for each category
 # Percentile for each category
@@ -54,22 +57,18 @@ STUDY VERIFIACTION TEST
 
 **`r firstname` `r surname`**   
 1st semester Medialogy, `r campus`   
-October 2017
+September 2017
 
-### Student Report
+## Student Report
 
-This is an interpretive report of your responses to the Study Verification Test. Its purpose is to help you identify your student profile within specific topics. 
+This is an interpretive report of your responses to the Study Verification Test. Its purpose is to help you identify your student profile within specific topics.  
 
-The boxplots show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average score of all students in 14 different topics, and your score for each topic is indicated with red dots. A value less than 0.5 means that you scored lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Based on these results we have created specific recommendations for you to get more comfortable in the Medialogy study environment. 
+The boxplots show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average score of all students in 7 different topics, and your score for each topic is indicated with red dots. A value less than 0.5 means that you scored lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Based on these results we have created specific recommendations for you to get more comfortable in the Medialogy study environment. 
 
 As the report is based on questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or counselor will help you understand your scores and find the services you desire.
 
 
-
-
-```{r echo=FALSE, warning=FALSE}
-score_info$variable <- as.character(score_info$variable)
-score_info$variable <- factor(score_info$variable, levels=unique(score_info$variable))
+```{r include=FALSE}
 
 # ggplot(score_info, aes(x=variable, y=value)) +
 #   geom_boxplot() + 
@@ -110,18 +109,22 @@ score_info$variable <- factor(score_info$variable, levels=unique(score_info$vari
 #         legend.position="none")
 
 
+score_info$variable <- as.character(score_info$variable)
+score_info$variable <- factor(score_info$variable, levels=unique(score_info$variable))
+
 student <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
 pScore <- ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
   geom_boxplot() + 
   coord_flip() +
   geom_dotplot(data = student,
-               aes(x=variable, y=value, fill = "green"),
+               aes(x=variable, y=value, fill = "student data"),
                binaxis='y',
                stackdir='center',
                binwidth = 0.04) +
   theme_bw() +
   #facet_grid(Campus ~ .) +
-  theme(axis.title.y=element_blank(),
+  theme(plot.margin = margin(20, 1, 1, 1),
+        axis.title.y=element_blank(),
         #axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
         axis.title.x=element_blank(),
@@ -129,37 +132,143 @@ pScore <- ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
         panel.grid.minor = element_blank(),
         legend.position="none")
 
-#pScore
 ```
 
 
-```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
-#, fig.height=4.5
-studentTable <- melt(subset(personalized_info[,-c(1:5)], personalized_info$rowID %in% personalized_info$rowID[i]))
+```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
+
+studentTable <- melt(subset(personalized_info[,-c(1:5, 20:23)], personalized_info$rowID %in% personalized_info$rowID[i]))
 studentTable1<- NULL
-studentTable1 <- data.frame(c(studentTable[-c(15:28),-c(1)]), apply(studentTable[-c(1:14), ], 2, rev))
+studentTable1 <- data.frame(c(studentTable[-c(1:7),-c(1)]), apply(studentTable[-c(8:14), ], 2, rev))
 studentTable1 <- studentTable1[, c(2,3,1)]
 names(studentTable1)[2]<-"Average score"
 names(studentTable1)[3]<-"Percentile rank"
 row.names(studentTable1) <- NULL
-studentTable1[3]<- c(0)
 studentTable1$`Average score` <- as.numeric(levels(studentTable1$`Average score`))[studentTable1$`Average score`]
 studentTable1 <- studentTable1[,-c(1)]
-studentTable1 <- rbind(studentTable1, c(" "))
-
-
 
 is.num <- sapply(studentTable1, is.numeric)
 studentTable1[is.num] <- sapply(studentTable1[is.num], round, 2)
+studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
+studentTable1 <- rbind(studentTable1, c(" "))
 
-#kable(studentTable1, digits = 4) %>% kable_styling(bootstrap_options = "striped", full_width = F)
-tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme("blank"))
-showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(1.6,1))
 
+tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 11.5), "mm")))
+showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(2.5,1.5)) # , common.legend = TRUE
+```
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 showAnalysis
 ```
 
 
+\pagebreak
 
 
- 
+
+STUDY VERIFIACTION TEST
+  
+**`r firstname` `r surname`**   
+1st semester Medialogy, `r campus`   
+September 2017
+
+
+
+## Specific Recommondations
+
+In this section you will receive a more detailed explanation of your results. The purpose of this information is to help you develop your skills and get the most from your university experience. Take a balanced approach to reviewing and utilizing this information. Do not assume that each statement is perfectly accurate just because it is printed in a formal manner; some statements may not fit you well. However, do not dismiss a statement just because it points to a challenge.
+
+Keep an open mind as you consider each statement. When it seems accurate, give serious thought to any suggestions that accompany the statement. If the statement is puzzling, discuss it with someone who can help you interpret it. Approaching the information in this way can be very helpful.
+
+
+```{r include=FALSE}
+
+#studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
+
+selectRecommondations <- studentTable1[1]
+selectRecommondations[1,1] <- ifelse(selectRecommondations[1,1]<0.5, 
+  "and your responses suggest that you enrolled for a university degree in general and Medialogy at AAU specifically without having received a large amount of encouragement from friends, family, or other sources. During your education it can help to have a social network that understands that this is part of pursuing a higher education and can support you in times of hardship, doubt, and low morale. Making friends at university who can provide such support can be a valuable source to rely on.",
+  "and your responses suggest that you received a sufficient amount of encouragement from friends, family, or other sources when you enrolled for a university degree in general and Medialogy at AAU. During your education it can help to have a social network that understands that this is part of pursuing a higher education and can support you in times of hardship, doubt, and low morale. Making friends at university who can provide such support can be a valuable source to rely on. Make sure to dedicate some time to making and strengthening bonds with fellow students who also want to get a university degree.")
+
+selectRecommondations[2,1] <- ifelse(selectRecommondations[1,1]<0.5, 
+  "it suggests that you need to reflect on your study habits and find out what you can change.",
+  "and it suggests that you have strong study habits. However, remember that going from pupil to student involves many changes that you need to adjust to.")
+
+selectRecommondations[3,1] <- ifelse(selectRecommondations[1,1]<0.5, 
+  "and you probably need to put much more effort into this area. As soon as possible, develop a clear daily routine in which you set aside certain periods of time to study. Learn to focus your attention and to pace yourself. Other useful techniques include previewing, underlining, note-taking, and reviewing. Academic counselors can help you develop your study habits and exercises for keeping focus.",
+  "suggesting that you are disciplined and know what it takes to study at university. Although you scored well in the test, you still want to put effort into this area, as you will experience many changes since high school. Develop a clear daily routine in which you set aside certain periods of time to study. Learn to focus your attention and to pace yourself. Other useful techniques include previewing, underlining, note-taking, and reviewing.")
+
+selectRecommondations[4,1] <- ifelse(selectRecommondations[1,1]<0.5, 
+  "and you might lack motivation to be persistent in problem solving.",
+  "and you have motivation to be persistent in problem solving.")
+
+selectRecommondations[5,1] <- ifelse(selectRecommondations[1,1]<0.5, 
+  "meaning that you are missguided of how you should perceive your own and other's intelligence.",
+  "meaning that you are open to learning progress.")
+
+personalized_info <- personalized_info[,-c(1)]
+StudyHours <- personalized_info[i,19]
+RelatedWork <- personalized_info[i,20] 
+NonRelatedWork <- personalized_info[i,21]
+
+
+selectRecommondations[6,1] <- ifelse(selectRecommondations[1,1]<0.5, 
+  "and it indicates that you are not using enough time on studying.",
+  "and it indicates that you are using adequate amount of time on studying.")
+
+selectRecommondations[7,1] <- ifelse(selectRecommondations[1,1]<0.5, 
+  "meaning that you have been misinformed about what you will learn at Medialogy.",
+  "meaning that you have a good idea of you will learn at Medialogy.")
+
+```
+
+
+#### Social Support for Studying
+Studying is a long-term endeavor and there will be times of frustration and doubt. 
+Your score placed you in the `r studentTable1[1,2]` percentile, 
+`r selectRecommondations[1,1]` 
+
+#### High School Habits
+In high school, the teacher often has the responsibility of giving homework, communicating learning material, and recording attendance in class. 
+Your score placed you in the `r studentTable1[2,2]` percentile, 
+`r selectRecommondations[2,1]` 
+As a student at university, you have the responsibility for what you learn. Your lecturers will often have more focus on academics than pedagogy, and weak study habits can therefore set you back in your learning progress. 
+
+
+#### Study Habits
+Weak study habits are the single greatest cause of academic problems in college.
+Your score placed you in the `r studentTable1[3,2]` percentile,
+`r selectRecommondations[3,1]` 
+
+
+\pagebreak
+
+STUDY VERIFIACTION TEST
+
+**`r firstname` `r surname`**   
+1st semester Medialogy, `r campus`   
+September 2017
+
+
+#### Grit
+Students with high self-reported values in grit are less likely to drop out and fail exams than those with lower scores. Your score placed you in the `r studentTable1[4,2]` percentile, 
+`r selectRecommondations[4,1]` 
+Simply trying to stay with a problem for long enough increases your chances of cracking it and mastering new skills. This requires time and dedication. Our previous cohorts have shown that even students with poor grades at entry to AAU can make it through the education if they persist and invest the time and effort. 
+
+#### Growth mindset 
+Students with high self-reported values in growth mindset are less likely to drop out and fail exams than those with lower scores. Your score placed you in the `r studentTable1[5,2]` percentile, 
+`r selectRecommondations[5,1]` 
+Seeing setbacks as an opportunity to learn and grow rather than inadequacy, lack of intelligence or talent helps to overcome challenges. Such challenges include lower than expected outcomes (e.g. grades) or failing exams or assignments. 
+
+#### Study and Work
+Studying requires a lot of time and dedication in order to succeed. Your score placed you in the `r studentTable1[6,2]` percentile, 
+`r selectRecommondations[6,1]` 
+You reported that you weekly spend `r StudyHours` hours studying, `r RelatedWork` hours on study related work, and `r NonRelatedWork` hours on non-study related work. Being intelligent and having talent can help but does not replace the need for dedicating time and effort to studying. The ECTS system assumes that you spend 45 hours a week on your education. This is difficult to do achieve over long-term with other obligations or demands on you. Should you not able to dedicate this amount of time you should not despair when you fail exams. You simply did not have the time resources to succeed and studying might take longer than expected. However, if you mainly rely on SU this provides a clear time frame within which you need to finish your education. You should therefore carefully review your commitments and other activities that you need or want to dedicate time to vis-a-vis the study demands. 
+
+#### Understanding of Medialogy
+Choosing a suitable education can be difficult, and students should reflect on their choice of education, especially, in the first semester. Your score placed you in the `r studentTable1[7,2]` percentile, 
+`r selectRecommondations[7,1]` 
+Previous students have been misinformed about what students study at Medialogy, and while some students have chosen to continue on the programme, others have chosen a different education or dropped out. Attending to Med Awards can inform you about other student projects in Medialogy. Contacting older students in the Medialogy facebook group, study counselors, and going to the study cafe can also provide you information about the education and what is means to be a student in Medialogy. 
+
+
+
