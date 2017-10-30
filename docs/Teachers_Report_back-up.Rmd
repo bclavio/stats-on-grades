@@ -29,7 +29,7 @@ library(ggpubr)
 
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
-library(kableExtra)
+#library(kableExtra)
 homeDir<-Sys.getenv("HOME")
 opts_knit$set(root.dir = paste(homeDir,"/SVN/01Projects/SSP/", sep = ""))
 ```
