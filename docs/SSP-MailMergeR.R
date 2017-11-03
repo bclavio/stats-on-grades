@@ -111,13 +111,13 @@ avgGrades <- NULL
 # avgGrades['Education Attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
 # avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
 
-avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:111)]))
+avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:106)])) # removed 5
 avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[93:97]))
 avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
 avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
-avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:74]))
+avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:68]))
 avgGrades['High School Habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[2:8])) # removed 2
+avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[c(2:4,7:8,55:56)])) # removed 4, added 2
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
 
 # normalizes avg grades
@@ -146,19 +146,29 @@ scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
   scale_x_discrete(breaks=seq(7,11,1), name ="Total score")
 
-
+# OLD: gradesum calculated for all SSP topics, high risk student 
 #dfSSPgradesSum <- data.frame(rowID = scaled.avgGrades$rowID, campus = scaled.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
-dfSSPgradesSum <- data.frame(rowID = norm.avgGrades$rowID, campus = norm.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
+#dfSSPgradesSum <- data.frame(rowID = norm.avgGrades$rowID, campus = norm.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
+#ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_histogram()
 
-ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_histogram()
+selectedTopics <- dfSSPgradesStat[,c(2:4,7:8,34:45,55:56,65:68,57:61,62:64,93:97,98:106)]
+dfSSPgradesSum <- data.frame(rowID = norm.avgGrades$rowID, campus = norm.avgGrades$Campus, gradeSums = rowSums(selectedTopics))
+ggplot(dfSSPgradesStat, aes(rowSums(selectedTopics))) + geom_histogram()
 
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
 highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
-
-#scaled.avgGradesMelt <- melt(scaled.avgGrades, id.vars = c("rowID", "Campus"))
-#scaled.avgGradesMelt['highRisk'] <- ifelse(scaled.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
 norm.avgGradesMelt <- melt(norm.avgGrades, id.vars = c("rowID", "Campus"))
 norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
+
+dfSSPanswers["rowID"] <- seq(1:nrow(dfSSPanswers))
+studyHours <- dfSSPanswers [, c('rowID', 'Campus', 'Response 93')]
+studyHours['highRisk'] <- ifelse(studyHours$rowID %in% highRiskStudents$rowID, 1, 0)
+names(studyHours)[3]<-"hours"
+
+
+
+
+
 
 
 # The histogram for each category shows that the scaled averages are not normal distributed:
@@ -323,13 +333,41 @@ ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
         legend.position="none")
 
 
+
+# i <- 1 # from 1-20
+# # study hours boxplot
+# 
+# studentHours <- subset(studyHours, studyHours$rowID %in% highRiskStudents$rowID[i])
+# studentHours['DotPos'] <- 95 
+# ggplot(studyHours, aes(x=rowID,y=hours)) + 
+#   geom_boxplot() + 
+#   coord_flip() +
+#   geom_dotplot(data = studentHours,
+#                aes(x=DotPos, y=hours, fill = "green"),
+#                binaxis='y',
+#                stackdir='center',
+#                #position = "dodge",
+#                #binpositions="all",
+#                binwidth = 2.0) +
+#   theme_bw() +
+#   theme(axis.title.y=element_blank(),
+#         axis.text.y=element_blank(),
+#         axis.ticks.y=element_blank(),
+#         #axis.title.x=element_blank(),
+#         panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank(),
+#         legend.position="none")
+
+
+
+
 #######################################################################
 
 studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
 studentData['FirstName'] <- dfSSPgrades[,2]
 studentData['SurName'] <- dfSSPgrades[,1]
 
-avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, dfSSPanswers[, c(104,106:107)])
+avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, dfSSPanswers[, c(67,104,106:107,109:116)])
 
 #studentData1 <- merge(studentData, norm.avgGradesMelt, by= "rowID")
 #studentData1 <- studentData1[order(studentData1$variable), ]
