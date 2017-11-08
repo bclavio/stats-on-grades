@@ -22,12 +22,21 @@ library(ecdfHT)
 ### Import SSP data
 
 # Brian: change dir
-SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP/'} else {"~/SVN/01Projects/SSP/"}
+SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/'} else {"~/SVN/01Projects/"}
 setwd(SVNData)
 
-dfQAGrades<-read.csv("QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
-dfSSPgradesCPH<-read.csv("SSPgradesTestCPH 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPgradesAAL<-read.csv("SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfQAGrades<-read.csv("SSP/QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+dfSSPgradesCPH<-read.csv("SSP/SSPgradesTestCPH 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPgradesAAL<-read.csv("SSP/SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+
+# GPRO midterm grades from AAL and CPH
+dfGPROmidtermAAL <- read.csv("GPRO/MidtermExamAAL-grades_07-11.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfGPROmidtermCPH <- read.csv("GPRO/MidtermExamCPH-grades_07-11.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+
+# Question topics for each question in the midterm exam and for the self-assessments in lecture 1-7 (before the midterm exam)):
+dfGPROtopics <- read.csv("GPRO/GPRO_question_topics.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+#dfGPROmidterm <- data.frame(lapply(dfGPROmidterm, function(x) { gsub("-", NA, x) }))
+
 
 ####################################
 ###### the answers are not in use
@@ -51,6 +60,20 @@ dfSSPgradesCPH <- dfSSPgradesCPH[-nrow(dfSSPgradesCPH),]
 dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
 dfSSPgrades <- dfSSPgrades[!grepl("In progress", dfSSPgrades$State),]
 dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
+
+# NEW
+dfGPROmidtermCPH["Campus"]<-"CPH"
+dfGPROmidtermAAL["Campus"]<-"AAL"
+dfGPROmidterm <- rbind(dfGPROmidtermCPH,dfGPROmidtermAAL) 
+names(dfGPROmidterm)[1] <- "Surname"
+dfGPROmidterm <- dfGPROmidterm[!grepl("Overall average", dfGPROmidterm$Surname),]
+dfGPROmidterm <- dfGPROmidterm[!grepl("User 01", dfGPROmidterm$Surname),]
+dfGPROmidterm["rowID"] <- seq(1:nrow(dfGPROmidterm))
+dfGPROmidterm$`First name` <- gsub("-", " ", dfGPROmidterm$`First name`)
+dfGPROmidterm["Name"] <- paste(dfGPROmidterm$`First name`,dfGPROmidterm$Surname)
+dfGPROmidterm$Surname <- gsub("-", " ", dfGPROmidterm$Surname)
+dfGPROmidterm <- data.frame(lapply(dfGPROmidterm, function(x) { gsub("-", 0, x) }))
+
 
 # computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
 # Problem Q93, Q95 and Q96 contained strings, so I had to change them manually:
@@ -104,17 +127,45 @@ avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:68]))
 avgGrades['High school habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
 avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[c(2:4,7:8,55:56)])) # removed 4, added 2
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
+# New - check: avgGrades <- na.omit(avgGrades)
 
-
-# normalizes avg grades
+# NEW 
 normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
 }
+
+dfGPROmidtermStat <- data.frame( lapply(dfGPROmidterm[11:34], function(x) as.numeric(as.character(x))) )
+dfGPROmaxGrades <- data.frame( lapply(dfGPROtopics[nrow(dfGPROtopics), -c(1:2)], function(x) as.numeric(as.character(x))) )
+names(dfGPROmidtermStat) <- names(dfGPROmaxGrades) 
+dfGPROmidtermStat <- rbind(dfGPROmidtermStat, dfGPROmaxGrades)
+dfGPROmidtermStat <- as.data.frame(lapply(dfGPROmidtermStat, normalize))
+dfGPROmidtermStat <- dfGPROmidtermStat[-c(1),]
+
+avgMidtermGrades <- NULL
+avgMidtermGrades['If statements'] <- list(rowMeans(dfGPROmidtermStat[22:23]))
+avgMidtermGrades['Functions'] <- list(rowMeans(dfGPROmidtermStat[20:21]))
+avgMidtermGrades['Loops'] <- list(rowMeans(dfGPROmidtermStat[19]))
+avgMidtermGrades['Nesting'] <- list(rowMeans(dfGPROmidtermStat[18]))
+avgMidtermGrades['Logical expressions'] <- list(rowMeans(dfGPROmidtermStat[c(15:17,24)]))
+avgMidtermGrades['Mouse and keyboard input'] <- list(rowMeans(dfGPROmidtermStat[14]))
+avgMidtermGrades['Math and expressions'] <- list(rowMeans(dfGPROmidtermStat[10:13]))
+avgMidtermGrades['Data type'] <- list(rowMeans(dfGPROmidtermStat[9]))
+avgMidtermGrades['Variables'] <- list(rowMeans(dfGPROmidtermStat[3:8]))
+avgMidtermGrades['General knowledge'] <- list(rowMeans(dfGPROmidtermStat[2]))
+avgMidtermGrades['Programming rules'] <- list(rowMeans(dfGPROmidtermStat[1]))
+avgMidtermGrades <- data.frame( lapply(avgMidtermGrades, function(x) as.numeric(as.character(x))) )
+avgMidtermGrades["rowID"] <- seq(1:nrow(avgMidtermGrades))
+avgMidtermGradesMelt <- melt(avgMidtermGrades, id.vars = "rowID")
+
+
+ggplot(dfGPROmidtermStat, aes(rowSums(dfGPROmidtermStat))) + geom_density()+
+  scale_x_continuous(breaks=seq(0,120,10), limits = c(0,120), name ="Total score")
+
+
+# normalizes avg grades
 norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
 norm.avgGrades["Campus"] <- dfSSPgrades$Campus
 norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
-
-
 ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
   scale_x_discrete(breaks=seq(7,11,1), name ="Total score")
 
@@ -140,6 +191,8 @@ names(studyHours)[3]<-"hours"
 
 
 
+
+
 #######################################################################
 
 studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
@@ -157,12 +210,18 @@ setwd('C:/Users/BiancaClavio/Documents/stats-on-grades/docs')
 write.csv(studentData,file = "studentData.csv")
 write.csv(highRiskStudents,file = "highRiskStudents.csv")
 personalized_info <- read.csv(file = "studentData.csv")
-highRiskStudents <- read.csv(file = "highRiskStudents.csv")
+
+
+avgPerGPRO <- data.frame(avgMidtermGrades, apply(avgMidtermGrades[,11:1], 2, function(c) ecdf(c)(c))*100, dfGPROmidterm$Name, dfGPROmidterm$Campus)
+names(avgPerGPRO)[ncol(avgPerGPRO)] <- "Campus"
+names(avgPerGPRO)[ncol(avgPerGPRO)-1] <- "Name"
+write.csv(avgPerGPRO,file = "MidtermGrades.csv")
+personalized_infoGPRO <- read.csv(file = "MidtermGrades.csv")
 
 ## Loop
-for (i in 1:nrow(personalized_info)){
-  rmarkdown::render(input = "SSP-MailMerge.Rmd",
+for (i in 1:nrow(personalized_infoGPRO)){
+  rmarkdown::render(input = "SSP-MailMergeForBrian.Rmd",
                     output_format = "pdf_document",
-                    output_file = paste("SSPanalysis_", i, ".pdf", sep=''),
-                    output_dir = "handouts/")
+                    output_file = paste("GPROanalysis_", i, ".pdf", sep=''),
+                    output_dir = "handoutsGPRO/")
 }

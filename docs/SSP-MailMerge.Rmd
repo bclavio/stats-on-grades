@@ -84,7 +84,7 @@ student <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID %in% highRiskStud
 pScore <- ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
   geom_boxplot() + 
   coord_flip() +
-  labs(y="Figure 1: Boxplots of the self-ratings in seven topic of all students.") +
+  labs(y="Figure 1: Boxplots of the self-ratings of all students in seven topic.") +
   geom_dotplot(data = student,
                aes(x=variable, y=value, fill = "student data"),
                binaxis='y',

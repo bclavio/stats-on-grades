@@ -88,9 +88,10 @@ studyHoursTable <- data.frame(
     "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "CPH", ])))
 names(studyHoursTable)[1]<-"AAL"
 names(studyHoursTable)[2]<-"CPH"
-
+names(dfSSPgrades)[1]<-"Surname"
 
 dfSSPgrades$`First name` <- gsub("-", " ", dfSSPgrades$`First name`)
+dfSSPgrades$Surname <- gsub("-", " ", dfSSPgrades$Surname)
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
 
