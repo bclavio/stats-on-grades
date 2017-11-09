@@ -147,7 +147,7 @@ ectsAggsAll<-merge(ECTSovw,ectsSumSPbySPVAndCT, by="SPV")
 
 #From2010s<-dfEnrolStatus[dfEnrolStatus$startaar>2009,]
 ForSvante<-merge(dfEnrolStatus,ectsAggsAll)
-ForSvante<-ForSvante[ForSvante$startaar>2009,]
+ForSvante<-ForSvante[ForSvante$startaar>2011,]
 ForSvante<-merge(ForSvante,GPAavgagg)
 sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
 
