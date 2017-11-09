@@ -291,7 +291,7 @@ ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=va
 
 # Campi side-by-side
 ggplot(data= melt(norm.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
-  geom_boxplot(aes(fill=Campus)) +
+  geom_boxplot(aes(fill=Campus,alpha=.1)) +
   scale_y_continuous(breaks=seq(0,1,0.1)) +
   labs(title = "Normalized averages of test scores", y = "Normalized averages scores") +
   #geom_hline(yintercept = 0, color = "grey") +

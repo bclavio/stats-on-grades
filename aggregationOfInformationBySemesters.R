@@ -163,6 +163,9 @@ highSchoolVariables<-unique(merge(dfKvote1,dfM1, by = "studienr"))
 ForSvante3<-merge(highSchoolVariables,ForSvante2)
 ForSvante3<-merge(highSchoolData1,ForSvante3,by = c("navn"))
 
+perc.rank <- function(x) trunc(rank(x))/length(x)
+MScstudentsGPAavgs<-sqldf("select type, enrolID, sum(ECTS/5*GPAgrade)/(sum(ECTS)/5) as GPAavg, sum(ECTS) as ECTS from dfAAUMarriedGrades where GPAgrade is not Null and type='kandidat'  group by type, enrolID having sum(ECTS)>=80")
+MScstudentsGPAavgs$rank<-perc.rank(MScstudentsGPAavgs$GPAavg)
 
 # anonymize ---------------------------------------------------------------
 

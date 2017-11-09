@@ -1,9 +1,9 @@
 ---
 title: "Study Verification Test"
 output:
-  pdf_document: default
   html_notebook: default
   html_document: default
+  pdf_document: default
   word_document: default
 ---
  
@@ -29,7 +29,7 @@ library(ggpubr)
 
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
-library(kableExtra)
+#library(kableExtra)
 homeDir<-Sys.getenv("HOME")
 opts_knit$set(root.dir = paste(homeDir,"/SVN/01Projects/SSP/", sep = ""))
 ```

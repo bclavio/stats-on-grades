@@ -123,10 +123,39 @@ dropOutModel<- glm(isDropOut ~ #
                    +campus 
                    #+ gender 
                    +isIntl
-                   ,dfM3y,family=binomial())
+                   ,dfM[dfM$startaar==2016,],family=binomial())
 #,dfM[dfM$yearOfEnrolment== & dfM$campus=="Aalborg" ,])
 #,dfM[dfM$startaar %in% c(2011,2012,2013) ,])
 summary(dropOutModel)
+
+PFIModel<- lm(PFI_1g ~ #
+                MAT_Niveau
+              * MATGrade +
+                  GPRO_Lg
+                   #+ ENG_Niveau* ENGGrade
+                   #+ DANGradeX
+                   #+ GPRO_PassedBy1stAttempt
+                   #+ GPRO_PassedBy2ndAttempt
+                   #+ MMA_PassedBy1stAttempt
+                   #+ MMA_PassedBy2ndAttempt
+                   #+ PFI_PassedBy1stAttempt
+                   #+ PFI_PassedBy2ndAttempt
+                   #mathLevel 
+                   #+ EnglishGrade
+                   #+ EnglishLevel
+                   #+ DanishGrade
+                   #+ yearsFromEnrolment
+                   #+ADGGRU
+                   +campus 
+                   #+ gender 
+                   #+isIntl
+                   ,dfM[dfM$startaar==2016 ,])
+#,dfM[dfM$yearOfEnrolment== & dfM$campus=="Aalborg" ,])
+#,dfM[dfM$startaar %in% c(2011,2012,2013) ,])
+summary(PFIModel)
+
+
+
 # 
 # Coefficients:
 #   Estimate Std. Error z value Pr(>|z|)    
