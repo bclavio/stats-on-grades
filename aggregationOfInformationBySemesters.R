@@ -167,6 +167,9 @@ perc.rank <- function(x) trunc(rank(x))/length(x)
 MScstudentsGPAavgs<-sqldf("select type, enrolID, sum(ECTS/5*GPAgrade)/(sum(ECTS)/5) as GPAavg, sum(ECTS) as ECTS from dfAAUMarriedGrades where GPAgrade is not Null and type='kandidat'  group by type, enrolID having sum(ECTS)>=80")
 MScstudentsGPAavgs$rank<-perc.rank(MScstudentsGPAavgs$GPAavg)
 
+# final check of data ----------------------------------------------------
+missingInSPV<-data.frame(unique(dfAAUGradesWODistEnrol[!dfAAUGradesWODistEnrol$aktivitet %in% dfECTSstruct$aktivitet,]$aktivitet ) )
+#ideally the data frame is empty
 # anonymize ---------------------------------------------------------------
 
 ForSvante$studienr<-NULL
