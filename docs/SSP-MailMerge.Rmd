@@ -38,10 +38,6 @@ firstname <- personalized_info$FirstName[i]
 surname <- personalized_info$SurName[i]
 rowID <- personalized_info$rowID[i]
 
-#personalized_info <- personalized_info[,-c(1)]
-
-# average normalized for each category
-# Percentile for each category
 ```
 
 ---
@@ -70,8 +66,7 @@ The boxplots[^1]  show how you compare to a larger sample of first semester Medi
 
 As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or student counselor will help you understand your scores and find the services you desire.
 
-[^1]: A *boxplot* consists of four equal sized groups made from the ordered scores, i.e. 25% of all scores are placed in each group. The lines dividing the groups are called quartiles. The rectangular box denotes the middle 50% of scores for the group, and its lengyh is equal to the difference between the 75th and 25th percentiles. The median (middle quartile) marks the mid-point of the data, indicated as the line dividing the box into two parts. The upper and lower lines (also called whiskers) represent scores outside the middle 50%. Outliers are defined as data points outside the whiskers and plotted as black dots. 
-
+[^1]: A *boxplot* can give you information regarding the range, distribution, and centre of a statistical data set. The rectangular box denotes the middle 50% of scores, in which the line dividing the box into two parts marks the mid-point of the data (i.e. median). The upper and lower lines (also called whiskers) represent the 25% highest scores (upper line) and the 25% lowest scores (lower line). Outliers are defined as data points outside the whiskers and plotted as black dots. 
 
 
 ```{r include=FALSE}
@@ -211,10 +206,10 @@ selectRecommondations[5,1] <- ifelse(studentTable1[5,1]<0.5,
   "meaning that you are open to actively improving your intelligence. Seeing setbacks (failed assignments or poor exam grades) as an opportunity to learn and grow rather than inadequacy, lack of intelligence or talent helps  you overcome challenges and develop a positive learning attitude. ")
 
 # Study and work
-selectRecommondations[6,1] <- ifelse(studyingHours<38, "much less than the recommended",
-  ifelse(studyingHours>38 && studyHours<42, "less than the recommended",
+selectRecommondations[6,1] <- ifelse(studyingHours>47, "sufficient",
   ifelse(studyingHours>42 && studyHours<47, "about the recommended",
-  ifelse(studyingHours>47, "sufficient"))))
+  ifelse(studyingHours>38 && studyHours<42, "less than the recommended",
+  ifelse(studyingHours<38, "much less than the recommended"))))
 
 selectRecommondations[2,2] <- ifelse(relatedWork>=10 || nonRelatedWork>=10 || (relatedWork+nonRelatedWork)>=10,
   paste("You reported using ", relatedWork, "hours on study related work, and", nonRelatedWork, "hours on non-study related work.",
