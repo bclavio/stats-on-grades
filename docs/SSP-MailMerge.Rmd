@@ -66,7 +66,7 @@ The boxplots[^1]  show how you compare to a larger sample of first semester Medi
 
 As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or student counselor will help you understand your scores and find the services you desire.
 
-[^1]: A *boxplot* can give you information regarding the range, distribution, and centre of a statistical data set. The rectangular box denotes the middle 50% of scores, in which the line dividing the box into two parts marks the mid-point of the data (i.e. median). The upper and lower lines (also called whiskers) represent the 25% highest scores (upper line) and the 25% lowest scores (lower line). Outliers are defined as data points outside the whiskers and plotted as black dots. 
+[^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation (IQR), and a typical value (median). The rectangular box denotes the IQR, corresponding to the middle scores of the dataset. The line dividing the box into two parts marks the median. The upper and lower lines (also called whiskers) represent the highest scores (upper line) and the lowest scores (lower line). Outliers are defined as data points outside the whiskers and plotted as black dots. 
 
 
 ```{r include=FALSE}

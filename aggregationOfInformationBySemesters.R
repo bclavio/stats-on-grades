@@ -169,6 +169,11 @@ MScstudentsGPAavgs$rank<-perc.rank(MScstudentsGPAavgs$GPAavg)
 
 # final check of data ----------------------------------------------------
 missingInSPV<-data.frame(unique(dfAAUGradesWODistEnrol[!dfAAUGradesWODistEnrol$aktivitet %in% dfECTSstruct$aktivitet,]$aktivitet ) )
+missingInSPV['studentCounts'] <- 0
+for (i in 1:nrow(missingInSPV)){
+  missingInSPV[i,2] <- count(dfAAUGradesWODistEnrol$aktivitet, missingInSPV[i,1])
+}
+
 #ideally the data frame is empty
 # anonymize ---------------------------------------------------------------
 
@@ -188,10 +193,13 @@ ForSvante4$navn<-NULL
 ForSvante<-ForSvante[!duplicated(ForSvante), ]
 ForSvante2<-ForSvante2[!duplicated(ForSvante2), ]
 
-write.csv(ForSvante,file = "MedData1.csv") # 2294 rows 133 variables
-write.csv(ForSvante2,file = "MedData2.csv") # 1826 rows 145 variables
-write.csv(ForSvante3,file = "MedData3.csv") # 1122 rows 150 variables
-write.csv(ForSvante4,file = "MedData4.csv") # 1852 rows 139 variables
+myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"} # on IMAC "~/Documents/R/stats-on-grades"
+setwd(myWD)
+
+write.csv(ForSvante,file = "MedData1.csv") # 1716 rows 168 variables (2012-2016, no high school data)
+write.csv(ForSvante2,file = "MedData2.csv") # 1539 rows 179 variables (2012-2016, high school grades)
+write.csv(ForSvante3,file = "MedData3.csv") # 1094 rows 184 variables (2012-2016, HS demographics) - gave to students
+write.csv(ForSvante4,file = "MedData4.csv") # 1852 rows 174 variables (2010/2017, HS GPA) - gave to students
 
 #studenCntKand<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='kandidat' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
 #studenCntBach<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='bachelor' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
