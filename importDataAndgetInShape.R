@@ -121,7 +121,7 @@ dfAAUGrades$reg_dato<- as.Date(as.character(dfAAUGrades$reg_dato) , "%d.%m.%Y")
 
 #match grades with enrolment data
 dfAAUGrades<-merge(dfAAUGrades,dfEnrolStatus[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn","stype")],by.x = c("studienr","type"),by.y = c("studienr","stype"))
-dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn|is.na(dfAAUGrades$slutdatosn)),]
+dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn+1|is.na(dfAAUGrades$slutdatosn)),]
 
 #dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>dfAAUGrades$fradatosn,]
 dfAAUGrades$isIntl<-ifelse(dfAAUGrades$Land=="Danmark",0,1)
@@ -141,7 +141,20 @@ dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$exa
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
                                #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
-                                                                 
+
+
+#hard coded data corrections for three students 
+dfAAUGrades[dfAAUGrades$studienr==20133942 & dfAAUGrades$aktivitetText=="Bachelorprojekt (Design af int"]$aktivitetText<-"Bachelorprojekt"
+dfAAUGrades[dfAAUGrades$studienr==20133942 & dfAAUGrades$aktivitetText=="Bachelorprojekt",]$bedom_dato<- -1 + dfAAUGrades[dfAAUGrades$studienr==20133942 & dfAAUGrades$aktivitetText=="Bachelorprojekt",]$bedom_dato
+dfAAUGrades[dfAAUGrades$aktivitetText=="Interaktionsdesign - sammenlø",]$aktivitetText<-"Interaktionsdesign - sammenl"
+
+dfAAUGrades[dfAAUGrades$studienr==20133634 & dfAAUGrades$aktivitetText=="Bachelorprojekt (Design af int",]$aktivitetText<-"Bachelorprojekt"
+dfAAUGrades[dfAAUGrades$studienr==20133634 & dfAAUGrades$aktivitetText=="Bachelorprojekt",]$ECTS<-20
+
+dfAAUGrades[dfAAUGrades$studienr==20133951 & dfAAUGrades$aktivitetText=="Bachelorprojekt (Design af int",]$aktivitetText<-"Bachelorprojekt"   
+dfAAUGrades[dfAAUGrades$studienr==20133951 & dfAAUGrades$aktivitetText=="Bachelorprojekt",]$ECTS<-20
+dfAAUGrades[dfAAUGrades$aktivitetText=="Sansning af medier (Computerg",]$aktivitetText<-"Sansning af medier (Computergr"
+
 #1+(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2) 
 #as.numeric(format(dfAAUGrades$bedom_dato,'%Y')) ,2)
 
