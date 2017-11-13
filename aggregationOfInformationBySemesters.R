@@ -175,7 +175,7 @@ missingInSPV<-data.frame(unique(dfAAUGradesWODistEnrol[!dfAAUGradesWODistEnrol$a
 ForSvante$studienr<-NULL
 ForSvante2$studienr<-NULL
 ForSvante3$studienr<-NULL
-ForSvante4$studienr<-NULL
+#ForSvante4$studienr<-NULL
 ForSvante$navn<-NULL
 ForSvante2$navn<-NULL
 ForSvante3$navn<-NULL
@@ -191,7 +191,7 @@ ForSvante2<-ForSvante2[!duplicated(ForSvante2), ]
 write.csv(ForSvante,file = "MedData1.csv") # 2294 rows 133 variables
 write.csv(ForSvante2,file = "MedData2.csv") # 1826 rows 145 variables
 write.csv(ForSvante3,file = "MedData3.csv") # 1122 rows 150 variables
-write.csv(ForSvante4,file = "MedData4.csv") # 1852 rows 139 variables
+#write.csv(ForSvante4,file = "MedData4.csv") # 1852 rows 139 variables
 
 #studenCntKand<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='kandidat' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
 #studenCntBach<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='bachelor' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
