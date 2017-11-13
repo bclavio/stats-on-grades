@@ -98,7 +98,7 @@ semSkeleton<-data.frame(merge(CTdfs,semesters));semSkeleton<-merge(semSkeleton,e
 StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("enrolID","stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
 #StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("studienr", "stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
 
-ECTSattainedMelted<- merge(dfAAUMarriedGrades[dfAAUMarriedGrades$isPassed==1,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
+ECTSattainedMelted<- merge(dfAAUMarriedGrades[dfAAUMarriedGrades$isPassed>0,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
 
 maxECTSTakenByCourseBySemester<-sqldf('select bctdf, enrolID, takenInSem, aktivitet, type, max(ECTS) as ECTS from dfAAUMarriedGrades group by bctdf, enrolID, takenInSem, aktivitet, type')
 
@@ -147,7 +147,7 @@ ectsAggsAll<-merge(ECTSovw,ectsSumSPbySPVAndCT, by="SPV")
 
 #From2010s<-dfEnrolStatus[dfEnrolStatus$startaar>2009,]
 ForSvante<-merge(dfEnrolStatus,ectsAggsAll)
-ForSvante<-ForSvante[ForSvante$startaar>2009,]
+ForSvante<-ForSvante[ForSvante$startaar>2011,]
 ForSvante<-merge(ForSvante,GPAavgagg)
 sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
 
@@ -167,6 +167,9 @@ perc.rank <- function(x) trunc(rank(x))/length(x)
 MScstudentsGPAavgs<-sqldf("select type, enrolID, sum(ECTS/5*GPAgrade)/(sum(ECTS)/5) as GPAavg, sum(ECTS) as ECTS from dfAAUMarriedGrades where GPAgrade is not Null and type='kandidat'  group by type, enrolID having sum(ECTS)>=80")
 MScstudentsGPAavgs$rank<-perc.rank(MScstudentsGPAavgs$GPAavg)
 
+# final check of data ----------------------------------------------------
+missingInSPV<-data.frame(unique(dfAAUGradesWODistEnrol[!dfAAUGradesWODistEnrol$aktivitet %in% dfECTSstruct$aktivitet,]$aktivitet ) )
+#ideally the data frame is empty
 # anonymize ---------------------------------------------------------------
 
 ForSvante$studienr<-NULL

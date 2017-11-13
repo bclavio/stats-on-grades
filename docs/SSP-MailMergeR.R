@@ -88,9 +88,10 @@ studyHoursTable <- data.frame(
     "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "CPH", ])))
 names(studyHoursTable)[1]<-"AAL"
 names(studyHoursTable)[2]<-"CPH"
+names(dfSSPgrades)[1]<-"Surname"
 
-
-
+dfSSPgrades$`First name` <- gsub("-", " ", dfSSPgrades$`First name`)
+dfSSPgrades$Surname <- gsub("-", " ", dfSSPgrades$Surname)
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
 
@@ -112,13 +113,14 @@ avgGrades <- NULL
 # avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
 
 avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:106)])) # removed 5
-avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[93:97]))
-avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
+avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[93:97]))
+avgGrades['Growth mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
 avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
 avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:68]))
-avgGrades['High School Habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
+avgGrades['High school habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
 avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[c(2:4,7:8,55:56)])) # removed 4, added 2
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
+
 
 # normalizes avg grades
 normalize <- function(x) {
@@ -157,8 +159,13 @@ ggplot(dfSSPgradesStat, aes(rowSums(selectedTopics))) + geom_histogram()
 
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
 highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
+norm.avgGradesMelt <- NULL
 norm.avgGradesMelt <- melt(norm.avgGrades, id.vars = c("rowID", "Campus"))
+norm.avgGradesMelt$variable <- gsub("\\.", " ", norm.avgGradesMelt$variable)
 norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
+norm.avgGradesMelt$variable <- factor(norm.avgGradesMelt$variable, levels = c('Understanding of Medialogy', 'Study and work', 
+                                                                              'Growth mindset','Grit','Study habits',
+                                                                              'High school habits','Social support for studying'),ordered = TRUE)
 
 dfSSPanswers["rowID"] <- seq(1:nrow(dfSSPanswers))
 studyHours <- dfSSPanswers [, c('rowID', 'Campus', 'Response 93')]
@@ -368,6 +375,7 @@ studentData['FirstName'] <- dfSSPgrades[,2]
 studentData['SurName'] <- dfSSPgrades[,1]
 
 avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, dfSSPanswers[, c(67,104,106:107,109:116)])
+# norm.avgGradesMelt <- norm.avgGradesMelt[c(nrow(norm.avgGradesMelt):1),]
 
 #studentData1 <- merge(studentData, norm.avgGradesMelt, by= "rowID")
 #studentData1 <- studentData1[order(studentData1$variable), ]
