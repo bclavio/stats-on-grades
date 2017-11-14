@@ -95,23 +95,7 @@ dfSSPgrades$Surname <- gsub("-", " ", dfSSPgrades$Surname)
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
 
-# computes avg grade for each category and for each student
 avgGrades <- NULL
-# avgGrades['View on Medialogy'] <- list(rowMeans(dfSSPgradesStat[98:111]))
-# avgGrades['Study and Work'] <- list(rowMeans(dfSSPgradesStat[c(94:97)]))
-# avgGrades['Academic Abilities'] <- list(rowMeans(dfSSPgradesStat[88:92]))
-# avgGrades['Personal Trait'] <- list(rowMeans(dfSSPgradesStat[75:87]))
-# avgGrades['Self-control'] <- list(rowMeans(dfSSPgradesStat[65:74]))
-# avgGrades['Growth Mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
-# avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
-# avgGrades['Belonging Uncertainty'] <- list(rowMeans(dfSSPgradesStat[51:56]))
-# avgGrades['High School Trust'] <- list(rowMeans(dfSSPgradesStat[46:50]))
-# avgGrades['High School Behaviour'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-# avgGrades['Education Choice'] <- list(rowMeans(dfSSPgradesStat[24:33]))
-# avgGrades['Going to University'] <- list(rowMeans(dfSSPgradesStat[16:23]))
-# avgGrades['Education Attitude'] <- list(rowMeans(dfSSPgradesStat[10:15]))
-# avgGrades['Demographics'] <- list(rowMeans(dfSSPgradesStat[1:9]))
-
 avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:106)])) # removed 5
 avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[93:97]))
 avgGrades['Growth mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
@@ -173,228 +157,25 @@ studyHours['highRisk'] <- ifelse(studyHours$rowID %in% highRiskStudents$rowID, 1
 names(studyHours)[3]<-"hours"
 
 
-
-
-
-
-
-# The histogram for each category shows that the scaled averages are not normal distributed:
-# ggplot(scaled.avgGradesMelt,aes(x = value)) + 
-#   facet_wrap(~variable,scales = "free_x") + 
-#   geom_histogram(binwidth = 0.1)
-
-ggplot(norm.avgGradesMelt,aes(x = value)) + 
-  facet_wrap(~variable,scales = "free_x") + 
-  geom_histogram(binwidth = 0.1)
-
-
-# sumGrades <- NULL
-# sumGrades['avgDemographics'] <- list(rowSums(dfSSPgradesStat[1:9]))
-# sumGrades['avgAttitude'] <- list(rowSums(dfSSPgradesStat[10:15]))
-# sumGrades['avgReasons'] <- list(rowSums(dfSSPgradesStat[16:23]))
-# sumGrades['avgChoice'] <- list(rowSums(dfSSPgradesStat[24:33]))
-# sumGrades['avgHSBehave'] <- list(rowSums(dfSSPgradesStat[34:45]))
-# sumGrades['avgHSTrust'] <- list(rowSums(dfSSPgradesStat[46:50]))
-# sumGrades['avgBelonging'] <- list(rowSums(dfSSPgradesStat[51:56]))
-# sumGrades['avgGrit'] <- list(rowSums(dfSSPgradesStat[57:61]))
-# sumGrades['avgGrowth'] <- list(rowSums(dfSSPgradesStat[62:64]))
-# sumGrades['avgControl'] <- list(rowSums(dfSSPgradesStat[65:74]))
-# sumGrades['avgTraits'] <- list(rowSums(dfSSPgradesStat[75:87]))
-# sumGrades['avgAcademic'] <- list(rowSums(dfSSPgradesStat[88:92]))
-# sumGrades['avgHours'] <- list(rowSums(dfSSPgradesStat[c(94,97)])) # I have removed 3 questions
-# sumGrades['avgMedialogy'] <- list(rowSums(dfSSPgradesStat[98:111]))
-# sumGrades <- data.frame( lapply(sumGrades, function(x) as.numeric(as.character(x))) )
-# 
-# scaled.sumGrades <- sumGrades
-# scaled.sumGrades[1:14] <- scale(sumGrades[1:14])
-# scaled.sumGrades["Campus"] <- dfSSPgrades$Campus
-# scaled.sumGrades["rowID"] <- seq(1:nrow(scaled.sumGrades))
-# scaled.sumGradesMelt <- melt(scaled.sumGrades, id.vars = c("rowID", "Campus"))
-# scaled.sumGradesMelt['highRisk'] <- ifelse(scaled.sumGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
-# 
-# # The histogram for each category shows that the scaled averages are not normal distributed (the same as the above):
-# ggplot(scaled.sumGradesMelt,aes(x = value)) + 
-#   facet_wrap(~variable,scales = "free_x") + 
-#   geom_histogram(binwidth = 0.1)
-
-
-
-
-# scaled data with facet of AAL and CPH common for all students
-ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
-  geom_boxplot(aes(fill=Campus)) +
-  scale_y_continuous(breaks=seq(-4,4,1)) +
-  coord_flip() +
-  theme_bw() + 
-  facet_grid(Campus ~ .) +
-  theme(axis.title.y=element_blank(),
-        #axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.title.x=element_blank(),
-        #panel.border = element_blank(), 
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        legend.position="none"
-        )
-
-# Campi side-by-side
-ggplot(data= melt(scaled.avgGrades[1:15], id.var="Campus"), aes(x=variable, y=value)) + 
-  geom_boxplot(aes(fill=Campus)) +
-  scale_y_continuous(breaks=seq(-4,4,1)) +
-  labs(title = "Scaled averages of student scores",y = "Standard deviations from the mean") +
-  coord_flip() +
-  theme_bw() + 
-  #facet_grid(Campus ~ .) +
-  theme(axis.title.y=element_blank(),
-        #axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        #axis.title.x=element_blank(),
-        #panel.border = element_blank(), 
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        #legend.position="none"
-  )
-
-
-# all high risk students with color diff - dots on top of each other
-ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) + 
-  geom_boxplot() + 
-  coord_flip() +
-  #facet_grid(Campus ~ .) +
-  geom_dotplot(data = subset(norm.avgGradesMelt, norm.avgGradesMelt$highRisk ==1), 
-               aes(fill = factor(rowID)), 
-               binaxis='y',
-               stackdir='center',
-               #position = "jitter",
-               #alpha = 0.5,
-               binwidth = 0.025) +
-  #facet_grid(Campus ~ .) +
-  theme(axis.title.y=element_blank(),
-        #axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.title.x=element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank() )
-
-# all high risk students
-ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) + 
-  geom_boxplot() + 
-  scale_y_continuous(breaks=seq(-4,4,1)) +
-  coord_flip() +
-  #facet_grid(Campus ~ .) +
-  geom_dotplot(data = subset(scaled.avgGradesMelt, scaled.avgGradesMelt$highRisk ==1), 
-               aes(fill = factor(rowID==1)), 
-               binaxis='y',
-               stackdir='center',
-               #position = position_dodge(width = 1),
-               binwidth = 0.1) +
-  #facet_grid(Campus ~ .) +
-  theme(axis.title.y=element_blank(),
-        #axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.title.x=element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        legend.position="none")
-
-# individual high risk student (used in the markdown file)
-# ggplot(scaled.avgGradesMelt, aes(x=variable, y=value)) +
-#   geom_boxplot() +
-#   coord_flip() +
-#   geom_dotplot(data = subset(scaled.avgGradesMelt, scaled.avgGradesMelt$highRisk ==1),
-#                aes(fill = rowID %in% highRiskStudents$rowID[i],
-#                  #fill = ifelse(rowID == highRiskStudents$rowID[i],"blue", "white"),
-#                    #color = ifelse(rowID == highRiskStudents$rowID[i], "blue", "white"),
-#                    alpha = ifelse(rowID %in% highRiskStudents$rowID[i], 1, 0)),
-#                binaxis='y',
-#                stackdir='center',
-#                binwidth = 0.11) +
-#   theme_bw() +
-#   #facet_grid(Campus ~ .) +
-#   theme(axis.title.y=element_blank(),
-#         #axis.text.y=element_blank(),
-#         axis.ticks.y=element_blank(),
-#         axis.title.x=element_blank(),
-#         #panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank(),
-#         legend.position="none")
-
-i <- 1 # from 1-20
-student <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
-ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
-  geom_boxplot() + 
-  coord_flip() +
-  geom_dotplot(data = student,
-               aes(x=variable, y=value, fill = "green"),
-               binaxis='y',
-               stackdir='center',
-               binwidth = 0.02) +
-  theme_bw() +
-  #facet_grid(Campus ~ .) +
-  theme(axis.title.y=element_blank(),
-        #axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.title.x=element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        legend.position="none")
-
-
-
-# i <- 1 # from 1-20
-# # study hours boxplot
-# 
-# studentHours <- subset(studyHours, studyHours$rowID %in% highRiskStudents$rowID[i])
-# studentHours['DotPos'] <- 95 
-# ggplot(studyHours, aes(x=rowID,y=hours)) + 
-#   geom_boxplot() + 
-#   coord_flip() +
-#   geom_dotplot(data = studentHours,
-#                aes(x=DotPos, y=hours, fill = "green"),
-#                binaxis='y',
-#                stackdir='center',
-#                #position = "dodge",
-#                #binpositions="all",
-#                binwidth = 2.0) +
-#   theme_bw() +
-#   theme(axis.title.y=element_blank(),
-#         axis.text.y=element_blank(),
-#         axis.ticks.y=element_blank(),
-#         #axis.title.x=element_blank(),
-#         panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank(),
-#         legend.position="none")
-
-
-
-
 #######################################################################
 
 studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
-studentData['FirstName'] <- dfSSPgrades[,2]
-studentData['SurName'] <- dfSSPgrades[,1]
-
+studentData['name'] <- paste(dfSSPgrades[,2],dfSSPgrades[,1])
+studentData['email'] <- dfSSPgrades[,5]
 avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, dfSSPanswers[, c(67,104,106:107,109:116)])
-# norm.avgGradesMelt <- norm.avgGradesMelt[c(nrow(norm.avgGradesMelt):1),]
-
-#studentData1 <- merge(studentData, norm.avgGradesMelt, by= "rowID")
-#studentData1 <- studentData1[order(studentData1$variable), ]
 studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
-studentData <- subset(studentData, studentData$rowID %in% highRiskStudents$rowID)
 studentData$rowID <- as.numeric(levels(studentData$rowID))[studentData$rowID]
 studentData <- studentData[with(studentData, order(studentData$rowID)),]
 
-setwd('C:/Users/BiancaClavio/Documents/stats-on-grades/docs')
+setwd('C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP')
 write.csv(studentData,file = "studentData.csv")
-#write.csv(studentData1,file = "studentData1.csv")
 write.csv(highRiskStudents,file = "highRiskStudents.csv")
 personalized_info <- read.csv(file = "studentData.csv")
-#score_info <- read.csv(file = "studentData1.csv")
 highRiskStudents <- read.csv(file = "highRiskStudents.csv")
 
 ## Loop
 for (i in 1:nrow(personalized_info)){
-  rmarkdown::render(input = "SSP-MailMerge.Rmd",
+  rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs/SSP-MailMerge.Rmd",
                     output_format = "pdf_document",
                     output_file = paste("SSPanalysis_", i, ".pdf", sep=''),
                     output_dir = "handouts/")

@@ -20,68 +20,56 @@ library(cowplot)
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
 library(kableExtra)
-#opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
+opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP'} else {paste(homeDir,"~/SVN/01Projects/SSP/", sep = "")})
+
 homeDir<-Sys.getenv("HOME")
-#opts_knit$set(root.dir = paste(homeDir,"/git/AAU/dropOutProject/analysis/docs", sep = ""))
-opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades/docs'} else {paste(homeDir,"/git/AAU/dropOutProject/analysis/docs", sep = "")})
+
 ```
 
 
  
 ```{r include=FALSE, warning=FALSE}
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
-score_info <- read.csv("studentData1.csv", stringsAsFactors = FALSE)
-highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
-#HKtest i=1
+#highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
 campus <- personalized_info$Campus[i]
-firstname <- personalized_info$FirstName[i]
-surname <- personalized_info$SurName[i]
+name <- personalized_info$name[i]
 rowID <- personalized_info$rowID[i]
-
 ```
 
-<<<<<<< HEAD
-# Study Verification Test - Student Report
-||||||| merged common ancestors
-# Study Verification Test
-## Student Report
-=======
+
+
 ---
 header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
-- \fancyhead[RE,RO]{`r firstname` `r surname`}
+- \fancyhead[RE,RO]{`r name`}
 - \fancyhead[LE,LO]{Medialogy, `r campus`, 2017}
 - \fancyfoot[CE,CO]{STUDY VERIFICATION TEST}
 - \fancyfoot[LE,RO]{\thepage}
 output:
-  html_notebook: default
-  html_document: default
   pdf_document: default
-  word_document: default
 urlcolor: blue
 ---
+
+
 
 
 # Study Verification Test - Student Report
 
 This is an interpretive report of your responses to the study verification test. Its purpose is to help you identify your student profile within specific topics.
->>>>>>> 040f1ba3ad9d20c3e94a0c8a3fe78a4b02ad646b
+
 
 The boxplots[^1]  show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven different topics (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported value for each topic is indicated with red dots. A value less than 0.5 means that you rated yourself lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Based on these results we have created specific recommendations for you to get more comfortable in the Medialogy study environment. 
 
 
 As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or student counselor will help you understand your scores and find the services you desire.
 
-[^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation (IQR), and a typical value (median). The rectangular box denotes the IQR, corresponding to the middle scores of the dataset. The line dividing the box into two parts marks the median. The upper and lower lines (also called whiskers) represent the highest scores (upper line) and the lowest scores (lower line). Outliers are defined as data points outside the whiskers and plotted as black dots. 
+
+[^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation called the interquartile range (IQR) and a typical value (median). The rectangular box denotes the IQR, corresponding to the middle scores of the dataset - ranging from the 25th to the 75th percentile. The line dividing the box into two parts marks the median. The horizontal lines to the left and right of the IQR (whiskers) are 1.5 times as long as the width of the IQR. Outliers are defined as data points outside the whisker ranges and plotted as black dots.
 
 
 ```{r include=FALSE}
-
-score_info$variable <- as.character(score_info$variable)
-score_info$variable <- factor(score_info$variable, levels=unique(score_info$variable))
-
-student <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
+student <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID ==i)
 
 pScore <- ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
   geom_boxplot() + 
@@ -135,8 +123,8 @@ showAnalysis
      
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height=1}
 
-studentHours <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
-studentHours <- subset(studyHours, studyHours$rowID %in% highRiskStudents$rowID[i])
+studentHours <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID == i) #norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
+studentHours <- subset(studyHours, studyHours$rowID==i) #studyHours$rowID %in% highRiskStudents$rowID[i])
 studentHours['DotPos'] <- 95
 ggplot(studyHours, aes(x=rowID,y=hours)) + 
   geom_boxplot() + 
@@ -165,15 +153,8 @@ ggplot(studyHours, aes(x=rowID,y=hours)) +
 
 ## Specific Recommondations
 In this section you will receive a more detailed explanation of your results. The purpose of this information is to help you develop your skills and get the most from your university experience. Take a balanced approach to reviewing and utilizing this information. Do not assume that each statement is perfectly accurate just because it is printed in a formal manner; some statements may not fit you well. However, do not dismiss a statement just because it points to a challenge.
-<<<<<<< HEAD
-Keep an open mind as you consider each statement. When it seems accurate, give serious thought to any suggestions that accompany the statement. If the statement is puzzling, discuss it with someone who can help you interpret it. Approaching the information in this way can be very helpful.
-||||||| merged common ancestors
-
-Keep an open mind as you consider each statement. When it seems accurate, give serious thought to any suggestions that accompany the statement. If the statement is puzzling, discuss it with someone who can help you interpret it. Approaching the information in this way can be very helpful.
-=======
 
 Keep an open mind as you consider each statement. When it seems accurate, give serious thought to any suggestions that accompany the statement. If the statement is puzzling, discuss it with someone who can help you interpret it. Approaching the information in this way can be very helpful. 
->>>>>>> 040f1ba3ad9d20c3e94a0c8a3fe78a4b02ad646b
 
 
 ```{r include=FALSE}
@@ -219,11 +200,11 @@ selectRecommondations[5,1] <- ifelse(studentTable1[5,1]<0.5,
   "meaning that you see intelligence as something rather static and outside of your control to affect. Instead of seeing setbacks as a manifestation of inadequacy, lack of intelligence, or lack of talent, consider them an opportunity to learn and grow your mindset, to overcome academic challenges in your study life. Develop a positive learning attitude, where challenge is not unwanted, but a logical part of the growth journey. Such challenges include lower than expected outcomes such as failed assignments, exams or low grades. We all have talents and weaknesses. We naturally need to work harder on our personal weaknesses, but we are still capable.",
   "meaning that you are open to actively improving your intelligence. Seeing setbacks (failed assignments or poor exam grades) as an opportunity to learn and grow rather than inadequacy, lack of intelligence or talent helps  you overcome challenges and develop a positive learning attitude. ")
 
+studyingHours <- 38
 # Study and work
-selectRecommondations[6,1] <- ifelse(studyingHours>47, "sufficient",
-  ifelse(studyingHours>42 && studyHours<47, "about the recommended",
-  ifelse(studyingHours>38 && studyHours<42, "less than the recommended",
-  ifelse(studyingHours<38, "much less than the recommended"))))
+selectRecommondations[6,1] <- ifelse(studyingHours>=47, "sufficient",
+  ifelse(studyingHours>=42 && studyHours<=46, "about the recommended",
+  ifelse(studyingHours>=38 && studyHours<=41, "less than the recommended", "much less than the recommended")))
 
 selectRecommondations[2,2] <- ifelse(relatedWork>=10 || nonRelatedWork>=10 || (relatedWork+nonRelatedWork)>=10,
   paste("You reported using ", relatedWork, "hours on study related work, and", nonRelatedWork, "hours on non-study related work.",
