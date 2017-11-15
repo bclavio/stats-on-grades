@@ -159,6 +159,8 @@ names(studyHours)[3]<-"hours"
 
 #######################################################################
 
+# Preparing the dataset to the mailmerge in rmarkdown
+
 studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
 studentData['name'] <- paste(dfSSPgrades[,2],dfSSPgrades[,1])
 studentData['email'] <- dfSSPgrades[,5]
@@ -173,10 +175,53 @@ write.csv(highRiskStudents,file = "highRiskStudents.csv")
 personalized_info <- read.csv(file = "studentData.csv")
 highRiskStudents <- read.csv(file = "highRiskStudents.csv")
 
-## Loop
+# The for loop renders the student report pdf files
 for (i in 1:nrow(personalized_info)){
   rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs/SSP-MailMerge.Rmd",
                     output_format = "pdf_document",
-                    output_file = paste("SSPanalysis_", i, ".pdf", sep=''),
+                    output_file = gsub(" ", "", paste(ifelse(personalized_info$Campus[i] == 'AAL', 
+                                               "SSP-AAL’17:IndividualStudentFeedback_", 
+                                               "SSP-CPH’17:IndividualStudentFeedback_"),
+                                        personalized_info$name[i], ".pdf", sep='')),
                     output_dir = "handouts/")
+}
+
+############################################################################
+
+
+# Sends mails with SSP student reports:
+
+library(sendmailR)
+library(RDCOMClient)
+
+for (i in 1:nrow(personalized_info)){
+  subject <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP-AAL’17:IndividualStudentFeedback_", "SSP-CPH’17:IndividualStudentFeedback_")
+  attachmentPath <- gsub(" ", "", paste('C:/Users/BiancaClavio/Documents/stats-on-grades/docs/handouts/', subject, personalized_info$name[i],'.pdf'))
+  name <- personalized_info$name[i]
+  coordinator <- ifelse(personalized_info$Campus[i] == 'AAL', "Hendrik (hk@create.aau.dk)", "Jon (jpe@create.aau.dk)")
+  mailBody <- paste("Dear",name, "
+  
+  In September, you participated in the Study Verification Test (SSP), in which you answered a series of questions on Moodle. We collected this information to better understand your hopes, expectations, and worries about student life at AAU in general and about Medialogy in particular. We use the information to improve your study environment and to reach out and provide individual support to those of you who seek or need it to adjust to university life and master your chosen programme.
+  We have analysed your responses in your respective cohort; more specifically within the first semester students in Aalborg and Copenhagen in 2017. One major outcome of this effort is the attached student report. It provides personalized feedback on important factors for finishing a university degree as well as specific recommendations and links to AAU resources that can be of help.
+  Currently only the semester coordinator, supervisors, and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, teachers, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
+  
+  Please contact",coordinator,"via email and add Bianca in CC (bcch@create.aau.dk) if you have any questions.
+  
+  Best regards,
+  Jon, Bianca, and Hendrik
+  
+  ")
+  ## init com api
+  OutApp <- COMCreate("Outlook.Application")
+  ## create an email
+  outMail = OutApp$CreateItem(0)
+  ## configure  email parameter
+  outMail[["To"]] = as.character(personalized_info$email[i])
+  outMail[["Cc"]] = ifelse(personalized_info$Campus[i] == 'AAL', "hk@create.aau.dk", "jpe@create.aau.dk")
+  outMail[["subject"]] = 
+    outMail[["body"]] = mailBody
+  outMail[["Attachments"]]$Add(attachmentPath)
+  
+  ####### Uncomment below to send mails:
+  ##### outMail$Send()
 }
