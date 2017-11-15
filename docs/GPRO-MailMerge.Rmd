@@ -20,20 +20,20 @@ library(cowplot)
 library(knitr)
 library(kableExtra)
 
-# Brian: change dir:
-opts_knit$set(root.dir = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs")
-homeDir<-Sys.getenv("HOME")
-#opts_knit$set(root.dir = paste(homeDir,"/git/AAU/dropOutProject/analysis/docs", sep = ""))
+opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO'} else {paste(homeDir,"~/SVN/01Projects/GPRO/", sep = "")})
+
+# homeDir<-Sys.getenv("HOME")
 
 ```
 
 
  
 ```{r include=FALSE, warning=FALSE}
-personalized_info <- read.csv("MidtermGrades.csv", stringsAsFactors = FALSE)
-campus <- personalized_info$Campus[i]
-name <- personalized_info$Name[i]
-rowID <- personalized_info$rowID[i]
+personalized_infoGPROGPRO <- read.csv("studentDataGPRO.csv", stringsAsFactors = FALSE)
+personalized_info <- personalized_info[,-1]
+campus <- personalized_infoGPROGPRO$Campus[i]
+name <- personalized_infoGPROGPRO$Name[i]
+rowID <- personalized_infoGPRO$rowID[i]
 
 ```
 
@@ -96,7 +96,7 @@ pScore <- ggplot(avgMidtermGradesMelt, aes(x=variable, y=value)) +
 
 
 ```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
-studentTable <- melt(subset(personalized_info[,-c(1,13, 25:26)], personalized_info$rowID %in% personalized_info$rowID[i]))
+studentTable <- melt(subset(personalized_infoGPRO[,-c(1,13, 25:28)], personalized_infoGPRO$rowID %in% personalized_infoGPRO$rowID[i]))
 studentTable1<- NULL
 studentTable1 <- data.frame(c(studentTable[-c(1:11),-c(1)]), apply(studentTable[-c(12:22), ], 2, rev))
 studentTable1 <- studentTable1[, c(2,3,1)]

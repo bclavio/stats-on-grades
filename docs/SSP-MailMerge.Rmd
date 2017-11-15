@@ -30,6 +30,7 @@ homeDir<-Sys.getenv("HOME")
  
 ```{r include=FALSE, warning=FALSE}
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
+personalized_info <- personalized_info[,-1]
 #highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
 campus <- personalized_info$Campus[i]
 name <- personalized_info$name[i]
