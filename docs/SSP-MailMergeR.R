@@ -113,6 +113,7 @@ normalize <- function(x) {
 norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
 norm.avgGrades["Campus"] <- dfSSPgrades$Campus
 norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
+norm.avgGrades["Email"] <- dfSSPgrades$Email.address
 
 ####################################
 # Students with averages above 1 are most likely to continue Medialogy while
@@ -138,7 +139,7 @@ ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
 #ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_histogram()
 
 selectedTopics <- dfSSPgradesStat[,c(2:4,7:8,34:45,55:56,65:68,57:61,62:64,93:97,98:106)]
-dfSSPgradesSum <- data.frame(rowID = norm.avgGrades$rowID, campus = norm.avgGrades$Campus, gradeSums = rowSums(selectedTopics))
+dfSSPgradesSum <- data.frame(rowID = norm.avgGrades$rowID, Campus = norm.avgGrades$Campus, email = norm.avgGrades$Email, gradeSums = rowSums(selectedTopics))
 ggplot(dfSSPgradesStat, aes(rowSums(selectedTopics))) + geom_histogram()
 
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
@@ -155,6 +156,61 @@ dfSSPanswers["rowID"] <- seq(1:nrow(dfSSPanswers))
 studyHours <- dfSSPanswers [, c('rowID', 'Campus', 'Response 93')]
 studyHours['highRisk'] <- ifelse(studyHours$rowID %in% highRiskStudents$rowID, 1, 0)
 names(studyHours)[3]<-"hours"
+
+
+
+
+
+######################### IMPORT allGPRO quizzes 
+
+SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO/'} else {"~/SVN/01Projects/GPRO/"}
+setwd(SVNData)
+
+# Note: I haven't imported the Midterm exam responses, but they are in SVN
+
+# imports and merges the midterm exam grades from AAL and CPH
+dfMidtermGradesCPH<-read.csv("MidtermExamCPH-grades_16-11.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfMidtermGradesAAL<-read.csv("MidtermExamAAL-grades_16-11.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfMidtermGradesCPH["Campus"]<-"CPH"
+dfMidtermGradesAAL["Campus"]<-"AAL"
+dfMidtermGradesCPH <- dfMidtermGradesCPH[-nrow(dfMidtermGradesCPH),]
+dfMidtermGradesAAL <- dfMidtermGradesAAL[-nrow(dfMidtermGradesAAL),]
+dfMidtermGradesAAL <- dfMidtermGradesAAL[!grepl("tmpuser_20171005@its.aau.dk", dfMidtermGradesAAL$`Email address`),] # removes temp user
+names(dfMidtermGradesAAL) <- names(dfMidtermGradesCPH) 
+dfMidtermGrades <- rbind(dfMidtermGradesAAL, dfMidtermGradesCPH)
+dfMidtermGrades$Institution <- NULL
+dfMidtermGrades$Department <- NULL
+
+# Note: Self assessment quizes are only used in AAL. 
+# Imports the Midterm exam grade (note: the midterm exam is also in here):
+#    dfGPROquizzesAAL<-read.csv("GPRO-gradebook-quiz.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+
+# merges GPRO Midterm exam and SSP (not self-assessments)
+
+
+dfMidtermGradesSelect <- dfMidtermGrades[, c(3,8,33)]
+names(dfMidtermGradesSelect)[1]<-"email"
+dfMED1data <- NULL
+dfMED1data <- merge(dfSSPgradesSum, dfMidtermGradesSelect, by= c("email", "Campus"))
+# Note: some data/students disappears in this merge: re-exams in GPRO, MED1 dropouts, merits to the GPRO exam
+dfMED1data$`Grade/100.00` <- dfMED1data$`Grade/100.00`/10
+dfMED1data['score'] <- rowSums(dfMED1data[4:5])
+
+ggplot(dfMED1data, aes(score)) + geom_density()+
+  scale_x_discrete(breaks=seq(0,15,1), name ="Total score", limits = c(0,15))
+
+highRiskStudentsGPRO <- data.frame(score= dfMED1data$score[order(dfMED1data$score)[1:20]])
+highRiskStudentsGPRO<- data.frame(dfMED1data[dfMED1data$score %in% highRiskStudentsGPRO$score,])
+
+
+# Note: SSP has 111 questions, and GPRO has 24 questions.
+setwd('C:/Users/BiancaClavio/Documents/stats-on-grades/')
+write.csv(dfMED1data,file = "DropoutMED1.csv")
+
+
+
+
+
 
 
 #######################################################################
