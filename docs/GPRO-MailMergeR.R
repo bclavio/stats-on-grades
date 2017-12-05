@@ -77,13 +77,15 @@ dfGPROmidtermStat["rowID"] <- seq(1:nrow(dfGPROmidtermStat))
 
 avgMidtermGrades <- NULL
 avgMidtermGrades['rowID'] <- list(dfGPROmidtermStat$rowID)
-avgMidtermGrades['Functions'] <- list(rowMeans(dfGPROmidtermStat[c(20:21)]))
-avgMidtermGrades['Looping'] <- list(rowMeans(dfGPROmidtermStat[19]))
-avgMidtermGrades['Branching'] <- list(rowMeans(dfGPROmidtermStat[c(15:18,22:24)]))
-avgMidtermGrades['VariablesDataMaths'] <- list(rowMeans(dfGPROmidtermStat[3:13]))
 avgMidtermGrades['CourseIntroduction'] <- list(rowMeans(dfGPROmidtermStat[1:2]))
+avgMidtermGrades['VariablesDataMaths'] <- list(rowMeans(dfGPROmidtermStat[3:13]))
+avgMidtermGrades['Branching'] <- list(rowMeans(dfGPROmidtermStat[c(15:18,22:24)]))
+avgMidtermGrades['Looping'] <- list(rowMeans(dfGPROmidtermStat[19]))
+avgMidtermGrades['Functions'] <- list(rowMeans(dfGPROmidtermStat[c(20:21)]))
 avgMidtermGrades <- as.data.frame(lapply(avgMidtermGrades, function(x) as.numeric(as.character(x))))
 #avgMidtermGrades['Email'] <- sqldf('select Email from dfGPROmidtermStat')
+
+# remove the 
 avgMidtermGradesMelt <- melt(avgMidtermGrades, id.vars = "rowID")
 avgMidtermGradesMelt$variable <- gsub("Branching","Branching (Q15-Q18, Q22-Q24)",avgMidtermGradesMelt$variable)
 avgMidtermGradesMelt$variable <- gsub("Looping","Looping (Q19)",avgMidtermGradesMelt$variable)
@@ -180,14 +182,18 @@ GPROprogressTable$avg <- round(GPROprogressTable$avg, digits = 2)
 # personalized_infoGPRO <- read.csv(file = "studentDataGPRO.csv")
 
 setwd('C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO')
-avgPerGPRO <- data.frame(avgMidtermGrades, apply(avgMidtermGrades[,6:2], 2, function(c) ecdf(c)(c))*100, 
+avgPerGPRO <- data.frame(avgMidtermGrades, apply(avgMidtermGrades[,2:6], 2, function(c) ecdf(c)(c))*100, 
                          dfGPROmidterm$Campus, dfGPROmidterm$Name, dfGPROmidterm$Email.address )
 names(avgPerGPRO)[ncol(avgPerGPRO)] <- "Email"
 names(avgPerGPRO)[ncol(avgPerGPRO)-1] <- "Name"
 names(avgPerGPRO)[ncol(avgPerGPRO)-2] <- "Campus"
 avgPerGPRO['initials'] <-  gsub("@student.aau.dk", "",dfGPROmidterm[,5])
-removeSAstudents <- read.csv(file = "avgPerGPROAALEmail.csv")
-avgPerGPRO <- subset(avgPerGPRO, !avgPerGPRO$Email %in% removeSAstudents$x)
+
+#only CHP, PDP and people who didn't complete the SA's:
+#removeSAstudents <- read.csv(file = "avgPerGPROAALEmail.csv")
+avgPerGPRO <- subset(avgPerGPRO, avgPerGPRO$Campus != "AAL")
+avgPerGPRO <- subset(avgPerGPRO, avgPerGPRO$Email %in% GPROprogress$Email.address) #&& (avgPerGPRO$Campus != "AAL"))
+
 
 write.csv(avgPerGPRO,file = "studentDataGPRO.csv")
 write.csv(GPROprogressTable,file = "GPROprogressTable.csv")
@@ -198,21 +204,24 @@ personalized_infoGPRO <- read.csv(file = "studentDataGPRO.csv")
 #######################################################################
 # Failing students (MT grade less than 64) - 173 students in total
 
-# 81 students from AAlborg??
-GPROgradebook2 <- read.csv(file = "GPROgradebook2")
-personalized_infoGPROAAL <- read.csv(file = "studentDataGPROSA.csv")
-interviewAAL <- subset(GPROgradebook2[2], GPROgradebook2$Email %in% personalized_infoGPROAAL$Email)
-
-# 92 students from Copenhagen
-interviewCPH <- subset(personalized_infoGPRO[15], (grepl("CPH", personalized_infoGPRO$Campus)) &  
-                         personalized_infoGPRO$Email %in% personalized_info$email)
-
-interviewees <- rbind(interviewAAL,interviewCPH)
-
-# find their SSP and MT grade 
-
-#highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
-#highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
+# SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO'} else {"~/SVN/01Projects/"}
+# setwd(SVNData)
+# 
+# # 81 students from AAlborg??
+# GPROgradebook2 <- read.csv(file = "GPROgradebook2.csv")
+# personalized_infoGPROAAL <- read.csv(file = "studentDataGPROSA.csv")
+# interviewAAL <- subset(GPROgradebook2[2], GPROgradebook2$Email %in% personalized_infoGPROAAL$Email)
+# 
+# # 92 students from Copenhagen
+# interviewCPH <- subset(personalized_infoGPRO[15], (grepl("CPH", personalized_infoGPRO$Campus)) &  
+#                          personalized_infoGPRO$Email %in% personalized_info$email)
+# 
+# interviewees <- rbind(interviewAAL,interviewCPH)
+# 
+# # find their SSP and MT grade 
+# 
+# #highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
+# #highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
 
 
 ####################################################################
@@ -228,3 +237,50 @@ for (i in 1:nrow(personalized_infoGPRO)){
                                                       personalized_infoGPRO$initials[i], ".pdf", sep='')),
                     output_dir = "handoutsGPRO/")
 }
+
+
+
+
+
+############################################################################
+
+
+# Sends mails with GPRO student in CPH reports:
+
+# library(sendmailR)
+# library(RDCOMClient)
+# 
+# for (i in 1:nrow(personalized_infoGPRO)){
+#   subject <- "GPRO-MT_CPH_Individual-StudentFeedback"
+#   attachmentPath <- gsub(" ", "", paste('C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO/handoutsGPRO/', subject,"_", personalized_infoGPRO$initial[i],'.pdf'))
+#   name <- as.character(personalized_infoGPRO$Name[i])
+#   #coordinator <- ifelse(personalized_infoGPRO$Campus[i] == 'AAL', "Rikke (rg@create.aau.dk)", "")
+#   mailBody <- paste("Dear",name, "
+# 
+# We have analysed your answers from the midterm exam in introduction to programming (GPRO). The analysis attached in this mail compares your score with the first semester students in Aalborg and Copenhagen in 2017.
+# Currently only the semester coordinator, supervisors, and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, teachers, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
+# 
+# Please contact me via email (bcch@create.aau.dk) and add Dannie (dmk@create.aau.dk) in CC if you have any questions.
+# 
+# Best regards,
+# Bianca
+# 
+#   ")
+#   ## init com api
+#   OutApp <- COMCreate("Outlook.Application")
+#   ## create an email
+#   outMail = OutApp$CreateItem(0)
+#   ## configure  email parameter
+#   outMail[["To"]] = as.character(personalized_infoGPRO$Email[i])
+#   outMail[["Cc"]] = "dmk@create.aau.dk"
+#   outMail[["subject"]] = subject
+#   outMail[["body"]] = mailBody
+#   outMail[["Attachments"]]$Add(attachmentPath)
+#   
+#   ####### Uncomment below to send mails:
+#   ###outMail$Send()
+# }
+
+
+
+

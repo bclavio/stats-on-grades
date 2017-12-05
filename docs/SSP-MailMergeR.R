@@ -119,7 +119,7 @@ norm.avgGrades["Email"] <- dfSSPgrades$Email.address
 # Students with averages above 1 are most likely to continue Medialogy while
 # students with averages below -1 are most likely to dropout.
 scaled.avgGrades <- avgGrades
-scaled.avgGrades[1:14] <- scale(avgGrades[1:14])
+scaled.avgGrades[1:14] <- scale(avgGrades[1:7])
 
 # checks that we get mean of 0 and sd of 1
 colMeans(scaled.avgGrades)
@@ -156,61 +156,6 @@ dfSSPanswers["rowID"] <- seq(1:nrow(dfSSPanswers))
 studyHours <- dfSSPanswers [, c('rowID', 'Campus', 'Response 93')]
 studyHours['highRisk'] <- ifelse(studyHours$rowID %in% highRiskStudents$rowID, 1, 0)
 names(studyHours)[3]<-"hours"
-
-
-
-
-
-######################### IMPORT allGPRO quizzes 
-
-SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO/'} else {"~/SVN/01Projects/GPRO/"}
-setwd(SVNData)
-
-# Note: I haven't imported the Midterm exam responses, but they are in SVN
-
-# imports and merges the midterm exam grades from AAL and CPH
-dfMidtermGradesCPH<-read.csv("MidtermExamCPH-grades_16-11.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfMidtermGradesAAL<-read.csv("MidtermExamAAL-grades_16-11.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfMidtermGradesCPH["Campus"]<-"CPH"
-dfMidtermGradesAAL["Campus"]<-"AAL"
-dfMidtermGradesCPH <- dfMidtermGradesCPH[-nrow(dfMidtermGradesCPH),]
-dfMidtermGradesAAL <- dfMidtermGradesAAL[-nrow(dfMidtermGradesAAL),]
-dfMidtermGradesAAL <- dfMidtermGradesAAL[!grepl("tmpuser_20171005@its.aau.dk", dfMidtermGradesAAL$`Email address`),] # removes temp user
-names(dfMidtermGradesAAL) <- names(dfMidtermGradesCPH) 
-dfMidtermGrades <- rbind(dfMidtermGradesAAL, dfMidtermGradesCPH)
-dfMidtermGrades$Institution <- NULL
-dfMidtermGrades$Department <- NULL
-
-# Note: Self assessment quizes are only used in AAL. 
-# Imports the Midterm exam grade (note: the midterm exam is also in here):
-#    dfGPROquizzesAAL<-read.csv("GPRO-gradebook-quiz.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-
-# merges GPRO Midterm exam and SSP (not self-assessments)
-
-
-dfMidtermGradesSelect <- dfMidtermGrades[, c(3,8,33)]
-names(dfMidtermGradesSelect)[1]<-"email"
-dfMED1data <- NULL
-dfMED1data <- merge(dfSSPgradesSum, dfMidtermGradesSelect, by= c("email", "Campus"))
-# Note: some data/students disappears in this merge: re-exams in GPRO, MED1 dropouts, merits to the GPRO exam
-dfMED1data$`Grade/100.00` <- dfMED1data$`Grade/100.00`/10
-dfMED1data['score'] <- rowSums(dfMED1data[4:5])
-
-ggplot(dfMED1data, aes(score)) + geom_density()+
-  scale_x_discrete(breaks=seq(0,15,1), name ="Total score", limits = c(0,15))
-
-highRiskStudentsGPRO <- data.frame(score= dfMED1data$score[order(dfMED1data$score)[1:20]])
-highRiskStudentsGPRO<- data.frame(dfMED1data[dfMED1data$score %in% highRiskStudentsGPRO$score,])
-
-
-# Note: SSP has 111 questions, and GPRO has 24 questions.
-setwd('C:/Users/BiancaClavio/Documents/stats-on-grades/')
-write.csv(dfMED1data,file = "DropoutMED1.csv")
-
-
-
-
-
 
 
 #######################################################################
@@ -258,14 +203,14 @@ for (i in 1:nrow(personalized_info)){
 #   coordinator <- ifelse(personalized_info$Campus[i] == 'AAL', "Hendrik (hk@create.aau.dk)", "Jon (jpe@create.aau.dk)")
 #   mailBody <- paste("Dear",name, "
 # 
-#   In September, you participated in the Study Verification Test (SSP), in which you answered a series of questions on Moodle. We collected this information to better understand your hopes, expectations, and worries about student life at AAU in general and about Medialogy in particular. We use the information to improve your study environment and to reach out and provide individual support to those of you who seek or need it to adjust to university life and master your chosen programme.
-#   We have analysed your responses in your respective cohort; more specifically within the first semester students in Aalborg and Copenhagen in 2017. One major outcome of this effort is the attached student report. It provides personalized feedback on important factors for finishing a university degree as well as specific recommendations and links to AAU resources that can be of help.
-#   Currently only the semester coordinator, supervisors, and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, teachers, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
+# In September, you participated in the Study Verification Test (SSP), in which you answered a series of questions on Moodle. We collected this information to better understand your hopes, expectations, and worries about student life at AAU in general and about Medialogy in particular. We use the information to improve your study environment and to reach out and provide individual support to those of you who seek or need it to adjust to university life and master your chosen programme.
+# We have analysed your responses in your respective cohort; more specifically within the first semester students in Aalborg and Copenhagen in 2017. One major outcome of this effort is the attached student report. It provides personalized feedback on important factors for finishing a university degree as well as specific recommendations and links to AAU resources that can be of help.
+# Currently only the semester coordinator, supervisors, and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, teachers, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
 # 
-#   Please contact",coordinator,"via email and add Bianca in CC (bcch@create.aau.dk) if you have any questions.
+# Please contact",coordinator,"via email and add Bianca in CC (bcch@create.aau.dk) if you have any questions.
 # 
-#   Best regards,
-#   Jon, Bianca, and Hendrik
+# Best regards,
+# Jon, Bianca, and Hendrik
 # 
 #   ")
 #   ## init com api
@@ -275,10 +220,105 @@ for (i in 1:nrow(personalized_info)){
 #   ## configure  email parameter
 #   outMail[["To"]] = as.character(personalized_info$email[i])
 #   outMail[["Cc"]] = ifelse(personalized_info$Campus[i] == 'AAL', "hk@create.aau.dk", "jpe@create.aau.dk")
-#   outMail[["subject"]] =
+#   outMail[["subject"]] = subject
 #     outMail[["body"]] = mailBody
 #   outMail[["Attachments"]]$Add(attachmentPath)
 #   
 #   ####### Uncomment below to send mails:
 #   ##### outMail$Send()
 # }
+
+
+
+
+
+
+######################### IMPORT allGPRO quizzes 
+
+SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO/'} else {"~/SVN/01Projects/GPRO/"}
+setwd(SVNData)
+
+# Note: I haven't imported the Midterm exam responses, but they are in SVN
+
+# imports and merges the midterm exam grades from AAL and CPH
+dfMidtermGradesCPH<-read.csv("MidtermExamCPH-grades_16-11.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfMidtermGradesAAL<-read.csv("MidtermExamAAL-grades_16-11.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfMidtermGradesCPH["Campus"]<-"CPH"
+dfMidtermGradesAAL["Campus"]<-"AAL"
+dfMidtermGradesCPH <- dfMidtermGradesCPH[-nrow(dfMidtermGradesCPH),]
+dfMidtermGradesAAL <- dfMidtermGradesAAL[-nrow(dfMidtermGradesAAL),]
+dfMidtermGradesAAL <- dfMidtermGradesAAL[!grepl("tmpuser_20171005@its.aau.dk", dfMidtermGradesAAL$`Email address`),] # removes temp user
+names(dfMidtermGradesAAL) <- names(dfMidtermGradesCPH) 
+dfMidtermGrades <- rbind(dfMidtermGradesAAL, dfMidtermGradesCPH)
+dfMidtermGrades$Institution <- NULL
+dfMidtermGrades$Department <- NULL
+
+# Note: Self assessment quizes are only used in AAL. 
+# Imports the Midterm exam grade (note: the midterm exam is also in here):
+#    dfGPROquizzesAAL<-read.csv("GPRO-gradebook-quiz.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+
+# merges GPRO Midterm exam and SSP (not self-assessments)
+
+
+dfMidtermGradesSelect <- dfMidtermGrades[, c(3,8,33)]
+names(dfMidtermGradesSelect)[1]<-"email"
+dfMED1data <- NULL
+dfMED1data <- merge(dfSSPgradesSum, dfMidtermGradesSelect, by= c("email", "Campus"))
+# Note: some data/students disappears in this merge: re-exams in GPRO, MED1 dropouts, merits to the GPRO exam
+dfMED1data$`Grade/100.00` <- dfMED1data$`Grade/100.00`/10
+dfMED1data['score'] <- rowSums(dfMED1data[4:5])
+
+ggplot(dfMED1data, aes(score)) + geom_density()+
+  scale_x_discrete(breaks=seq(0,15,1), name ="Total score", limits = c(0,15))
+
+highRiskStudentsGPRO <- data.frame(score= dfMED1data$score[order(dfMED1data$score)[1:20]])
+highRiskStudentsGPRO <- data.frame(dfMED1data[dfMED1data$score %in% highRiskStudentsGPRO$score,])
+highRiskStudentsGPRO <- merge(highRiskStudentsGPRO, personalized_info[4:5], by="email")
+
+highRiskStudentsGPROAAL <- subset(highRiskStudentsGPRO, highRiskStudentsGPRO$Campus =="AAL")
+highRiskStudentsGPROCPH <- subset(highRiskStudentsGPRO, highRiskStudentsGPRO$Campus =="CPH")
+
+setwd('C:/Users/BiancaClavio/Documents/stats-on-grades/')
+write.csv(dfMED1data,file = "DropoutMED1.csv")
+
+
+############################################################################
+
+
+# Sends mails to highrisk students (highRiskStudentsGPRO):
+
+# library(sendmailR)
+# library(RDCOMClient)
+# 
+# for (i in 1:nrow(highRiskStudentsGPROAAL)){
+#   subject <- "Invitation to talk about your study experience"
+#   name <- highRiskStudentsGPROAAL$name[i] 
+#   mailBody <- paste("Dear",name, "
+# 
+# We would like to meet with you on Monday 11th December and talk about your study experience at Medialogy. We want to improve the Medialogy education so that students will have an easier time learning. The students best qualified to help us are those who find the content more difficult than other students. According to your mid-term exams you might be able to help us, and we would like to know from you about your experience so far and how to better help students master the challenges encountered during the first year of study.
+# It would help us tremendously if you filled in the questionnaire (https://www.moodle.aau.dk/mod/quiz/view.php?id=697398) to give us some initial indication of how helpful you found the individual (SSP) feedback. 
+# We hope you can spare some time on Monday to meet with us and give us some feedback. It should both benefit you in the coming semester and future student generations. 
+# 
+# Please contact us via email if you want to book a specific timeslot for the meeting on Monday, or if you have any questions.
+# 
+# 
+# Best regards,
+# Hendrik and Bianca
+# 
+#   ")
+#   ## init com api
+#   OutApp <- COMCreate("Outlook.Application")
+#   ## create an email
+#   outMail = OutApp$CreateItem(0)
+#   ## configure  email parameter
+#   outMail[["To"]] = as.character(highRiskStudentsGPROAAL$email[i])
+#   outMail[["Cc"]] = "hk@create.aau.dk"
+#   outMail[["subject"]] = subject
+#   outMail[["body"]] = mailBody
+# 
+#   ####### Uncomment below to send mails:
+#   ###outMail$Send()
+# }
+
+
+

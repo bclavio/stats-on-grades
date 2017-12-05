@@ -79,7 +79,7 @@ A score above 0.5 means that you received more than half of the points denoted f
 
 
 ```{r include=FALSE}
-student <- subset(avgMidtermGradesMelt, avgMidtermGradesMelt$rowID == i)
+student <- subset(avgMidtermGradesMelt, avgMidtermGradesMelt$rowID %in% personalized_infoGPROAAL$rowID[i])
 
 #avgMidtermGradesMelt$variable <- gsub("\\.", " ", avgMidtermGradesMelt$variable)
 # avgMidtermGradesMelt$variable <- factor(avgMidtermGradesMelt$variable,
@@ -197,7 +197,7 @@ GPROgradebookStudent['lowlow'] <- ""
 GPROgradebookStudent[(GPROgradebookStudent$PriorEXP=="beginner" & GPROgradebookStudent$MT <= 63) ||
                       (GPROgradebookStudent$PriorEXP=="novice" & GPROgradebookStudent$MT <= 63)]$lowlow <-
                             paste("You reached a score of ", GPROgradebookStudent$MT, "in the MT,
-                                  showing that you still need to study and practise programming
+                                  showing that you need to study and practise programming
                                   to be on-track with the course. Some students with no and little prior programming
                                   experience managed to achieve high scores in the MT
                                   (see Table 2), and with more effort and time you can do the same.
@@ -217,9 +217,9 @@ GPROgradebookStudent[(GPROgradebookStudent$PriorEXP=="intermediate" & GPROgradeb
                        (GPROgradebookStudent$PriorEXP=="expert" & GPROgradebookStudent$MT <= 63)]$highlow <-
                             paste("However, dispite of your prior programming experience you performed
                                   lower than expected in the MT, with a score of ", GPROgradebookStudent$MT,
-                                  "points, showing that you lack some basic understanding of programming.
-                                  Students, with intermediate or expert programming experience
-                                  prior to Medialogy, obtained high MT scores
+                                  "points, showing that you need to study and practise programming
+                                  to be on-track with the course. Students, with intermediate or expert 
+                                  programming experience prior to Medialogy, obtained high MT scores
                                   if they had achieved a high score in the SA's." )
 GPROgradebookStudent['highhigh'] <-""
 GPROgradebookStudent[(GPROgradebookStudent$PriorEXP=="intermediate" & GPROgradebookStudent$MT > 63) || 
@@ -261,14 +261,14 @@ Table 1 describes characterics of your programming experience, SA usage, and MT 
 
 In September you reported having `r GPROgradebookStudent$PriorEXP` programming experience in the study verification test (SSP).
 `r GPROgradebookStudent$text`
-Other tools and activities also have influence on learning, and you should utilize all accessible aids. For example, asking for help from the teacher and TA's not only assist you in completing the mandatory exercises, but it can also help you in understanding what is essential for you to learn for the course. `r GPROgradebookStudent$tutorText` At this time of the year, with no lectures, you will need to seek support elsewhere, such as your peers. Teaming up with peers and explaining to each other the course content can help you reach new understandings, other methods to apply programming, and which topics of the course you need to review.
+Hence, you can use this tool to assess your learning progress. Other tools and activities also have influence on learning, and you should utilize all accessible aids. For example, asking for help from the teacher and TA's not only assist you in completing the mandatory exercises, but it can also help you in understanding what is essential for you to learn for the course. `r GPROgradebookStudent$tutorText` At this time of the year, with no lectures, you will need to seek support elsewhere, such as your peers. Teaming up with peers and explaining to each other the course content can help you reach new understandings, other methods to apply programming, and which topics of the course you need to review.
 
 
 
 ####Table 1: Statistics of programming experience, SA usage, and MT score.
 ```{r echo=FALSE}
 GPROgradebookStudent <- GPROgradebookStudent[c(16,12:14,10,15)]
-names(GPROgradebookStudent) <- c('Prior \nexp.', "Perc. of\ncompleted SA's", "Avg. score \nof SA's", "Avg. score\nof completed SA's", 'MT score', 'Tutoring')
+names(GPROgradebookStudent) <- c('Prior \nexp.', "Perc. of\ncompleted SA's", "Avg. score \nof SA's", "Avg. score \n of completed SA's", 'MT score', 'Tutoring')
 #kable(GPROgradebookStudent, rows = NULL)
 GPROgradebookStudent <- GPROgradebookStudent[colSums(!is.na(GPROgradebookStudent)) > 0]
 row.names(GPROgradebookStudent) <- NULL

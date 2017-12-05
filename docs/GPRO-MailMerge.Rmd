@@ -59,7 +59,7 @@ urlcolor: blue
 
 # Midterm Exam - Student Report
 
-This is an interpretive report of your responses to the midterm exam in introduction to programming (GPRO). Its purpose is to help you identify your strengths and weaknesses in the course topics.
+This is a report of your acedemic performance in the the midterm exam of the introduction to programming course (GPRO).
 
 The boxplots[^1] show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen (see Figure 1). 
 Specifically, they indicate the average score of all students in five topics, consisting of the midterm term questions (referred to as Q on the y-axis of Figure 1). 
@@ -83,7 +83,7 @@ avgMidtermGradesMelt$variable <- factor(avgMidtermGradesMelt$variable,
   'Branching (Q15-Q18, Q22-Q24)','Variables and math (Q3-Q13)',
   'Course introduction (Q1-Q2)'),ordered = TRUE)
 
-student <- subset(avgMidtermGradesMelt, avgMidtermGradesMelt$rowID == i)
+student <- subset(avgMidtermGradesMelt, avgMidtermGradesMelt$rowID %in% personalized_infoGPRO$rowID[i])
 
 # avgMidtermGradesMelt$variable <- gsub("\\.", " ", avgMidtermGradesMelt$variable)
 # avgMidtermGradesMelt$variable <- factor(avgMidtermGradesMelt$variable,
@@ -118,7 +118,7 @@ pScore <- ggplot(avgMidtermGradesMelt, aes(x=variable, y=value)) +
 ```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
 studentTable <- melt(subset(personalized_infoGPRO[,-c(1:2, 13:16)], personalized_infoGPRO$rowID %in% personalized_infoGPRO$rowID[i]))
 studentTable1<- NULL
-studentTable1 <- data.frame(c(studentTable[-c(6:10),-c(1)]), apply(studentTable[-c(1:5), ], 2, rev))
+studentTable1 <- data.frame(c(studentTable[-c(6:10),-c(1)]), c(studentTable[-c(1:5), ]))
 #studentTable1 <- studentTable1[, c(2,3,1)]
 names(studentTable1)[1]<-"Your score"
 names(studentTable1)[3]<-"Percentile rank"
