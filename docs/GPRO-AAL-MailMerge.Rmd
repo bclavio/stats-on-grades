@@ -1,0 +1,292 @@
+
+```{r setup, include=FALSE}
+
+# 81 students from AAL took the SSP and the MT 2017?
+
+library(xlsx)
+library(sqldf)
+library(plyr)
+library(dplyr)
+library(reshape2)
+library(MASS)
+library(manipulate)
+library(stringr)
+library(CTT)
+library(Hmisc)
+library(psych)
+library(ggplot2)
+library(ggpubr)
+library(gtable)
+library(cowplot)
+library(pander)
+library(base64)
+
+# Setting the directory for knitr, as the dir is reset after running a code chunk.
+library(knitr)
+library(kableExtra)
+
+opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO'} else {paste(homeDir,"~/SVN/01Projects/GPRO/", sep = "")})
+
+# homeDir<-Sys.getenv("HOME")
+
+```
+
+
+ 
+```{r include=FALSE, warning=FALSE}
+personalized_infoGPRO <- read.csv("studentDataGPROSA.csv", stringsAsFactors = FALSE)
+GPROprogressTable <- read.csv("GPROprogressTable.csv", stringsAsFactors = FALSE)
+#GPROprogress <- read.csv("GPROprogress.csv", stringsAsFactors = FALSE)
+GPROgradebook2 <- read.csv("GPROgradebook2.csv", stringsAsFactors = FALSE)
+
+personalized_infoGPRO <- personalized_infoGPRO[,-1]
+campus <- personalized_infoGPRO$Campus[i]
+name <- personalized_infoGPRO$Name[i]
+#rowID <- personalized_infoGPRO$rowID[i]
+#MTscore <- subset(GPROprogress$MTscore, GPROprogress$Email.address %in% personalized_infoGPRO$Email[i])
+#priorExp <- subset(GPROprogress$PriorEXP, GPROprogress$Email.address %in% personalized_infoGPRO$Email[i])
+
+
+
+```
+
+---
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[RE,RO]{`r name`}
+- \fancyhead[LE,LO]{Medialogy, `r campus`, 2017}
+- \fancyfoot[CE,CO]{INTRODUCTION TO PROGRAMMING}
+- \fancyfoot[LE,RO]{\thepage}
+output:
+  pdf_document: default
+urlcolor: blue
+---
+
+
+# Midterm Exam - Student Report
+
+This is a report of your acedemic performance in the introduction to programming course (GPRO), including your scores in the midterm exam (MT) and the self-assessment quizzes (SA). Our data analysis of Medialogy students in Aalborg shows that students taking the SA's have higher scores in the MT, regardless of prior programming experience. We hope that you will benefit from this report by identifying your current programming progress. 
+
+The boxplots[^1] show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen (see Figure 1). 
+Specifically, they indicate the average score of all students in five topics, based on results from the SA and the MT. The SA topics refer to the first self-assessment quizzes on Moodle and their corresponding lectures, i.e. course introduction, variables and math, branching, looping, and functions. The same five topics constitute the midterm exam questions (Q). 
+Your score in the MT is indicated with red dots, and your score in the SA is indicated with blue dots.
+The scores are normalized on a scale from 0 to 1, indicating the lowest and highest possible scores for each topic.
+A score above 0.5 means that you received more than half of the points denoted for the particular topic. The percentiles indicate the percentage of students whose scores are equal to or less than yours.
+
+[^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation called the interquartile range (IQR) and a typical value (median). The rectangular box denotes the IQR, corresponding to the middle scores of the dataset - ranging from the 25th to the 75th percentile. The line dividing the box into two parts marks the median. The horizontal lines to the left and right of the IQR (whiskers) are 1.5 times as long as the width of the IQR. Outliers are defined as data points outside the whisker ranges and plotted as black dots.
+
+
+
+```{r include=FALSE}
+student <- subset(avgMidtermGradesMelt, avgMidtermGradesMelt$rowID %in% personalized_infoGPROAAL$rowID[i])
+
+#avgMidtermGradesMelt$variable <- gsub("\\.", " ", avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- factor(avgMidtermGradesMelt$variable,
+#   levels = c('Functions.x','Functions.y', 'Looping.x', 'Looping.y',
+#   'Branching.x', 'Branching.y','VariablesDataMaths.x', 'VariablesDataMaths.y',
+#   'CourseIntroduction.x', 'CourseIntroduction.y'),ordered = TRUE)
+
+avgMidtermGradesMelt$variable <- gsub("CourseIntroduction.x","1_MT Q1-Q2",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("CourseIntroduction.y","1_SA Course introduction",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("VariablesDataMaths.x","2_MT Q3-Q13",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("VariablesDataMaths.y","2_SA Variables and math",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("Branching.x","3_MT Q15-Q18, Q22-Q24",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("Branching.y","3_SA Branching",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("Looping.x","4_MT Q19",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("Looping.y","4_SA Looping",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("Functions.x","5_MT Q20-Q21",avgMidtermGradesMelt$variable)
+avgMidtermGradesMelt$variable <- gsub("Functions.y","5_SA Functions",avgMidtermGradesMelt$variable)
+
+avgMidtermGradesMelt$variable <- factor(avgMidtermGradesMelt$variable,
+  levels = c('5_MT Q20-Q21','5_SA Functions', '4_MT Q19', '4_SA Looping',
+  '3_MT Q15-Q18, Q22-Q24', '3_SA Branching','2_MT Q3-Q13', '2_SA Variables and math',
+  '1_MT Q1-Q2', '1_SA Course introduction'),ordered = TRUE)
+
+
+# avgMidtermGradesMelt$variable <- gsub("CourseIntroduction.x","Course introduction MT",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("CourseIntroduction.y","Course introduction SA",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("VariablesDataMaths.x","Variables and math MT",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("VariablesDataMaths.y","Variables and math SA",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("Branching.x","Branching MT",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("Branching.y","Branching SA",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("Looping.x","Looping MT",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("Looping.y","Looping SA",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("Functions.x","Functions MT",avgMidtermGradesMelt$variable)
+# avgMidtermGradesMelt$variable <- gsub("Functions.y","Functions SA",avgMidtermGradesMelt$variable)
+# 
+# avgMidtermGradesMelt$variable <- factor(avgMidtermGradesMelt$variable,
+#   levels = c('Functions MT','Functions SA', 'Looping MT', 'Looping SA',
+#   'Branching MT', 'Branching SA','Variables and math MT', 'Variables and Math SA',
+#   'Course introduction MT', 'Course introduction SA'),ordered = TRUE)
+
+# avgMidtermGradesMelt$variable <- factor(avgMidtermGradesMelt$variable,
+#   levels = c('Functions.x', 'Looping.x', 
+#   'Branching.x', 'VariablesDataMaths.x', 
+#   'CourseIntroduction.x'),ordered = TRUE)
+
+
+# avgMidtermGradesMelt$variable <- factor(avgMidtermGradesMelt$variable,
+#   levels = c('Functions (Q20-Q21)', 'Loops (Q19)',
+#   'Nesting (Q18, Q22-Q23)','Logical expressions (Q15-Q17, Q24)','Mouse and keyboard input (Q14)',
+#   'Math and expressions (Q10-Q13)','Variables and data types (Q3-Q9)',
+#   'Programming rules (Q1-Q2)'),ordered = TRUE)
+
+pScore <- ggplot(avgMidtermGradesMelt, aes(x=variable, y=value, group=variable)) + 
+  geom_boxplot() + #aes(fill=type)
+  #scale_fill_hue(l=80, c=50) + # lightness (l) chroma (c, intensity of color)
+  coord_flip() +
+  #opts() +
+  labs(y="Figure 1: Boxplots of the scores of all students in five topics.") +
+  geom_dotplot(data = student,
+               aes(x=variable, y=value, fill = type),
+               binaxis='y',
+               stackdir='center',
+               binwidth = 0.05) +
+  theme_bw() +
+  #facet_grid(Campus ~ .) +
+  theme(plot.margin = margin(35, 1, 1, 1),
+        axis.title.y=element_blank(),
+        #axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        #axis.title.x=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.y = element_text(hjust = 0),
+        legend.position="none")
+
+```
+
+
+```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
+
+studentTable <- melt(subset(personalized_infoGPRO[,-c(1,12,23:25)], personalized_infoGPRO$rowID %in% personalized_infoGPRO$rowID[i]))
+studentTable1<- NULL
+studentTable1 <- data.frame(c(studentTable[-c(11:20),]), c(studentTable[-c(1:10),-c(1)]))
+studentTable1 <- studentTable1[c(10,5,9,4,8,3,7,2,6,1), ]
+
+names(studentTable1)[2]<-"Your score"
+names(studentTable1)[3]<-"Percentile rank"
+row.names(studentTable1) <- NULL
+#studentTable1$`Your score` <- as.numeric(levels(studentTable1$`Your score`))[studentTable1$`Your score`]
+studentTable1 <- studentTable1[,-c(1)]
+
+is.num <- sapply(studentTable1, is.numeric)
+studentTable1[is.num] <- sapply(studentTable1[is.num], round, 2)
+studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
+studentTable1 <- rbind(studentTable1, c(" "))
+
+tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(5, 6.5), "mm")))
+showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(3,2))
+```
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+showAnalysis
+
+```
+
+
+******
+## Programming progress - from SA to MT
+
+```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+
+GPROgradebookStudent <- subset(GPROgradebook2, GPROgradebook2$Email %in% personalized_infoGPRO$Email[i])
+
+GPROgradebookStudent['lowlow'] <- ""
+GPROgradebookStudent[(GPROgradebookStudent$PriorEXP=="beginner" & GPROgradebookStudent$MT <= 63) ||
+                      (GPROgradebookStudent$PriorEXP=="novice" & GPROgradebookStudent$MT <= 63)]$lowlow <-
+                            paste("You reached a score of ", GPROgradebookStudent$MT, "in the MT,
+                                  showing that you need to study and practise programming
+                                  to be on-track with the course. Some students with no and little prior programming
+                                  experience managed to achieve high scores in the MT
+                                  (see Table 2), and with more effort and time you can do the same.
+                                  Students, with similar prior experienced as you, obtained high MT scores
+                                  if they had completed the SA's and achieved a high score in these.")
+GPROgradebookStudent['lowhigh'] <- ""
+GPROgradebookStudent[(GPROgradebookStudent$PriorEXP=="beginner" & GPROgradebookStudent$MT > 63) ||
+                      (GPROgradebookStudent$PriorEXP=="novice" & GPROgradebookStudent$MT > 63)]$lowhigh <-
+                            paste("Dispite of your prior programming experience, you performed better than
+                                  expected in the MT, with a score of ",GPROgradebookStudent$MT,
+                                  "points, showing that you understand the fundamentals of programming
+                                  and are on-track with the course.
+                                  Students, with similar prior experienced as you, obtained high MT scores
+                                  if they had completed the SA's and achieved a high score in these." )
+GPROgradebookStudent['highlow'] <- ""
+GPROgradebookStudent[(GPROgradebookStudent$PriorEXP=="intermediate" & GPROgradebookStudent$MT <= 63) || 
+                       (GPROgradebookStudent$PriorEXP=="expert" & GPROgradebookStudent$MT <= 63)]$highlow <-
+                            paste("However, dispite of your prior programming experience you performed
+                                  lower than expected in the MT, with a score of ", GPROgradebookStudent$MT,
+                                  "points, showing that you need to study and practise programming
+                                  to be on-track with the course. Students, with intermediate or expert 
+                                  programming experience prior to Medialogy, obtained high MT scores
+                                  if they had achieved a high score in the SA's." )
+GPROgradebookStudent['highhigh'] <-""
+GPROgradebookStudent[(GPROgradebookStudent$PriorEXP=="intermediate" & GPROgradebookStudent$MT > 63) || 
+                       (GPROgradebookStudent$PriorEXP=="expert" & GPROgradebookStudent$MT > 63)]$highhigh <-
+                            paste("With your prior experience and study in the course, you achieved a score of ",
+                                  GPROgradebookStudent$MT, "points, showing that you understand the fundamentals of
+                                  programming and are on-track with the course. Students, with intermediate or expert programming experience
+                                  prior to Medialogy, obtained high MT scores
+                                  if they had achieved a high score in the SA's.")
+GPROgradebookStudent['text'] <- ifelse( (GPROgradebookStudent$PriorEXP=="beginner") ||
+                      (GPROgradebookStudent$PriorEXP=="novice"), 
+                      paste(GPROgradebookStudent$lowlow, GPROgradebookStudent$lowhigh),
+                      paste(GPROgradebookStudent$highlow, GPROgradebookStudent$highhigh))
+
+# cor(lowEXP$MT, lowEXP$SAavgScore)     = 0.3728291 !!
+# cor(lowEXP$MT, lowEXP$SAavgScoreNA)   = 0.2701078
+
+# cor(highEXP$MT, highEXP$SAavgScore)   = 0.2244853
+# cor(highEXP$MT, highEXP$SAavgScoreNA) = 0.7607267 !!
+
+GPROgradebookStudent['tutorIgnored'] <- ifelse(GPROgradebookStudent$tutoring=="not taken",
+                              "In November 2017, you had the advantage of such opportunaty
+                              in an individual tutoring session, from which you could get help with anything
+                              in programming.",NA)
+                              
+GPROgradebookStudent['tutorSessions'] <- ifelse(GPROgradebookStudent$tutoring=="taken", 
+                            "In November 2017, you took such opportunaty,
+                            and we hope that you have benefited from the tutoring.",NA)
+GPROgradebookStudent['tutorText'] <- paste(GPROgradebookStudent$tutorIgnored, GPROgradebookStudent$tutorSessions)
+GPROgradebookStudent$tutorText <- gsub("NA","",GPROgradebookStudent$tutorText)
+GPROgradebookStudent$tutorText <- trimws(GPROgradebookStudent$tutorText,"r")
+
+
+```
+
+
+
+Table 1 describes characterics of your programming experience, SA usage, and MT score. The SA data consists of the first seven SA's, and it was retrieved one day before the MT. Thus, with this data we analyse if the SA usage before the MT is related to MT scores. For this purpose, we look at the percentage of completed SA's, the average score of all seven SA's (assigning zero to incompleted SA's), and the average score of completed SA's.
+
+In September you reported having `r GPROgradebookStudent$PriorEXP` programming experience in the study verification test (SSP).
+`r GPROgradebookStudent$text`
+Hence, you can use this tool to assess your learning progress. Other tools and activities also have influence on learning, and you should utilize all accessible aids. For example, asking for help from the teacher and TA's not only assist you in completing the mandatory exercises, but it can also help you in understanding what is essential for you to learn for the course. `r GPROgradebookStudent$tutorText` At this time of the year, with no lectures, you will need to seek support elsewhere, such as your peers. Teaming up with peers and explaining to each other the course content can help you reach new understandings, other methods to apply programming, and which topics of the course you need to review.
+
+
+
+####Table 1: Statistics of programming experience, SA usage, and MT score.
+```{r echo=FALSE}
+GPROgradebookStudent <- GPROgradebookStudent[c(16,12:14,10,15)]
+names(GPROgradebookStudent) <- c('Prior \nexp.', "Perc. of\ncompleted SA's", "Avg. score \nof SA's", "Avg. score \n of completed SA's", 'MT score', 'Tutoring')
+#kable(GPROgradebookStudent, rows = NULL)
+GPROgradebookStudent <- GPROgradebookStudent[colSums(!is.na(GPROgradebookStudent)) > 0]
+row.names(GPROgradebookStudent) <- NULL
+pander(GPROgradebookStudent, rows = NULL, keep.line.breaks = TRUE)
+
+```
+
+
+
+
+Table 2 shows the minimum (min), maximum (max), and average (avg) of the midterm exam scores based on prior programming experience, retrieved from the study verification test (SSP). The descriptive statistics consist of data from Medalogy students in Aalborg and Copenhagen, of which the number of students in each experience level is indicated with N. As you may have heard or experienced, hands-on practice is the key to learning and improving your programming skills. Actively participating and completing all lecture exercises is a reason why some of your peers across prior programming experience achieved a high score. 
+
+
+####Table 2: MT scores based on prior programming experience.
+```{r echo=FALSE}
+# ggtexttable
+names(GPROprogressTable)[2] <- "Prior programming experience"
+kable(GPROprogressTable[,-1], rows = NULL)
+```
+
+

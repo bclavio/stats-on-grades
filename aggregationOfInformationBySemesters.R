@@ -170,6 +170,11 @@ MScstudentsGPAavgs$rank<-perc.rank(MScstudentsGPAavgs$GPAavg)
 
 # final check of data ----------------------------------------------------
 missingInSPV<-data.frame(unique(dfAAUGradesWODistEnrol[!dfAAUGradesWODistEnrol$aktivitet %in% dfECTSstruct$aktivitet,]$aktivitet ) )
+missingInSPV['studentCounts'] <- 0
+for (i in 1:nrow(missingInSPV)){
+  missingInSPV[i,2] <- count(dfAAUGradesWODistEnrol$aktivitet, missingInSPV[i,1])
+}
+
 #ideally the data frame is empty
 # anonymize ---------------------------------------------------------------
 
