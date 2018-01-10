@@ -162,6 +162,7 @@ highSchoolVariables<-unique(merge(dfKvote1,dfM1, by = "studienr"))
 
 ForSvante3<-merge(highSchoolVariables,ForSvante2)
 ForSvante3<-merge(highSchoolData1,ForSvante3,by = c("navn"))
+ForSvante3<-ForSvante3[ForSvante3$stype=="bachelor",]
 
 perc.rank <- function(x) trunc(rank(x))/length(x)
 MScstudentsGPAavgs<-sqldf("select type, enrolID, sum(ECTS/5*GPAgrade)/(sum(ECTS)/5) as GPAavg, sum(ECTS) as ECTS from dfAAUMarriedGrades where GPAgrade is not Null and type='kandidat'  group by type, enrolID having sum(ECTS)>=80")
@@ -188,9 +189,9 @@ ForSvante4$navn<-NULL
 ForSvante<-ForSvante[!duplicated(ForSvante), ]
 ForSvante2<-ForSvante2[!duplicated(ForSvante2), ]
 
-write.csv(ForSvante,file = "MedData1.csv") # 2294 rows 133 variables
-write.csv(ForSvante2,file = "MedData2.csv") # 1826 rows 145 variables
-write.csv(ForSvante3,file = "MedData3.csv") # 1122 rows 150 variables
+write.csv(ForSvante,file = "MedDataBScMSc-MoreRowsFewerColumns.csv") # 1714 rows 167 variables
+write.csv(ForSvante2,file = "MedData2.csv") # 1826 rows 145 variables # currently not used
+write.csv(ForSvante3,file = "MedDataBSc.csv") # 1007 rows 184 variables 
 #write.csv(ForSvante4,file = "MedData4.csv") # 1852 rows 139 variables
 
 #studenCntKand<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='kandidat' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
