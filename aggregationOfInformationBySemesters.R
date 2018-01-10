@@ -20,7 +20,7 @@ semStruct<-merge(semStruct,CTdfs)
 sem<-join(semStruct,ectsSumSPbySemAndCT,by=c("SPV","sem","CTdf"), type="left")
 sem$nominalECTS[is.na(sem$nominalECTS)]<-0
 ectsSumSPbySemAndCT<-sqldf('select a.SPV as SPV, 
-                           a.sem as sem, a.CTdf as CTdf, sum(b.nominalECTS+0) as nominalECTS
+                           a.sem as sem, a.CTdf as CTdf, round(sum(b.nominalECTS+0),0) as nominalECTS
                            from semStruct as a, sem as b
                            where a.SPV=b.SPV and 
                            b.sem<=a.sem and 
