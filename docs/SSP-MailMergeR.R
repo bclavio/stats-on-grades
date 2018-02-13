@@ -145,7 +145,7 @@ ggplot(dfSSPgradesStat, aes(rowSums(selectedTopics))) + geom_histogram()
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
 highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
 norm.avgGradesMelt <- NULL
-norm.avgGradesMelt <- melt(norm.avgGrades, id.vars = c("rowID", "Campus"))
+norm.avgGradesMelt <- melt(norm.avgGrades[,-10], id.vars = c("rowID", "Campus"))
 norm.avgGradesMelt$variable <- gsub("\\.", " ", norm.avgGradesMelt$variable)
 norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
 norm.avgGradesMelt$variable <- factor(norm.avgGradesMelt$variable, levels = c('Understanding of Medialogy', 'Study and work', 

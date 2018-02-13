@@ -19,6 +19,10 @@ library(reshape2)
 library(ecdfHT)
 library(compare)
 
+library(ggthemes)
+library(extrafont)
+library(scales)
+
 
 ### Import GPRO data
 
@@ -53,5 +57,12 @@ hist(subset(dfGPROquestionnnaire$`confidence-ex`,!grepl("Copenhagen", dfGPROques
      xlab="points", 
      xlim=c(1,10),
      breaks=10)
+
+
+dfGPROquestionnnaireCPH <- subset(dfGPROquestionnnaire, grepl("Copenhagen", dfGPROquestionnnaire$study))
+dfGPROquestionnnaireAAL <- subset(dfGPROquestionnnaire, !grepl("Copenhagen", dfGPROquestionnnaire$study))
+
+
+
 
 

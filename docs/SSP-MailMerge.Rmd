@@ -22,6 +22,8 @@ library(knitr)
 library(kableExtra)
 opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP'} else {paste(homeDir,"~/SVN/01Projects/SSP/", sep = "")})
 
+knitr::opts_chunk$set(fig.height=3.5) 
+
 homeDir<-Sys.getenv("HOME")
 
 ```
@@ -55,27 +57,38 @@ urlcolor: blue
 
 
 
-# Study Verification Test - Student Report
+# Personalized Feedback for the Study Verification Test
 
-This is an interpretive report of your responses to the study verification test. Its purpose is to help you identify your student profile within specific topics.
+This is an interpretive report of your responses to the study verification test. We hope this report will help you identify your current student profile, but also aid you in reflection.
 
+The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported value for each topic is indicated with red dots. A value less than 0.5 means that you rated yourself lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Low percentiles are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth. 
 
-The boxplots[^1]  show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven different topics (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported value for each topic is indicated with red dots. A value less than 0.5 means that you rated yourself lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Based on these results we have created specific recommendations for you to get more comfortable in the Medialogy study environment. 
-
-
-As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or student counselor will help you understand your scores and find the services you desire.
+As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or student counselor will help you understand your scores and find the services you desire. Based on your self-reported answers we have created specific recommendations with concrete examples and links for you to get more comfortable in the Medialogy study environment (see the following pages).
 
 
 [^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation called the interquartile range (IQR) and a typical value (median). The rectangular box denotes the IQR, corresponding to the middle scores of the dataset - ranging from the 25th to the 75th percentile. The line dividing the box into two parts marks the median. The horizontal lines to the left and right of the IQR (whiskers) are 1.5 times as long as the width of the IQR. Outliers are defined as data points outside the whisker ranges and plotted as black dots.
 
 
 ```{r include=FALSE}
-student <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID ==i)
 
-pScore <- ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
+norm.avgGradesMelt1 <- norm.avgGradesMelt
+norm.avgGradesMelt1$variable <- gsub("Social support for studying","Social support for studying",norm.avgGradesMelt1$variable)
+norm.avgGradesMelt1$variable <- gsub("Study habits","Study habits at AAU",norm.avgGradesMelt1$variable)
+norm.avgGradesMelt1$variable <- gsub("Study and work","Time commitments (study and other)",norm.avgGradesMelt1$variable)
+
+norm.avgGradesMelt1$variable <- factor(norm.avgGradesMelt1$variable,
+  levels = c('Understanding of Medialogy', 'Time commitments (study and other)',
+  'Growth mindset', 'Grit',
+  'Study habits at AAU','High school habits',
+  'Social support for studying'),ordered = TRUE)
+
+
+student <- subset(norm.avgGradesMelt1, norm.avgGradesMelt1$rowID ==i)
+
+pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
   geom_boxplot() + 
   coord_flip() +
-  labs(y="Figure 1: Boxplots of the self-ratings of all students in seven topic.") +
+  labs(y="Figure 1: Boxplots of the self-ratings of all students in seven topics.") +
   geom_dotplot(data = student,
                aes(x=variable, y=value, fill = "student data"),
                binaxis='y',
@@ -97,10 +110,10 @@ pScore <- ggplot(norm.avgGradesMelt, aes(x=variable, y=value)) +
 
 ```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
 #studentTable<- NULL
-studentTable <- melt(subset(personalized_info[,-c(1:5, 20:31)], personalized_info$rowID %in% personalized_info$rowID[i]))
+studentTable <- melt(subset(personalized_info[,-c(1:5, 21:32)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
 studentTable1<- NULL
 studentTable1 <- data.frame(c(studentTable[-c(1:7),-c(1)]), apply(studentTable[-c(8:14), ], 2, rev))
-studentTable1 <- studentTable1[, c(2,3,1)]
+studentTable1 <- studentTable1[, c(1,5,2)]
 names(studentTable1)[2]<-"Your score"
 names(studentTable1)[3]<-"Percentile rank"
 row.names(studentTable1) <- NULL
@@ -113,7 +126,7 @@ studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile ra
 studentTable1 <- rbind(studentTable1, c(" "))
 
 
-tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 10), "mm")))
+tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
 showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(2.5,1.5)) # , common.legend = TRUE
 ```
 
@@ -152,7 +165,7 @@ ggplot(studyHours, aes(x=rowID,y=hours)) +
 \pagebreak
 
 
-## Specific Recommondations
+## Specific Recommondations - what can you do
 In this section you will receive a more detailed explanation of your results. The purpose of this information is to help you develop your skills and get the most from your university experience. Take a balanced approach to reviewing and utilizing this information. Do not assume that each statement is perfectly accurate just because it is printed in a formal manner; some statements may not fit you well. However, do not dismiss a statement just because it points to a challenge.
 
 Keep an open mind as you consider each statement. When it seems accurate, give serious thought to any suggestions that accompany the statement. If the statement is puzzling, discuss it with someone who can help you interpret it. Approaching the information in this way can be very helpful. 
@@ -253,7 +266,7 @@ selectRecommondations[7,1] <- ifelse(studentTable1[7,1]<0.5,
   "your understanding of Medialogy is rather","your understanding of Medialogy is"), " different from what the study plan indicates. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming.", 
   ifelse(is.na(toBeMed), "",paste0("Contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about: ",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL), 
   paste("you have a pretty good idea of what you will learn at Medialogy. Medialogy has a strong technical  foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming.",
-  ifelse(is.na(toBeMed), "",paste("However, contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about:",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL))
+  ifelse(is.na(toBeMed), "",paste0("However, contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about: ",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL))
 
 # selectRecommondations <- gsub("\\,\\s+”", ",", selectRecommondations)
 
@@ -298,7 +311,7 @@ Talent without hard work rarely amounts to anything ambitious. Making the effort
 Seeing your intelligence as something that you can actively influence and grow is referred to as having a growth mindset. Students with high self-reported values in growth mindset are less likely to drop out and fail exams than those with lower scores. Your self-reported understanding of intelligence placed you in the `r studentTable1[5,2]` percentile, 
 `r selectRecommondations[5,1]` 
 
-#### Study and Work
+#### Time Commitments (study and other)
 Studying requires a lot of time and dedication in order to succeed. Being intelligent and having talent can help but does not replace the need for dedicating time and effort to studying. The ECTS system assumes that you spend 45 hours a week on your education. You reported using `r studyingHours` hours weekly for studying, which indicates that you are using
 `r selectRecommondations[6,1]` 
 amount of time for studying. Meeting these demands is difficult over long-term with too many other obligations.

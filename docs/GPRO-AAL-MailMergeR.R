@@ -18,6 +18,7 @@ library(ggplot2)
 library(reshape2)
 library(ecdfHT)
 library(compare)
+library(sm)
 
 
 ### Import GPRO data
@@ -130,6 +131,7 @@ highEXP <- subset(GPROgradebook2, grepl("intermediate", GPROgradebook2$PriorEXP)
 
 
 # dataset: 63 students
+personalized_infoGPRO$Email <- as.character(personalized_infoGPRO$Email)
 GPROgradebookPlot <- subset(GPROgradebook2, GPROgradebook2$Email %in% personalized_infoGPRO$Email)
 plot(GPROgradebookPlot$MT, GPROgradebookPlot$SAavgScore)
 plot(GPROgradebookPlot$MT, GPROgradebookPlot$SAavgScoreNA, pch=unclass(PrioEXP))
@@ -153,6 +155,18 @@ ggplot(GPROgradebookPlot, aes(x=SAavgScore, y=MT, shape=PriorEXP, color=PriorEXP
 ggplot(GPROgradebookPlot, aes(x=SAavgScoreNA, y=MT, shape=PriorEXP, color=PriorEXP)) +
   geom_point()  + 
   geom_smooth(method=lm, aes(fill=PriorEXP))
+
+
+###################################################################
+
+GPROgradebook3 <- subset(GPROgradebook2, !is.na(GPROgradebook2$PriorEXP))
+GPROgradebook3$PriorEXP <- gsub("expert", "intermediate", GPROgradebook3$PriorEXP)
+GPROgradebook3$PriorEXP <- factor(GPROgradebook3$PriorEXP,
+   levels = c('intermediate', 'beginner','novice'),ordered = TRUE)
+
+sm.density.compare(GPROgradebook3$PriorEXP)
+
+ggplot(GPROgradebook3, aes(x = MT, fill = PriorEXP)) + geom_density(alpha = 0.5) + ylim(0,0.025) + xlim(0,150)
 
 #######################################################################
 

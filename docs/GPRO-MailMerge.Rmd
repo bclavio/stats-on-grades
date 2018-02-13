@@ -22,7 +22,7 @@ library(kableExtra)
 
 opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/GPRO'} else {paste(homeDir,"~/SVN/01Projects/GPRO/", sep = "")})
 
-knitr::opts_chunk$set(fig.height=2.5) 
+knitr::opts_chunk$set(fig.height=2.7) 
 
 # homeDir<-Sys.getenv("HOME")
 
@@ -100,7 +100,7 @@ pScore <- ggplot(avgMidtermGradesMelt, aes(x=variable, y=value)) +
                aes(x=variable, y=value, fill = "student data"),
                binaxis='y',
                stackdir='center',
-               binwidth = 0.05) +
+               binwidth = 0.06) +
   theme_bw() +
   #facet_grid(Campus ~ .) +
   theme(plot.margin = margin(35, 1, 1, 1),
@@ -123,7 +123,7 @@ studentTable1 <- data.frame(c(studentTable[-c(6:10),-c(1)]), c(studentTable[-c(1
 names(studentTable1)[1]<-"Your score"
 names(studentTable1)[3]<-"Percentile rank"
 row.names(studentTable1) <- NULL
-#studentTable1$`Your score` <- as.numeric(levels(studentTable1$`Your score`))[studentTable1$`Your score`]
+studentTable1$`Your score` <- as.numeric(levels(studentTable1$`Your score`))[studentTable1$`Your score`]
 studentTable1 <- studentTable1[,-c(2)]
 #studentTable1 <- data.frame( lapply(studentTable1[nrow(studentTable1),], function(x) as.numeric(as.character(x))) )
 #studentTable1['MTQ'] <- c('Q1,Q2', 'Q3-Q13', 'Q15-Q18, Q22-Q24', 'Q19', 'Q20, Q21') 
