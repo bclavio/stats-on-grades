@@ -1,0 +1,64 @@
+---
+title: "List of risk/succes factors"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The following variables were found to influence student dropout
+
+\textbf{Qualifying education}
+Students with a foreign qualifying education were found to be less likely to drop out than students from HTX and STX who were again less likeliy to drop out than students from HF and HHX. No difference were found between HTX and STX and nor between HF and HHX. The conclusion is based on
+\begin{itemize}
+\item Visual inspection of survival curves
+\item A log rank test
+\item The variable is significant in a cox' proportional hazards model both before and after correcting for remaining variables.
+\item The variable is significant in a logistic regression model after correcting for other variables
+\item After using the CART-algorithm and pruning the tree it is one of the two remaining variables to split on
+\end{itemize}
+Note however that some assumptions about non-infomative censuring and proprotional hazard seems to be violated in the cox model.
+
+\textbf{Quotient from qualifying education}
+A high quotient was found to reduce the risk of dropping out. The findings were based on
+
+\begin{itemize}
+\item Visual inspection of survival curves
+\item A log-rank test
+\item Significant in cos' proprotioal hazard model both before and after correcting for other variables
+\item Significant in a logistic regression model
+\item After using the CART-algorithm and pruning the tree it is one of the two remaining variables to split on
+\end{itemize}
+Note however that some assumptions about non-infomative censuring and proprotional hazard seems to be violated in the cox model.
+
+\textbf{Level of math from qualifying education}
+It was found that students with level A in mathematics are less likeliy to drop out than students with level B. The findings are based on
+\begin{itemize}
+\item Visual inspection of survival curves
+\item A log rank test
+\item The variable is signifikant in a cox' proportional hazard model both before and after correction for other variables
+\item The variable is significant in a logistic regression model
+\end{itemize}
+
+\textbf{Grade in Math from qualifying education}
+It was found that for students with level A in math a higher grade in math means they are less likely to drop out. For math on level B there was no particular effect of the grade. The findings are based on
+\begin{itemize}
+\item Visual inspection of survival curves
+\item Log-rank tests
+\item Math grade is in itself not significant in cox' proprotional hazard model after correcting for quotient  but an interaction term between math grade and level is. However different test do not agree and the significance is sensible to removing some data points
+\item The variable is significant in a logistic regression model
+\end{itemize}
+
+\textbf{Gender}
+Men were found to be less likely to drop out than women. The findings are based on
+\begin{itemize}
+\item The variable is significant in a cox' proportional hazard model however this conclusion is sensible to changes in few data points
+\item The difference between genders seems to be only for danish students.
+\end{itemize}
+
+\textbf{Age at enrolment}
+There are some indications that high age is protective to dropping out. The results are based on
+\begin{itemize}
+\item The variable is significant in some cox' proportional hazard model but it is sensitive to the removal of few observations
+\end{itemize}
+
