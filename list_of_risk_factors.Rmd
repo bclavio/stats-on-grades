@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 The following variables were found to influence student dropout
 
 \textbf{Qualifying education}
+
 Students with a foreign qualifying education were found to be less likely to drop out than students from HTX and STX who were again less likeliy to drop out than students from HF and HHX. No difference were found between HTX and STX and nor between HF and HHX. The conclusion is based on
 \begin{itemize}
 \item Visual inspection of survival curves
@@ -20,6 +21,7 @@ Students with a foreign qualifying education were found to be less likely to dro
 Note however that some assumptions about non-infomative censuring and proprotional hazard seems to be violated in the cox model.
 
 \textbf{Quotient from qualifying education}
+
 A high quotient was found to reduce the risk of dropping out. The findings were based on
 
 \begin{itemize}
@@ -32,6 +34,7 @@ A high quotient was found to reduce the risk of dropping out. The findings were 
 Note however that some assumptions about non-infomative censuring and proprotional hazard seems to be violated in the cox model.
 
 \textbf{Level of math from qualifying education}
+
 It was found that students with level A in mathematics are less likeliy to drop out than students with level B. The findings are based on
 \begin{itemize}
 \item Visual inspection of survival curves
@@ -41,6 +44,7 @@ It was found that students with level A in mathematics are less likeliy to drop 
 \end{itemize}
 
 \textbf{Grade in Math from qualifying education}
+
 It was found that for students with level A in math a higher grade in math means they are less likely to drop out. For math on level B there was no particular effect of the grade. The findings are based on
 \begin{itemize}
 \item Visual inspection of survival curves
@@ -50,6 +54,7 @@ It was found that for students with level A in math a higher grade in math means
 \end{itemize}
 
 \textbf{Gender}
+
 Men were found to be less likely to drop out than women. The findings are based on
 \begin{itemize}
 \item The variable is significant in a cox' proportional hazard model however this conclusion is sensible to changes in few data points
@@ -57,8 +62,18 @@ Men were found to be less likely to drop out than women. The findings are based 
 \end{itemize}
 
 \textbf{Age at enrolment}
+
 There are some indications that high age is protective to dropping out. The results are based on
 \begin{itemize}
 \item The variable is significant in some cox' proportional hazard model but it is sensitive to the removal of few observations
 \end{itemize}
 
+\textbf{Time varying variables}
+
+Information about how many ECTS a student has attempted and atained and performance in some activities were found to be significant in cox models with time varying covariates, but there are some issues concerning this: 
+\begin{itemize}
+\item The coefficients indicate that it reduces the hazard to attempt many ECTS. However, there have been some changes in rules concerning how many ECTS a student must attempt each semester during the period of the gathered data and this might influence the results.
+\item Some coefficients are counterintuitive since they indicate that it increases hazard to miss ECTS or having high GPA in projects. The point about missing ECTS might actually be a result about people already having recieved qualifications for some courses earlier.
+\end{itemize}
+
+Fitting of certain logistic regression models indicate that the more variables we know from after enrolling the less important the variables gathered before the beginning of the education are.  
