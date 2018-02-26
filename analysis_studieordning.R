@@ -19,5 +19,81 @@ ggsurvplot(sur, conf.int = T)
 #It looks like the changes are for students unrolled by the institution. I may indicate
 #that the changes are due to new rules and not the study plan
 
+sem <- 1:10
 
+enroll2011 <- enrolldata[enrolldata$startaar==2011,]
+drop2011 <- c()
+dropInst2011 <- c()
+dropSelv2011 <- c()
+for (day in c(152,333,517,698,882,1063,1247,1429,1613,1794)){
+  if (day<max(enroll2011$Days)){
+  drop2011 <- c(drop2011,mean(enroll2011$statussn=='afbrudt' & enroll2011$Days<day)) 
+  dropInst2011 <- c(dropInst2011,mean(enroll2011$udmeldsn=='Afbrudt af institutionen' & enroll2011$Days<day)) 
+  dropSelv2011 <- c(dropSelv2011,mean(enroll2011$udmeldsn=='Afbrudt af den studerende' & enroll2011$Days<day)) 
+  
+  }
+}
 
+enroll2012 <- enrolldata[enrolldata$startaar==2012,]
+drop2012 <- c()
+dropInst2012 <- c()
+dropSelv2012 <- c()
+for (day in c(152,333,517,698,882,1063,1247,1429,1613,1794)){
+  if (day<max(enroll2012$Days)){
+    drop2012 <- c(drop2012,mean(enroll2012$statussn=='afbrudt' & enroll2012$Days<day)) 
+    dropInst2012 <- c(dropInst2012,mean(enroll2012$udmeldsn=='Afbrudt af institutionen' & enroll2012$Days<day)) 
+    dropSelv2012 <- c(dropSelv2012,mean(enroll2012$udmeldsn=='Afbrudt af den studerende' & enroll2012$Days<day)) 
+    
+  }
+}
+
+enroll2013 <- enrolldata[enrolldata$startaar==2013,]
+drop2013 <- c()
+dropInst2013 <- c()
+dropSelv2013 <- c()
+for (day in c(152,333,517,698,882,1063,1247,1429,1613,1794)){
+  if (day<max(enroll2013$Days)){
+    drop2013 <- c(drop2013,mean(enroll2013$statussn=='afbrudt' & enroll2013$Days<day)) 
+    dropInst2013 <- c(dropInst2013,mean(enroll2013$udmeldsn=='Afbrudt af institutionen' & enroll2013$Days<day)) 
+    dropSelv2013 <- c(dropSelv2013,mean(enroll2013$udmeldsn=='Afbrudt af den studerende' & enroll2013$Days<day)) 
+    
+  }
+}
+
+enroll2014 <- enrolldata[enrolldata$startaar==2014,]
+drop2014 <- c()
+dropInst2014 <- c()
+dropSelv2014 <- c()
+for (day in c(152,333,517,698,882,1063,1247,1429,1613,1794)){
+  if (day<max(enroll2014$Days)){
+    drop2014 <- c(drop2014,mean(enroll2014$statussn=='afbrudt' & enroll2014$Days<day)) 
+    dropInst2014 <- c(dropInst2014,mean(enroll2014$udmeldsn=='Afbrudt af institutionen' & enroll2014$Days<day)) 
+    dropSelv2014 <- c(dropSelv2014,mean(enroll2014$udmeldsn=='Afbrudt af den studerende' & enroll2014$Days<day)) 
+    
+  }
+}
+
+library(ggplot2)
+navne <- c('2011'='red','2012'='green','2013'='purple','2014'='blue')
+(ggplot()+ylim(0,1)+ylab('Dropout')+xlab('Semester') + geom_point(aes(factor(sem),drop2011, col='2011')) + geom_line(aes(sem,drop2011, col='2011'))
+  + geom_point(aes(factor(sem),drop2012, col='2012')) + geom_line(aes(sem,drop2012, col='2012'))
+  + geom_point(aes(factor(1:8),drop2013, col='2013')) + geom_line(aes(1:8,drop2013, col='2013'))
+  + geom_point(aes(factor(1:6),drop2014, col='2014')) + geom_line(aes(1:6,drop2014, col='2014'))
+  )            
+
+(ggplot()+ylim(0,1)+ylab('Dropout by institution')+xlab('Semester')
+  + geom_point(aes(factor(sem),dropInst2011, col='2011')) + geom_line(aes(sem,dropInst2011, col='2011'))
+  + geom_point(aes(factor(sem),dropInst2012, col='2012')) + geom_line(aes(sem,dropInst2012, col='2012'))
+  + geom_point(aes(factor(1:8),dropInst2013, col='2013')) + geom_line(aes(1:8,dropInst2013, col='2013'))
+  + geom_point(aes(factor(1:6),dropInst2014, col='2014')) + geom_line(aes(1:6,dropInst2014, col='2014'))
+) 
+
+(ggplot()+ylim(0,1)+ylab('Dropout by student')+xlab('Semester')
+  + geom_point(aes(factor(sem),dropSelv2011, col='2011')) + geom_line(aes(sem,dropSelv2011, col='2011'))
+  + geom_point(aes(factor(sem),dropSelv2012, col='2012')) + geom_line(aes(sem,dropSelv2012, col='2012'))
+  + geom_point(aes(factor(1:8),dropSelv2013, col='2013')) + geom_line(aes(1:8,dropSelv2013, col='2013'))
+  + geom_point(aes(factor(1:6),dropSelv2014, col='2014')) + geom_line(aes(1:6,dropSelv2014, col='2014'))
+) 
+
+#It does seem to reveal the same pattern. After 2014 most students who are forced to drop
+#out drops out on 3. semester and the previous years it was on 5. semester.
