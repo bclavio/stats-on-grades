@@ -97,3 +97,67 @@ navne <- c('2011'='red','2012'='green','2013'='purple','2014'='blue')
 
 #It does seem to reveal the same pattern. After 2014 most students who are forced to drop
 #out drops out on 3. semester and the previous years it was on 5. semester.
+
+##Looking into how many exam trys they have used
+AAUGradesBsc <- dfAAUGrades[dfAAUGrades$type=='bachelor',]
+enrollMaxExamTry <- merge(enrolldata, dfRetrier, all.x = T)
+enrollMaxExamTry <- enrollMaxExamTry[enrollMaxExamTry$startaar %in% c(2011,2012,2013,2014),]
+
+dat <- data.frame(table(enrollMaxExamTry$startaar,enrollMaxExamTry$MaxTry))
+count2011 <- sum(dat$Freq[dat$Var1==2011])
+count2012 <- sum(dat$Freq[dat$Var1==2012])
+count2013 <- sum(dat$Freq[dat$Var1==2013])
+count2014 <- sum(dat$Freq[dat$Var1==2014])
+dat$Freq[dat$Var1==2011] <- dat$Freq[dat$Var1==2011]/count2011
+dat$Freq[dat$Var1==2012] <- dat$Freq[dat$Var1==2012]/count2012
+dat$Freq[dat$Var1==2013] <- dat$Freq[dat$Var1==2013]/count2013
+dat$Freq[dat$Var1==2014] <- dat$Freq[dat$Var1==2014]/count2014
+
+ggplot(dat, aes(factor(Var2), Freq, fill = Var1)) + 
+  geom_bar(stat="identity", position = "dodge")
+
+
+MaxTryInst <- enrollMaxExamTry[enrollMaxExamTry$udmeldsn=='Afbrudt af institutionen',]
+
+datInst <- data.frame(table(MaxTryInst$startaar,MaxTryInst$MaxTry))
+count2011 <- sum(datInst$Freq[datInst$Var1==2011])
+count2012 <- sum(datInst$Freq[datInst$Var1==2012])
+count2013 <- sum(datInst$Freq[datInst$Var1==2013])
+count2014 <- sum(datInst$Freq[datInst$Var1==2014])
+datInst$Freq[datInst$Var1==2011] <- datInst$Freq[datInst$Var1==2011]/count2011
+datInst$Freq[datInst$Var1==2012] <- datInst$Freq[datInst$Var1==2012]/count2012
+datInst$Freq[datInst$Var1==2013] <- datInst$Freq[datInst$Var1==2013]/count2013
+datInst$Freq[datInst$Var1==2014] <- datInst$Freq[datInst$Var1==2014]/count2014
+
+ggplot(datInst, aes(factor(Var2), Freq, fill = Var1)) + 
+  geom_bar(stat="identity", position = "dodge")
+
+MaxTrySelv <- enrollMaxExamTry[enrollMaxExamTry$udmeldsn=='Afbrudt af den studerende',]
+
+datSelv <- data.frame(table(MaxTrySelv$startaar,MaxTrySelv$MaxTry))
+count2011 <- sum(datSelv$Freq[datSelv$Var1==2011])
+count2012 <- sum(datSelv$Freq[datSelv$Var1==2012])
+count2013 <- sum(datSelv$Freq[datSelv$Var1==2013])
+count2014 <- sum(datSelv$Freq[datSelv$Var1==2014])
+datSelv$Freq[datSelv$Var1==2011] <- datSelv$Freq[datSelv$Var1==2011]/count2011
+datSelv$Freq[datSelv$Var1==2012] <- datSelv$Freq[datSelv$Var1==2012]/count2012
+datSelv$Freq[datSelv$Var1==2013] <- datSelv$Freq[datSelv$Var1==2013]/count2013
+datSelv$Freq[datSelv$Var1==2014] <- datSelv$Freq[datSelv$Var1==2014]/count2014
+
+ggplot(datSelv, aes(factor(Var2), Freq, fill = Var1)) + 
+  geom_bar(stat="identity", position = "dodge")
+
+MaxTryFinished <- enrollMaxExamTry[enrollMaxExamTry$udmeldsn=='Afsluttet',]
+
+datFinished <- data.frame(table(MaxTryFinished$startaar,MaxTryFinished$MaxTry))
+count2011 <- sum(datFinished$Freq[datFinished$Var1==2011])
+count2012 <- sum(datFinished$Freq[datFinished$Var1==2012])
+count2013 <- sum(datFinished$Freq[datFinished$Var1==2013])
+count2014 <- sum(datFinished$Freq[datFinished$Var1==2014])
+datFinished$Freq[datFinished$Var1==2011] <- datFinished$Freq[datFinished$Var1==2011]/count2011
+datFinished$Freq[datFinished$Var1==2012] <- datFinished$Freq[datFinished$Var1==2012]/count2012
+datFinished$Freq[datFinished$Var1==2013] <- datFinished$Freq[datFinished$Var1==2013]/count2013
+datFinished$Freq[datFinished$Var1==2014] <- datFinished$Freq[datFinished$Var1==2014]/count2014
+
+ggplot(datFinished, aes(factor(Var2), Freq, fill = Var1)) + 
+  geom_bar(stat="identity", position = "dodge")
