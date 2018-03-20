@@ -2,6 +2,7 @@ library(tidyr)
 library(glmnet)
 library(rpart)
 library(rpart.plot)
+library(ggplot2)
 
 ############################################
 #########Loading and preparing data ########
@@ -215,60 +216,60 @@ for (i in 1:length(q)){
 #There are very little dispersion for some questions. Maybe they should be treated as factors instead of numeric
 
 #Adding single term one by one and check whether they are significant
-fit <- glm(Status~1,data = SSPQuestions,family = binomial(link='logit'))
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- glm(Status~1,data = SSPQuestions,family = binomial(link='logit'))
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 #Q7,Q9,Q10,Q25,Q88,Q92,Q96,Q98,Q106,Q107,Q108 are significant with level 0.05
 #The most significant one is added and the test is repeated for the new model
-fit <- update(fit,~.+Q10)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q10)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 #Q92,Q96,Q98,Q107,Q108 are still significant after correcting for Q10
 #ading the one with smallest p and repeating
-fit <- update(fit,~.+Q96)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q96)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q98)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q98)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q92)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q92)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q108)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q108)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q73)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q73)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q88)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q88)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q65)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q65)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q4)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q4)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q14)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q14)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-fit <- update(fit,~.+Q32)
-add <- add1(fit, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+fitQ <- update(fitQ,~.+Q32)
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
-summary(fit)
-drop1(fit, test='Chisq')
+summary(fitQ)
+drop1(fitQ, test='Chisq')
 #Q10 no longer significant
-fit <- update(fit,~.-Q10)
+fitQ <- update(fitQ,~.-Q10)
 ###
 
 ###Using lasso to choose
@@ -307,7 +308,6 @@ tree$variable.importance
 plotcp(tree)
 #Also indicate not to use any predictors
 
-
 ######Croos validation for all candidate models
 
 logCV <- function(fit,k=10, data,thres=0.5){
@@ -327,14 +327,100 @@ logCV <- function(fit,k=10, data,thres=0.5){
     if(sum(tab[,2])==0){FN[i] <- 0}
     else{FN[i] <- tab[1,2]/sum(tab[,2])}
   }
+  sda <- sd(CV)
   accuracy <- mean(CV)
+  sdFP <- sd(FP)
   FP <- mean(FP)
+  sdFN <- sd(FN)
   FN <- mean(FN)
-  return(list('accuracy'=accuracy,'FP'=FP,'FN'=FN))
+  return(list('accuracy'=accuracy,'sda'=sda,'FP'=FP,'sdFP'=sdFP,'FN'=FN,'sdFN'=sdFN))
 }
 
-logCV(lognull,data = SSPQuestions)
-logCV(logpostlasso, data = SSPQuestions)
-logCV(fit, data = SSPQuestions)
-logCV(logcat, data=SSPCategory)
-logCV(catAIC, data = SSPCategory)
+CVlognull <- logCV(lognull,data = SSPQuestions)
+CVlogpostlass <- logCV(logpostlasso, data = SSPQuestions)
+CVlogfitQ <- logCV(fitQ, data = SSPQuestions)
+CVlogcat <- logCV(logcat, data=SSPCategory)
+CVlogcatAIC <- logCV(catAIC, data = SSPCategory)
+
+CVtreeQ <- rep(0,10)
+FP <- rep(0,10)
+FN <- rep(0,10)
+idx <- sample(1:10,nrow(SSPQuestions),replace = TRUE)
+for (i in 1:10){
+  train <- SSPQuestions[idx!=i,]
+  test <- SSPQuestions[idx==i,]
+  tree <- rpart(Status~., data = train)
+  pred <- predict(tree,test,type = 'class')
+  CVtreeQ[i] <- mean(pred==test$Status)
+  tab <- table(factor(pred, levels = c('active','dropout')),test$Status)
+  FP[i] <- tab[2,1]/sum(tab[,1])
+  if(sum(tab[,2])==0){FN[i] <- 0}
+  else{FN[i] <- tab[1,2]/sum(tab[,2])}
+}
+accuracytreeQ <- mean(CVtreeQ)
+sdatreeQ <- sd(CVtreeQ)
+FPtreeQ <- mean(FP)
+sdFPtreeQ <- sd(FP)
+FNtreeQ <- mean(FN)
+sdFNtreeQ <- sd(FN)
+
+CVtreeCat <- rep(0,10)
+FP <- rep(0,10)
+FN <- rep(0,10)
+idx <- sample(1:10,nrow(SSPCategory),replace = TRUE)
+for (i in 1:10){
+  train <- SSPCategory[idx!=i,]
+  test <- SSPCategory[idx==i,]
+  tree <- rpart(Status~., data = train)
+  pred <- predict(tree,test,type = 'class')
+  CVtreeCat[i] <- mean(pred==test$Status)
+  tab <- table(factor(pred, levels = c('active','dropout')),test$Status)
+  FP[i] <- tab[2,1]/sum(tab[,1])
+  if(sum(tab[,2])==0){FN[i] <- 0}
+  else{FN[i] <- tab[1,2]/sum(tab[,2])}
+}
+accuracytreeCat <- mean(CVtreeCat)
+sdatreeCat <- sd(CVtreeCat)
+FPtreeCat <- mean(FP)
+sdFPtreeCat <- sd(FP)
+FNtreeCat <- mean(FN)
+sdFNtreeCat <- sd(FN)
+
+CVlasso <- rep(0,10)
+FP <- rep(0,10)
+FN <- rep(0,10)
+idx <- sample(1:10,nrow(SSPQuestions), replace=T)
+for (i in 1:10){
+  xtrain <- as.matrix(SSPQuestions[idx!=i,-1])
+  ytrain <- SSPQuestions[idx!=i,1]
+  xtest <- as.matrix(SSPQuestions[idx==i,-1])
+  ytest <- SSPQuestions[idx==i,1]
+  fit <- glmnet(xtrain, ytrain, family = 'binomial', lambda = 0.05942334)
+  pred <- predict(fit,xtest, type='class')
+  CVlasso[i] <- mean(pred==ytest)
+  tab <- table(factor(pred, levels = c('active','dropout')),ytest)
+  FP[i] <- tab[2,1]/sum(tab[,1])
+  if(sum(tab[,2])==0){FN[i] <- 0}
+  else{FN[i] <- tab[1,2]/sum(tab[,2])}
+}
+accuracylasso <- mean(CVlasso)
+sdalasso <- sd(CVlasso)
+FPlasso <- mean(FP)
+sdFPlasso <- sd(FP)
+FNlasso <- mean(FN)
+sdFNlasso <- sd(FN)
+
+
+Model <- c('lognull', 'logpostlasso','lasso','fitQ','logcat','catAIC','treeQ','treeCat')
+ac <- c(CVlognull$accuracy,CVlogpostlass$accuracy,accuracylasso,CVlogfitQ$accuracy,CVlogcat$accuracy,CVlogcatAIC$accuracy,accuracytreeQ,accuracytreeCat)
+sdac <- c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogfitQ$sda,CVlogcat$sda,CVlogcatAIC$sda,sdatreeQ,sdatreeCat)
+FP <- c(CVlognull$FP,CVlogpostlass$FP,FPlasso,CVlogfitQ$FP,CVlogcat$FP,CVlogcatAIC$FP,FPtreeQ,FPtreeCat)
+sdFP <- c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogfitQ$sdFP,CVlogcat$sdFP,CVlogcatAIC$sdFP,sdFPtreeQ,sdFPtreeCat)
+FN <- c(CVlognull$FN,CVlogpostlass$FN,FNlasso,CVlogfitQ$FN,CVlogcat$FN,CVlogcatAIC$FN,FNtreeQ,FNtreeCat)
+sdFN <- c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogfitQ$sdFN,CVlogcat$sdFN,CVlogcatAIC$sdFN,sdFNtreeQ,sdFNtreeCat)
+Parametre <- c(1,7,7,10,1,2,5,3)
+(ggplot()+geom_point(aes(Model,ac, size=Parametre,col='accuracy')) + geom_errorbar(aes(x=Model, ymin=ac-sdac, ymax=ac+sdac),width=0.25) 
+ +geom_point(aes(Model,FP, size=Parametre,col='FP')) + geom_errorbar(aes(x=Model, ymin=FP-sdFP, ymax=FP+sdFP),width=0.25)
++geom_point(aes(Model,FN, size=Parametre,col='FN')) + geom_errorbar(aes(x=Model, ymin=FN-sdFN, ymax=FN+sdFN),width=0.25))
+
+#fitQ and logpostlasso seems okay.
