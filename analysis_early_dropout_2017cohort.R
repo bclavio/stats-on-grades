@@ -226,64 +226,107 @@ for (i in 1:length(q)){
 #There are very little dispersion for some questions. Maybe they should be treated as factors instead of numeric
 
 #Adding single term one by one and check whether they are significant
-fitQ <- glm(Status~1,data = SSPQuestions,family = binomial(link='logit'))
-add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+lognull <- glm(Status~1,data = SSPQuestions,family = binomial(link='logit'))
+add <- add1(lognull, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 #Q7,Q9,Q10,Q25,Q88,Q92,Q96,Q98,Q106,Q107,Q108 are significant with level 0.05
 #The most significant one is added and the test is repeated for the new model
-fitQ <- update(fitQ,~.+Q10)
+fitQ <- update(lognull,~.+Q10)
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 #Q92,Q96,Q98,Q107,Q108 are still significant after correcting for Q10
-#ading the one with smallest p and repeating
+#ading the one with smallest p and repeating after first checking that everything is still significant
 fitQ <- update(fitQ,~.+Q96)
+drop1(fitQ, test = 'Chisq')
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q98)
+drop1(fitQ, test = 'Chisq')
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q92)
+drop1(fitQ, test = 'Chisq')
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q108)
+drop1(fitQ, test = 'Chisq')
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q73)
+drop1(fitQ, test = 'Chisq')
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q88)
+drop1(fitQ, test = 'Chisq')
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q65)
+drop1(fitQ, test = 'Chisq')
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q4)
+drop1(fitQ, test = 'Chisq')
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q14)
+drop1(fitQ, test = 'Chisq')
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 fitQ <- update(fitQ,~.+Q32)
+drop1(fitQ, test = 'Chisq')
+#Q10 is no longer significant so it is removed
+fitQ <- update(fitQ,~.-Q10)
+
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+add[which(add$`Pr(>Chi)`<0.05),]
+
+fitQ <- update(fitQ,~.+Q64)
+drop1(fitQ, test = 'Chisq')
+
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+add[which(add$`Pr(>Chi)`<0.05),]
+
+fitQ <- update(fitQ,~.+Q83)
+drop1(fitQ, test = 'Chisq')
+
+add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
+add[which(add$`Pr(>Chi)`<0.05),]
+
+fitQ <- update(fitQ,~.+Q107)
+drop1(fitQ, test = 'Chisq')
+#Q64 is no longer significant so it is removed
+fitQ <- update(fitQ,~.-Q64)
+
 add <- add1(fitQ, scope = names(SSPQuestions)[2:111],test = 'Chisq')
 add[which(add$`Pr(>Chi)`<0.05),]
 
 summary(fitQ)
-drop1(fitQ, test='Chisq')
-#Q10 no longer significant
-fitQ <- update(fitQ,~.-Q10)
-###
 
-## Trying to do the same with AIC (both backwards and forwards)
-logQnull <- glm(Status~1,data = SSPQuestions,family = binomial(link='logit'))
+### Could also have been achieved with
+logQp05 <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=3.84)
+#Trying to use significance level 0.01 (k=6.63) also since possible probelms with multiple testing
+logQp01 <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=6.63)
+summary(logQp01)
+#That only gives Q10 and Q96
+
+## Trying to do the same with AIC and BIC as selection criteria (both backwards and forwards)
 logQAIC <- step(logQnull,scope=terms(Status~.,data = SSPQuestions),direction='both')
 #notice some warnings about convergence so probably not too reliable
 summary(logQAIC)
@@ -307,24 +350,23 @@ coef(CV.lambda, s='lambda.1se')
 coef(CV.lambda, s='lambda.min')
 #Q108,Q107,Q98,Q96,Q92,Q88,Q10.
 
-#Fit logistic regression model with none predictors and one with Q108,Q107,Q98,Q96,Q92,Q88,Q10
-lognull <- glm(Status~1,data=SSPQuestions,family = binomial)
+#Fit logistic regression model with Q108,Q107,Q98,Q96,Q92,Q88,Q10
 logpostlasso <- glm(Status~Q10+Q88+Q92+Q96+Q98+Q107+Q108, data = SSPQuestions, family = binomial)
 
 
 ###Trying decision trees
-tree <- rpart(Status~., data = SSPQuestions)
-rpart.plot(tree)
-tree$variable.importance
+treeQ <- rpart(Status~., data = SSPQuestions)
+rpart.plot(treeQ)
+treeQ$variable.importance
 #Indicate Q108,Q88,Q16,Q65 are important
-plotcp(tree)
+plotcp(treeQ)
 #suggest not to use anything
 
-tree <- rpart(Status~., data = SSPCategory)
-rpart.plot(tree)
-tree$variable.importance
+treeCat <- rpart(Status~., data = SSPCategory)
+rpart.plot(treeCat)
+treeCat$variable.importance
 #Indicate perceived academic abilities and styduing and working hours are important
-plotcp(tree)
+plotcp(treeCat)
 #Also indicate not to use any predictors
 
 ######Croos validation for all candidate models
@@ -357,7 +399,8 @@ logCV <- function(fit,k=10, data,thres=0.5){
 
 CVlognull <- logCV(lognull,data = SSPQuestions)
 CVlogpostlass <- logCV(logpostlasso, data = SSPQuestions)
-CVlogfitQ <- logCV(fitQ, data = SSPQuestions)
+CVlogQp05 <- logCV(logQp05, data = SSPQuestions)
+CVlogQp01 <- logCV(logQp01, data = SSPQuestions)
 CVlogQAIC <- logCV(logQAIC,data = SSPQuestions)
 CVlogQBIC <- logCV(logQBIC, data = SSPQuestions)
 CVlogcat <- logCV(logcat, data=SSPCategory)
@@ -432,17 +475,17 @@ FNlasso <- mean(FN)
 sdFNlasso <- sd(FN)
 
 
-Model <- c('lognull', 'logpostlasso','lasso','fitQ','logQAIC','logQBIC','logcat','catAIC','treeQ','treeCat')
-ac <- c(CVlognull$accuracy,CVlogpostlass$accuracy,accuracylasso,CVlogfitQ$accuracy,CVlogQAIC$accuracy,CVlogQBIC$accuracy,CVlogcat$accuracy,CVlogcatAIC$accuracy,accuracytreeQ,accuracytreeCat)
-sdac <- c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogfitQ$sda,CVlogQAIC$sda,CVlogQBIC$sda,CVlogcat$sda,CVlogcatAIC$sda,sdatreeQ,sdatreeCat)
-FP <- c(CVlognull$FP,CVlogpostlass$FP,FPlasso,CVlogfitQ$FP,CVlogQAIC$FP,CVlogQBIC$FP,CVlogcat$FP,CVlogcatAIC$FP,FPtreeQ,FPtreeCat)
-sdFP <- c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogfitQ$sdFP,CVlogQAIC$sdFP,CVlogQBIC$sdFP,CVlogcat$sdFP,CVlogcatAIC$sdFP,sdFPtreeQ,sdFPtreeCat)
-FN <- c(CVlognull$FN,CVlogpostlass$FN,FNlasso,CVlogfitQ$FN,CVlogQAIC$FN,CVlogQBIC$FN,CVlogcat$FN,CVlogcatAIC$FN,FNtreeQ,FNtreeCat)
-sdFN <- c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogfitQ$sdFN,CVlogQAIC$sdFN,CVlogQBIC$sdFN,CVlogcat$sdFN,CVlogcatAIC$sdFN,sdFNtreeQ,sdFNtreeCat)
-Parametre <- c(1,7,7,10,24,4,1,2,5,3)
-(ggplot()+geom_point(aes(Model,ac, size=Parametre,col='accuracy')) + geom_errorbar(aes(x=Model, ymin=ac-sdac, ymax=ac+sdac),width=0.25) 
- +geom_point(aes(Model,FP, size=Parametre,col='FP')) + geom_errorbar(aes(x=Model, ymin=FP-sdFP, ymax=FP+sdFP),width=0.25)
-+geom_point(aes(Model,FN, size=Parametre,col='FN')) + geom_errorbar(aes(x=Model, ymin=FN-sdFN, ymax=FN+sdFN),width=0.25))
+Model <- c('lognull', 'logpostlasso','lasso','logQp05','logQp01','logQAIC','logQBIC','logcat','catAIC','treeQ','treeCat')
+ac <- c(CVlognull$accuracy,CVlogpostlass$accuracy,accuracylasso,CVlogQp05$accuracy,CVlogQp01$accuracy,CVlogQAIC$accuracy,CVlogQBIC$accuracy,CVlogcat$accuracy,CVlogcatAIC$accuracy,accuracytreeQ,accuracytreeCat)
+sdac <- c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogQp05$sda,CVlogQp01$sda,CVlogQAIC$sda,CVlogQBIC$sda,CVlogcat$sda,CVlogcatAIC$sda,sdatreeQ,sdatreeCat)
+FP <- c(CVlognull$FP,CVlogpostlass$FP,FPlasso,CVlogQp05$FP,CVlogQp01$FP,CVlogQAIC$FP,CVlogQBIC$FP,CVlogcat$FP,CVlogcatAIC$FP,FPtreeQ,FPtreeCat)
+sdFP <- c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogQp05$sdFP,CVlogQp01$sdFP,CVlogQAIC$sdFP,CVlogQBIC$sdFP,CVlogcat$sdFP,CVlogcatAIC$sdFP,sdFPtreeQ,sdFPtreeCat)
+FN <- c(CVlognull$FN,CVlogpostlass$FN,FNlasso,CVlogQp05$FN,CVlogQp01$FN,CVlogQAIC$FN,CVlogQBIC$FN,CVlogcat$FN,CVlogcatAIC$FN,FNtreeQ,FNtreeCat)
+sdFN <- c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogQp05$sdFN,CVlogQp01$sdFN,CVlogQAIC$sdFN,CVlogQBIC$sdFN,CVlogcat$sdFN,CVlogcatAIC$sdFN,sdFNtreeQ,sdFNtreeCat)
+Parametre <- c(1,7,7,12,2,24,4,1,2,5,3)
+(ggplot()+geom_point(aes(Model,ac, size=Parametre,col='accuracy')) + geom_errorbar(aes(x=Model, ymin=ac-sdac, ymax=ac+sdac,col='accuracy'),width=0.25) 
+ +geom_point(aes(Model,FP, size=Parametre,col='FP')) + geom_errorbar(aes(x=Model, ymin=FP-sdFP, ymax=FP+sdFP,col='FP'),width=0.25)
++geom_point(aes(Model,FN, size=Parametre,col='FN')) + geom_errorbar(aes(x=Model, ymin=FN-sdFN, ymax=FN+sdFN,col='FN'),width=0.25))
 
 #fitQ, logpostlasso, AIC, BIC and treeQ seems okay.
 #would probably choose fitQ
@@ -468,9 +511,10 @@ for(k in ksize){
   FN[i] <- CV$FN
   sdFN[i] <- CV$sdFN
 }
-(ggplot()+geom_point(aes(ksize,ac,col='accuracy')) + geom_errorbar(aes(x=ksize, ymin=ac-sdac, ymax=ac+sdac),width=0.25) 
+(ggplot()+geom_point(aes(ksize,ac,col='accuracy')) + geom_errorbar(aes(x=ksize, ymin=ac-sdac, ymax=ac+sdac,col='accuracy'),width=0.25) 
   +geom_point(aes(ksize,FP,col='FP')) + geom_errorbar(aes(x=ksize, ymin=FP-sdFP, ymax=FP+sdFP),width=0.25)
   +geom_point(aes(ksize,FN,col='FN')) + geom_errorbar(aes(x=ksize, ymin=FN-sdFN, ymax=FN+sdFN),width=0.25))
 #Should probably choose k=3
 logk3 <- step(logQnull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=3)
 logk3$call
+summary(logk3)
