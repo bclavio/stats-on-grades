@@ -116,6 +116,7 @@ drop1(logCampus, test = 'Chisq')
 #Making some different logistic regression models
 loggrade <- glm(Status~Grade, family = binomial(link = 'logit'), data = SSP)
 summary(loggrade)
+drop1(loggrade,test='Chisq')
 #Overall grade does not seem to be significanat
 boxplot(Grade~Status, data=SSP)
 
@@ -327,10 +328,10 @@ summary(logQp01)
 #That only gives Q10 and Q96
 
 ## Trying to do the same with AIC and BIC as selection criteria (both backwards and forwards)
-logQAIC <- step(logQnull,scope=terms(Status~.,data = SSPQuestions),direction='both')
+logQAIC <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='both')
 #notice some warnings about convergence so probably not too reliable
 summary(logQAIC)
-logQBIC <- step(logQnull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=log(nrow(SSPQuestions)))
+logQBIC <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=log(nrow(SSPQuestions)))
 summary(logQBIC)
 #Q10,Q96,Q98,Q92
 
@@ -339,7 +340,7 @@ x <- as.matrix(SSPQuestions[,-1])
 y <- SSPQuestions[,1]
 
 lassofit <- glmnet(x,y,family = 'binomial')
-plot(lassofit, xvar='lambda')
+plot(lassofit, xvar='lambda',label = TRUE)
 CV.lambda <- cv.glmnet(x,y,family='binomial')
 plot(CV.lambda)
 CV.lambda$lambda.min
@@ -475,46 +476,20 @@ FNlasso <- mean(FN)
 sdFNlasso <- sd(FN)
 
 
-Model <- c('lognull', 'logpostlasso','lasso','logQp05','logQp01','logQAIC','logQBIC','logcat','catAIC','treeQ','treeCat')
-ac <- c(CVlognull$accuracy,CVlogpostlass$accuracy,accuracylasso,CVlogQp05$accuracy,CVlogQp01$accuracy,CVlogQAIC$accuracy,CVlogQBIC$accuracy,CVlogcat$accuracy,CVlogcatAIC$accuracy,accuracytreeQ,accuracytreeCat)
-sdac <- c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogQp05$sda,CVlogQp01$sda,CVlogQAIC$sda,CVlogQBIC$sda,CVlogcat$sda,CVlogcatAIC$sda,sdatreeQ,sdatreeCat)
-FP <- c(CVlognull$FP,CVlogpostlass$FP,FPlasso,CVlogQp05$FP,CVlogQp01$FP,CVlogQAIC$FP,CVlogQBIC$FP,CVlogcat$FP,CVlogcatAIC$FP,FPtreeQ,FPtreeCat)
-sdFP <- c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogQp05$sdFP,CVlogQp01$sdFP,CVlogQAIC$sdFP,CVlogQBIC$sdFP,CVlogcat$sdFP,CVlogcatAIC$sdFP,sdFPtreeQ,sdFPtreeCat)
-FN <- c(CVlognull$FN,CVlogpostlass$FN,FNlasso,CVlogQp05$FN,CVlogQp01$FN,CVlogQAIC$FN,CVlogQBIC$FN,CVlogcat$FN,CVlogcatAIC$FN,FNtreeQ,FNtreeCat)
-sdFN <- c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogQp05$sdFN,CVlogQp01$sdFN,CVlogQAIC$sdFN,CVlogQBIC$sdFN,CVlogcat$sdFN,CVlogcatAIC$sdFN,sdFNtreeQ,sdFNtreeCat)
-Parametre <- c(1,7,7,12,2,24,4,1,2,5,3)
+Model <- c('lognull', 'logQpostlasso','lassoQ','logQp05','logQp01','logQBIC','logCatp05','logCatAIC','treeQ','treeCat')
+ac <- c(CVlognull$accuracy,CVlogpostlass$accuracy,accuracylasso,CVlogQp05$accuracy,CVlogQp01$accuracy,CVlogQBIC$accuracy,CVlogcat$accuracy,CVlogcatAIC$accuracy,accuracytreeQ,accuracytreeCat)
+sdac <- c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogQp05$sda,CVlogQp01$sda,CVlogQBIC$sda,CVlogcat$sda,CVlogcatAIC$sda,sdatreeQ,sdatreeCat)
+FP <- c(CVlognull$FP,CVlogpostlass$FP,FPlasso,CVlogQp05$FP,CVlogQp01$FP,CVlogQBIC$FP,CVlogcat$FP,CVlogcatAIC$FP,FPtreeQ,FPtreeCat)
+sdFP <- c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogQp05$sdFP,CVlogQp01$sdFP,CVlogQBIC$sdFP,CVlogcat$sdFP,CVlogcatAIC$sdFP,sdFPtreeQ,sdFPtreeCat)
+FN <- c(CVlognull$FN,CVlogpostlass$FN,FNlasso,CVlogQp05$FN,CVlogQp01$FN,CVlogQBIC$FN,CVlogcat$FN,CVlogcatAIC$FN,FNtreeQ,FNtreeCat)
+sdFN <- c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogQp05$sdFN,CVlogQp01$sdFN,CVlogQBIC$sdFN,CVlogcat$sdFN,CVlogcatAIC$sdFN,sdFNtreeQ,sdFNtreeCat)
+Parametre <- c(1,8,8,13,3,5,2,3,5,3)
 (ggplot()+geom_point(aes(Model,ac, size=Parametre,col='accuracy')) + geom_errorbar(aes(x=Model, ymin=ac-sdac, ymax=ac+sdac,col='accuracy'),width=0.25) 
  +geom_point(aes(Model,FP, size=Parametre,col='FP')) + geom_errorbar(aes(x=Model, ymin=FP-sdFP, ymax=FP+sdFP,col='FP'),width=0.25)
-+geom_point(aes(Model,FN, size=Parametre,col='FN')) + geom_errorbar(aes(x=Model, ymin=FN-sdFN, ymax=FN+sdFN,col='FN'),width=0.25))
++geom_point(aes(Model,FN, size=Parametre,col='FN')) + geom_errorbar(aes(x=Model, ymin=FN-sdFN, ymax=FN+sdFN,col='FN'),width=0.25)
+  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,13,2)))
 
-#fitQ, logpostlasso, AIC, BIC and treeQ seems okay.
-#would probably choose fitQ
 
-#######Try to choose k in step with crossvalidation
-log <- glm(Status~1,data = SSPQuestions,family = binomial(link='logit'))
-ksize <- seq(2,4,0.2)
-ac <- rep(0,length(ksize))
-sdac <- rep(0,length(ksize))
-FP <- rep(0,length(ksize))
-sdFP <- rep(0,length(ksize))
-FN <- rep(0,length(ksize))
-sdFN <- rep(0,length(ksize))
-i <- 0
-for(k in ksize){
-  i <- i+1
-  log <- step(logQnull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=k)
-  CV <- logCV(log,data = SSPQuestions)
-  ac[i] <- CV$accuracy
-  sdac[i] <- CV$sda
-  FP[i] <- CV$FP
-  sdFP[i] <- CV$sdFP
-  FN[i] <- CV$FN
-  sdFN[i] <- CV$sdFN
-}
-(ggplot()+geom_point(aes(ksize,ac,col='accuracy')) + geom_errorbar(aes(x=ksize, ymin=ac-sdac, ymax=ac+sdac,col='accuracy'),width=0.25) 
-  +geom_point(aes(ksize,FP,col='FP')) + geom_errorbar(aes(x=ksize, ymin=FP-sdFP, ymax=FP+sdFP),width=0.25)
-  +geom_point(aes(ksize,FN,col='FN')) + geom_errorbar(aes(x=ksize, ymin=FN-sdFN, ymax=FN+sdFN),width=0.25))
-#Should probably choose k=3
-logk3 <- step(logQnull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=3)
-logk3$call
-summary(logk3)
+
+
+
