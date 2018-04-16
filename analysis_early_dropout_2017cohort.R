@@ -75,6 +75,10 @@ SSPDropout$Status <- factor(SSPDropout$Status)
 SSPDropout <- SSPDropout[,-c(1,2,5,7:9)]
 SSPDropout[,4:115] <- apply(SSPDropout[,4:115],MARGIN = 2,as.numeric)
 
+#Removing 3 students with unrealistic plans for how much they are going to work per week
+SSPDropout <- SSPDropout[SSPDropout$Q96<80,]
+
+
 #Making another dataset with questions sorted into categories
 SSP <- SSPDropout[!is.na(SSPDropout$State),]
 Qnolab <- questions[,c('Category','QuestionLabel','QuestionNo')]
@@ -97,7 +101,7 @@ SSPQuestions <- SSPQuestions[,-ncol(SSPQuestions)]
 SSPCategory <- SSP[,c(1,116:129)]
 which(is.na(SSPQuestions))
 ###Replace 10 missing values in SSPQuestions with mean of column
-for (i in 2:ncol(SSPQuestions)){
+for (i in 3:ncol(SSPQuestions)){
   SSPQuestions[is.na(SSPQuestions[,i]),i] <- mean(SSPQuestions[,i],na.rm=TRUE)
 }
 
@@ -322,10 +326,11 @@ summary(fitQ)
 
 ### Could also have been achieved with
 logQp05 <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=3.84)
+summary(logQp05)
 #Trying to use significance level 0.01 (k=6.63) also since possible probelms with multiple testing
 logQp01 <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=6.63)
 summary(logQp01)
-#That only gives Q10 and Q96
+#That only gives Q10
 
 ## Trying to do the same with AIC and BIC as selection criteria (both backwards and forwards)
 logQAIC <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='both')
@@ -333,7 +338,7 @@ logQAIC <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='bot
 summary(logQAIC)
 logQBIC <- step(lognull,scope=terms(Status~.,data = SSPQuestions),direction='both',k=log(nrow(SSPQuestions)))
 summary(logQBIC)
-#Q10,Q96,Q98,Q92
+#Q10
 
 ###Using lasso to choose
 x <- as.matrix(SSPQuestions[,-1])
@@ -345,14 +350,15 @@ CV.lambda <- cv.glmnet(x,y,family='binomial')
 plot(CV.lambda)
 CV.lambda$lambda.min
 CV.lambda$lambda.1se
+#OBS! Changes sometimes due to randomness in cross validation
 
 coef(CV.lambda, s='lambda.1se')
 #All variables are disregarded
 coef(CV.lambda, s='lambda.min')
-#Q108,Q107,Q98,Q96,Q92,Q88,Q10.
+#Q108,Q107,Q98,Q88,Q10.
 
-#Fit logistic regression model with Q108,Q107,Q98,Q96,Q92,Q88,Q10
-logpostlasso <- glm(Status~Q10+Q88+Q92+Q96+Q98+Q107+Q108, data = SSPQuestions, family = binomial)
+#Fit logistic regression model with Q108,Q107,Q98,Q88,Q10
+logpostlasso <- glm(Status~Q10+Q88+Q98+Q107+Q108, data = SSPQuestions, family = binomial)
 
 
 ###Trying decision trees
@@ -402,10 +408,7 @@ CVlognull <- logCV(lognull,data = SSPQuestions)
 CVlogpostlass <- logCV(logpostlasso, data = SSPQuestions)
 CVlogQp05 <- logCV(logQp05, data = SSPQuestions)
 CVlogQp01 <- logCV(logQp01, data = SSPQuestions)
-CVlogQAIC <- logCV(logQAIC,data = SSPQuestions)
-CVlogQBIC <- logCV(logQBIC, data = SSPQuestions)
 CVlogcat <- logCV(logcat, data=SSPCategory)
-CVlogcatAIC <- logCV(catAIC, data = SSPCategory)
 
 CVtreeQ <- rep(0,10)
 FP <- rep(0,10)
@@ -460,7 +463,7 @@ for (i in 1:10){
   ytrain <- SSPQuestions[idx!=i,1]
   xtest <- as.matrix(SSPQuestions[idx==i,-1])
   ytest <- SSPQuestions[idx==i,1]
-  fit <- glmnet(xtrain, ytrain, family = 'binomial', lambda = 0.05942334)
+  fit <- glmnet(xtrain, ytrain, family = 'binomial', lambda = 0.08929888)
   pred <- predict(fit,xtest, type='class')
   CVlasso[i] <- mean(pred==ytest)
   tab <- table(factor(pred, levels = c('active','dropout')),ytest)
@@ -476,18 +479,18 @@ FNlasso <- mean(FN)
 sdFNlasso <- sd(FN)
 
 
-Model <- c('lognull', 'logQpostlasso','lassoQ','logQp05','logQp01','logQBIC','logCatp05','logCatAIC','treeQ','treeCat')
-ac <- c(CVlognull$accuracy,CVlogpostlass$accuracy,accuracylasso,CVlogQp05$accuracy,CVlogQp01$accuracy,CVlogQBIC$accuracy,CVlogcat$accuracy,CVlogcatAIC$accuracy,accuracytreeQ,accuracytreeCat)
-sdac <- c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogQp05$sda,CVlogQp01$sda,CVlogQBIC$sda,CVlogcat$sda,CVlogcatAIC$sda,sdatreeQ,sdatreeCat)
-FP <- c(CVlognull$FP,CVlogpostlass$FP,FPlasso,CVlogQp05$FP,CVlogQp01$FP,CVlogQBIC$FP,CVlogcat$FP,CVlogcatAIC$FP,FPtreeQ,FPtreeCat)
-sdFP <- c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogQp05$sdFP,CVlogQp01$sdFP,CVlogQBIC$sdFP,CVlogcat$sdFP,CVlogcatAIC$sdFP,sdFPtreeQ,sdFPtreeCat)
-FN <- c(CVlognull$FN,CVlogpostlass$FN,FNlasso,CVlogQp05$FN,CVlogQp01$FN,CVlogQBIC$FN,CVlogcat$FN,CVlogcatAIC$FN,FNtreeQ,FNtreeCat)
-sdFN <- c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogQp05$sdFN,CVlogQp01$sdFN,CVlogQBIC$sdFN,CVlogcat$sdFN,CVlogcatAIC$sdFN,sdFNtreeQ,sdFNtreeCat)
-Parametre <- c(1,8,8,13,3,5,2,3,5,3)
+Model <- c('lognull', 'logQpostlasso','lassoQ','logQp05','logQp01','logCatp05','treeQ','treeCat')
+ac <- c(CVlognull$accuracy,CVlogpostlass$accuracy,accuracylasso,CVlogQp05$accuracy,CVlogQp01$accuracy,CVlogcat$accuracy,accuracytreeQ,accuracytreeCat)
+sdac <- c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogQp05$sda,CVlogQp01$sda,CVlogcat$sda,sdatreeQ,sdatreeCat)
+FP <- c(CVlognull$FP,CVlogpostlass$FP,FPlasso,CVlogQp05$FP,CVlogQp01$FP,CVlogcat$FP,FPtreeQ,FPtreeCat)
+sdFP <- c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogQp05$sdFP,CVlogQp01$sdFP,CVlogcat$sdFP,sdFPtreeQ,sdFPtreeCat)
+FN <- c(CVlognull$FN,CVlogpostlass$FN,FNlasso,CVlogQp05$FN,CVlogQp01$FN,CVlogcat$FN,FNtreeQ,FNtreeCat)
+sdFN <- c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogQp05$sdFN,CVlogQp01$sdFN,CVlogcat$sdFN,sdFNtreeQ,sdFNtreeCat)
+Parametre <- c(1,6,6,8,2,2,5,3)
 (ggplot()+geom_point(aes(Model,ac, size=Parametre,col='accuracy')) + geom_errorbar(aes(x=Model, ymin=ac-sdac, ymax=ac+sdac,col='accuracy'),width=0.25) 
  +geom_point(aes(Model,FP, size=Parametre,col='FP')) + geom_errorbar(aes(x=Model, ymin=FP-sdFP, ymax=FP+sdFP,col='FP'),width=0.25)
 +geom_point(aes(Model,FN, size=Parametre,col='FN')) + geom_errorbar(aes(x=Model, ymin=FN-sdFN, ymax=FN+sdFN,col='FN'),width=0.25)
-  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,13,2)))
+  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
 
 
 
