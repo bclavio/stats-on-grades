@@ -2,6 +2,9 @@ library(tidyr)
 library(glmnet)
 library(leaps)
 library(hydroGOF)
+library(ggplot2)
+library(rpart)
+library(rpart.plot)
 ############################################
 #######preparing and loading data###########
 ############################################
@@ -105,7 +108,6 @@ joinedKhan<-reshape(joinedKhan, idvar = "Student Name", timevar = "Exercise", di
 # Not sure how a student user name could occur more than once but it did in Fall 2017
 joinedKhan<-joinedKhan[!duplicated(joinedKhan[,1]),]
 # Remove Teachers
-# In subsequent semesters this may or may not be necessary.
 joinedKhan<-joinedKhan[!grepl("hendrik",joinedKhan$'Student Name'),]
 # Count number of completed Khan assignments for each student and store in "KhanCount" column
 # Like SA, Khan Academny assignments were nto mandatory so we consider number of attempts instead of assigning zeros to non-attempts.
@@ -139,15 +141,16 @@ dfComplete$'mid-term' <- as.numeric(dfComplete$'mid-term')
 dfComplete <- dfComplete[!is.na(dfComplete$Exam),]
 #Add pass/fail variable fail=1
 dfComplete$grade <- as.numeric(dfComplete$grade)
-dfComplete$PassFail <- as.numeric(dfComplete$grade<2)
+dfComplete$PassFail <- factor(as.numeric(dfComplete$grade<2))
 #Deleting unnecesarry colums
+Email <- dfComplete$`Email address`
 dfComplete <- dfComplete[,-c(1,2,3,6,8,10,18)]
 names(dfComplete)[c(3,9:12)] <- c('midterm','PeerSubmissionScore','PeerFeedbackScore','PeerCombinedScore','SSPGrade')
 names(dfComplete)[123:136] <- c('AttitudeTowardsEducation', "BelongingUncertainty","Demographics", "EducationChoiceFactors", "Grit" ,"GrowthMindset","HighSchoolBehaviour","HighSchoolTrust","PerceivedAcademicAbilities","PersonalTraitComparison","ReasonsforGoingtoUniversity","Selfcontrol","StudyingandWorkingHours","ViewonMedialogy")
 ####################################
 ############Analysis################
 ####################################
-mean(dfComplete$PassFail)
+mean(dfComplete$PassFail==1)
 #34.7 percent failed the course
 plot(dfComplete$Exam~dfComplete$saNumComp)
 plot(dfComplete$Exam~dfComplete$saRowAvg)
@@ -185,7 +188,7 @@ plot(lasso,label = T)
 CV.lasso <- cv.glmnet(x,y,family='gaussian')
 plot(CV.lasso)
 CV.lasso$lambda.min
-#3.858913
+#3.858913 (Changes each time due to crossvalidation randomness)
 CV.lasso$lambda.1se
 #6.74356
 coef(CV.lasso,s=3.858913)
@@ -307,15 +310,14 @@ CVlm <- function(lmfit,data,k=10){
   }
   return(CV)
 }
+#post.lasso.1selmfit1 and lmcatfit1 are the same model so only one
 
 CVpostlassomin <- CVlm(post.lasso.min,dfComplete)
 CVpostlasso1se <- CVlm(post.lasso.1se,dfComplete)
-CVsub1 <- CVlm(lmfit1,dfComplete)
 CVsub2 <- CVlm(lmfit2,dfComplete)
 CVsub3 <- CVlm(lmfit3,dfComplete)
 CVsub4 <- CVlm(lmfit4,dfComplete)
 CVsub5 <- CVlm(lmfit5,dfComplete)
-CVsubcat1 <- CVlm(lmcatfit1,dfComplete)
 CVsubcat2 <- CVlm(lmcatfit2,dfComplete)
 CVsubcat3 <- CVlm(lmcatfit3,dfComplete)
 CVsubcat4 <- CVlm(lmcatfit4,dfComplete)
@@ -324,3 +326,172 @@ CVstep05 <- CVlm(lmfit05,dfComplete)
 CVstep01 <- CVlm(lmfit01,dfComplete)
 CVcatstep05 <- CVlm(lmfitcat05,dfComplete)
 CVcatstep01 <- CVlm(lmfitcat01,dfComplete)
+
+
+
+Model <- c('post.lasso.Q.min','post.lasso.1se','lmQ2','lmQ3','lmQ4','lmQ5','lmcat2','lmcat3','lmcat4','lmcat5','lmQp01','lmcatp05','lmcatp01')
+CVmean <- c(mean(CVpostlassomin),mean(CVpostlasso1se),mean(CVsub2),mean(CVsub3),mean(CVsub4),mean(CVsub5),mean(CVsubcat2),mean(CVsubcat3),mean(CVsubcat4),mean(CVsubcat5),mean(CVstep01),mean(CVcatstep05),mean(CVcatstep01))
+se <- (1/sqrt(10))*c(sd(CVpostlassomin),sd(CVpostlasso1se),sd(CVsub2),sd(CVsub3),sd(CVsub4),sd(CVsub5),sd(CVsubcat2),sd(CVsubcat3),sd(CVsubcat4),sd(CVsubcat5),sd(CVstep01),sd(CVcatstep05),sd(CVcatstep01))
+Parametre <- c(5,2,3,4,5,6,3,4,5,6,5,8,3)
+(ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
+  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
+
+##Trying to predict passed failed with classification tree
+Qdatapf <- dfComplete[,c(1:3,8:11,13:122,137)]
+treeQ <- rpart(PassFail~.,data = Qdatapf)
+rpart.plot(treeQ)
+summary(dfComplete$grade[dfComplete$midterm<54])
+#All students with midterm score less than 54 failed
+summary(dfComplete$grade[dfComplete$midterm>=72])
+dfComplete$grade[dfComplete$midterm>=72]
+#Only six percent of students with more than 72 in midterm failed
+treeQ$variable.importance
+summary(treeQ)
+plotcp(treeQ)
+#cp=0.037
+#Cross validation
+CVtree <- rep(NA,10)
+FP <- rep(NA,10)
+FN <- rep(NA,10)
+idx <- sample(1:10,nrow(Qdatapf),replace = TRUE)
+for (i in 1:10){
+  train <- Qdatapf[idx!=i,]
+  test <- Qdatapf[idx==i,]
+  tree <- rpart(PassFail~., data = train)
+  pred <- predict(tree,test,type = 'class')
+  CVtree[i] <- mean(pred==test$PassFail)
+  tab <- table(factor(pred, levels = c(0,1)),test$PassFail)
+  FP[i] <- tab[2,1]/sum(tab[,1])
+  if(sum(tab[,2])==0){FN[i] <- 0}
+  else{FN[i] <- tab[1,2]/sum(tab[,2])}
+}
+accuracy <- mean(CVtree)
+sda <- sd(CVtree)
+FPtree <- mean(FP)
+sdFPtree <- sd(FP)
+FNtree <- mean(FN)
+sdFNtree <- sd(FN)
+
+####Trying to predict total score excluding midterm as predictor since it is part of the total score.
+#Choosing with lasso (single questions and other predictors)
+dfComplete$Total <- as.numeric(dfComplete$Total)
+x <- as.matrix(dfComplete[,c(1:2,8:11,13:122)])
+y <- dfComplete$Total
+lassoTotal <- glmnet(x,y,family = 'gaussian')
+plot(lasso,label = T)
+CV.lasso <- cv.glmnet(x,y,family='gaussian')
+plot(CV.lasso)
+CV.lasso$lambda.min
+#4.414971 (Changes each time due to crossvalidation randomness)
+CV.lasso$lambda.1se
+#8.467519
+coef(CV.lasso,s=4.414971)
+#PeerSubmissionScore, Q6, Q82, Q98
+coef(CV.lasso, s=8.467519)
+#Q82, PeerSubmissionScore
+
+post.lasso.min.total <- lm(Total~PeerSubmissionScore+Q6+Q82+Q98, data=dfComplete)
+post.lasso.1se.total <- lm(Total~Q82+PeerSubmissionScore, data=dfComplete)
+anova(post.lasso.min,post.lasso.1se)
+#Even though lasso does not choose them some seems to be significant anyway
+
+#Choosing with lasso (categories and other predictors)
+x <- as.matrix(dfComplete[,c(1:2,8:11,123:136)])
+y <- dfComplete$Total
+lasso.cat <- glmnet(x,y,family = 'gaussian')
+plot(lasso.cat,xvar = 'lambda',label = T)
+CV.lasso.cat <- cv.glmnet(x,y,family='gaussian')
+plot(CV.lasso.cat)
+CV.lasso.cat$lambda.min
+#2.396323
+CV.lasso.cat$lambda.1se
+#8.814586
+coef(CV.lasso.cat,s=2.396323)
+#Self-control,reasons for going to university, 
+#high school trust,grit, education choice factors,PeerSubmissionScore
+#khancount, saRowAvg
+coef(CV.lasso.cat, s=8.814586)
+#No predictors at all
+
+post.lasso.min.cat.total <- lm(Total~Selfcontrol+ReasonsforGoingtoUniversity+HighSchoolTrust+Grit+EducationChoiceFactors+PeerSubmissionScore+saRowAvg,data = dfComplete)
+null.model <- lm(Total~1,data = dfComplete)
+
+######Using best subset selection
+#single questions
+x <- as.matrix(dfComplete[,c(1:2,8:11,13:122)])
+y <- dfComplete$Total
+subsets <- regsubsets(x,y,nvmax = 5,method = 'exhaustive', really.big = T)
+variables <- summary(subsets)$which
+names(dfComplete[,c(1:2,8:11,13:122)])[variables[1,-1]]
+names(dfComplete[,c(1:2,8:11,13:122)])[variables[2,-1]]
+names(dfComplete[,c(1:2,8:11,13:122)])[variables[3,-1]]
+names(dfComplete[,c(1:2,8:11,13:122)])[variables[4,-1]]
+names(dfComplete[,c(1:2,8:11,13:122)])[variables[5,-1]]
+lmfittotal1 <- lm(Total~Q82,data=dfComplete)
+lmfittotal2 <- lm(Total~PeerSubmissionScore+Q82,data=dfComplete)
+lmfittotal3 <- lm(Total~PeerSubmissionScore+Q56+Q82,data=dfComplete)
+lmfittotal4 <- lm(Total~PeerSubmissionScore+Q6+Q82+Q98,data=dfComplete)
+lmfittotal5 <- lm(Total~PeerSubmissionScore+Q6+Q56+Q82+Q98,data=dfComplete)
+
+AIC(lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5)
+#Categories
+x <- as.matrix(dfComplete[,c(1:2,8:11,123:136)])
+y <- dfComplete$Total
+subsets <- regsubsets(x,y,nvmax = 5,method = 'exhaustive', really.big = T)
+variables <- summary(subsets)$which
+names(dfComplete[,c(1:2,8:11,123:136)])[variables[1,-1]]
+names(dfComplete[,c(1:2,8:11,123:136)])[variables[2,-1]]
+names(dfComplete[,c(1:2,8:11,123:136)])[variables[3,-1]]
+names(dfComplete[,c(1:2,8:11,123:136)])[variables[4,-1]]
+names(dfComplete[,c(1:2,8:11,123:136)])[variables[5,-1]]
+
+lmcatfittotal1 <- lm(Total~PeerSubmissionScore, data=dfComplete)
+lmcatfittotal2 <- lm(Total~PeerSubmissionScore+Selfcontrol, data=dfComplete)
+lmcatfittotal3 <- lm(Total~saRowAvg+PeerSubmissionScore+Selfcontrol, data=dfComplete)
+lmcatfittotal4 <- lm(Total~saRowAvg+PeerSubmissionScore+HighSchoolTrust+Selfcontrol, data=dfComplete)
+lmcatfittotal5 <- lm(Total~saRowAvg+PeerSubmissionScore+HighSchoolTrust+ReasonsforGoingtoUniversity+Selfcontrol, data=dfComplete)
+
+AIC(lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5)
+
+#Crossvalidation
+CVlassoTotalmin <- CVlm(post.lasso.min.total,dfComplete)
+CVlassoTotal1se <- CVlm(post.lasso.1se.total,dfComplete)
+CVlassoTotalcatmin <- CVlm(post.lasso.min.cat.total,dfComplete)
+CVnull <- CVlm(lmnull,dfComplete)
+CVQ1 <- CVlm(lmfittotal1,dfComplete)
+CVQ2 <- CVlm(lmfittotal2,dfComplete)
+CVQ3 <- CVlm(lmfittotal3,dfComplete)
+CVQ4 <- CVlm(lmfittotal4,dfComplete)
+CVQ5 <- CVlm(lmfittotal5,dfComplete)
+CVcat1 <- CVlm(lmcatfittotal1,dfComplete)
+CVcat2 <- CVlm(lmcatfittotal2,dfComplete)
+CVcat3 <- CVlm(lmcatfittotal3,dfComplete)
+CVcat4 <- CVlm(lmcatfittotal4,dfComplete)
+CVcat5 <- CVlm(lmcatfittotal5,dfComplete)
+
+Model <- c('lasso.Q.min.total','lasso.Q.1se.total','lasso.cat.min.total','nullmodel','lmQ1total','lmQ2total','lmQ3total','lmQ4total','lmQ5total','lmcat1total','lmcat2total','lmcat3total','lmcat4total','lmcat5total')
+CVmean <- c(mean(CVlassoTotalmin),mean(CVlassoTotal1se),mean(CVlassoTotalcatmin),mean(CVnull),mean(CVQ1),mean(CVQ2),mean(CVQ3),mean(CVQ4),mean(CVQ5),mean(CVcat1),mean(CVcat2),mean(CVcat3),mean(CVcat4),mean(CVcat5))
+se <- c(sd(CVlassoTotalmin),sd(CVlassoTotal1se),sd(CVlassoTotalcatmin),sd(CVnull),sd(CVQ1),sd(CVQ2),sd(CVQ3),sd(CVQ4),sd(CVQ5),sd(CVcat1),sd(CVcat2),sd(CVcat3),sd(CVcat4),sd(CVcat5))
+Parametre <- c(5,3,8,1,2,3,4,5,6,2,3,4,5,6)
+(ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
+  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
+
+
+###Q82 shows up pretty often so making some plots with this
+plot(Total~Q82, data = dfComplete)
+abline(lmfittotal1)
+plot(Total~factor(Q82),data = dfComplete)
+#It seems to make sense
+lmfitQ82asfactor <- lm(Total~factor(Q82),data = dfComplete)
+summary(lmfitQ82asfactor)
+
+###############################################################
+#######Trying to predict dropout based on exam results#########
+###############################################################
+dropoutFeb18 <- read.csv("Y:/analysis_data/dropOut/data/dropout-Feb2018-Q999.csv", encoding="UTF-8",stringsAsFactors=FALSE)
+names(dropoutFeb18)[1] <- 'Name'
+dropoutFeb18 <- dropoutFeb18[,2:3]
+dfComplete$Email <- Email
+test <- merge(dfComplete,dropoutFeb18,by='Email',all.x = T)
+which(!dfComplete$Email%in%dropoutFeb18$Email)
+Email[c(19,42)]
