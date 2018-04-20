@@ -144,6 +144,7 @@ dfComplete$grade <- as.numeric(dfComplete$grade)
 dfComplete$PassFail <- factor(as.numeric(dfComplete$grade<2))
 #Deleting unnecesarry colums
 Email <- dfComplete$`Email address`
+studienr <- dfComplete$`ID number`
 dfComplete <- dfComplete[,-c(1,2,3,6,8,10,18)]
 names(dfComplete)[c(3,9:12)] <- c('midterm','PeerSubmissionScore','PeerFeedbackScore','PeerCombinedScore','SSPGrade')
 names(dfComplete)[123:136] <- c('AttitudeTowardsEducation', "BelongingUncertainty","Demographics", "EducationChoiceFactors", "Grit" ,"GrowthMindset","HighSchoolBehaviour","HighSchoolTrust","PerceivedAcademicAbilities","PersonalTraitComparison","ReasonsforGoingtoUniversity","Selfcontrol","StudyingandWorkingHours","ViewonMedialogy")
@@ -329,12 +330,20 @@ CVcatstep01 <- CVlm(lmfitcat01,dfComplete)
 
 
 
-Model <- c('post.lasso.Q.min','post.lasso.1se','lmQ2','lmQ3','lmQ4','lmQ5','lmcat2','lmcat3','lmcat4','lmcat5','lmQp01','lmcatp05','lmcatp01')
-CVmean <- c(mean(CVpostlassomin),mean(CVpostlasso1se),mean(CVsub2),mean(CVsub3),mean(CVsub4),mean(CVsub5),mean(CVsubcat2),mean(CVsubcat3),mean(CVsubcat4),mean(CVsubcat5),mean(CVstep01),mean(CVcatstep05),mean(CVcatstep01))
-se <- (1/sqrt(10))*c(sd(CVpostlassomin),sd(CVpostlasso1se),sd(CVsub2),sd(CVsub3),sd(CVsub4),sd(CVsub5),sd(CVsubcat2),sd(CVsubcat3),sd(CVsubcat4),sd(CVsubcat5),sd(CVstep01),sd(CVcatstep05),sd(CVcatstep01))
-Parametre <- c(5,2,3,4,5,6,3,4,5,6,5,8,3)
+Model <- c('post.lasso.Q.min','post.lasso.1se','lmQ2','lmQ3','lmQ4','lmQ5','lmcat2','lmcat3','lmcat4','lmcat5')
+CVmean <- c(mean(CVpostlassomin),mean(CVpostlasso1se),mean(CVsub2),mean(CVsub3),mean(CVsub4),mean(CVsub5),mean(CVsubcat2),mean(CVsubcat3),mean(CVsubcat4),mean(CVsubcat5))
+se <- (1/sqrt(10))*c(sd(CVpostlassomin),sd(CVpostlasso1se),sd(CVsub2),sd(CVsub3),sd(CVsub4),sd(CVsub5),sd(CVsubcat2),sd(CVsubcat3),sd(CVsubcat4),sd(CVsubcat5))
+Parametre <- c(5,2,3,4,5,6,3,4,5,6)
 (ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
   +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
+#lmQ5 is very stable in the bottom
+AIC(post.lasso.min,post.lasso.1se,lmfit2,lmfit3,lmfit4,lmfit5,lmcatfit1,lmcatfit2,lmcatfit3,lmcatfit4,lmcatfit5)
+#It also has the lowest AIC
+AIC(post.lasso.min,post.lasso.1se,lmfit2,lmfit3,lmfit4,lmfit5,lmcatfit1,lmcatfit2,lmcatfit3,lmcatfit4,lmcatfit5,k=log(nrow(dfComplete)))
+#And BIC
+summary(lmfit5)
+#Everything is significant
+
 
 ##Trying to predict passed failed with classification tree
 Qdatapf <- dfComplete[,c(1:3,8:11,13:122,137)]
@@ -475,7 +484,13 @@ se <- c(sd(CVlassoTotalmin),sd(CVlassoTotal1se),sd(CVlassoTotalcatmin),sd(CVnull
 Parametre <- c(5,3,8,1,2,3,4,5,6,2,3,4,5,6)
 (ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
   +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
-
+#none seems to be a clear improvement to the null model
+AIC(post.lasso.min.total,post.lasso.1se.total,post.lasso.min.cat.total,null.model,lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5,lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5)
+#lmfittotal5 lavest AIC
+AIC(post.lasso.min.total,post.lasso.1se.total,post.lasso.min.cat.total,null.model,lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5,lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5,k=log(nrow(dfComplete)))
+#og BIC
+summary(lmfittotal5)
+#Everything significant
 
 ###Q82 shows up pretty often so making some plots with this
 plot(Total~Q82, data = dfComplete)
@@ -485,13 +500,44 @@ plot(Total~factor(Q82),data = dfComplete)
 lmfitQ82asfactor <- lm(Total~factor(Q82),data = dfComplete)
 summary(lmfitQ82asfactor)
 
+##Checking residuals for one model
+res <- residuals(lmfit5)
+plot(res)
+plot(res~lmfit5$fitted.values)
+plot(res~dfComplete$midterm)
+plot(res~factor(dfComplete$Q22))
+plot(res~factor(dfComplete$Q56))
+plot(res~factor(dfComplete$Q82))
+plot(res~factor(dfComplete$Q107))
+hist(res)
+qqnorm(res)
+qqline(res)
 ###############################################################
 #######Trying to predict dropout based on exam results#########
 ###############################################################
 dropoutFeb18 <- read.csv("Y:/analysis_data/dropOut/data/dropout-Feb2018-Q999.csv", encoding="UTF-8",stringsAsFactors=FALSE)
 names(dropoutFeb18)[1] <- 'Name'
-dropoutFeb18 <- dropoutFeb18[,2:3]
+dropoutFeb18 <- dropoutFeb18[,c(2,3,5)]
+dropoutFeb18[dropoutFeb18==''] <- NA
 dfComplete$Email <- Email
-test <- merge(dfComplete,dropoutFeb18,by='Email',all.x = T)
-which(!dfComplete$Email%in%dropoutFeb18$Email)
-Email[c(19,42)]
+dfComplete$studienr <- studienr
+test <- merge(dfComplete,dropoutFeb18,by=c('studienr'))
+test <- test[,-c(1,139,140)]
+test2 <- merge(dfComplete,dropoutFeb18,by='Email')
+test2 <- test2[,-c(1,139,141)]
+dfdropoutgrade <-  rbind(test2,test)
+table(dfdropoutgrade$Status)
+#Not many who have taken the exam has dropped out yet
+
+MedData <- read.csv('Y:/analysis_data/dropOut/data/MedDataBSc.csv',encoding="UTF-8")
+MedData$dropout <- factor(as.numeric(MedData$statussn=='afbrudt'))
+logdropout <- glm(dropout~X1_T_mGPA, data = MedData, family = binomial)
+summary(logdropout)
+data2017 <- dfdropoutgrade[,c('grade','Status')]
+names(data2017)[1] <- 'X1_T_mGPA'
+predprop <- predict(logdropout,newdata = data2017, type = 'response')
+predclass <- as.numeric(predprop>0.5)
+predclass
+table(predclass,data2017$Status)
+#The model actually identifies most of the dropout students. 25 active student are also predicted to
+#dropout and it is yet unknown how acurate this is.
