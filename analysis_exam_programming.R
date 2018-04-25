@@ -328,21 +328,24 @@ CVstep01 <- CVlm(lmfit01,dfComplete)
 CVcatstep05 <- CVlm(lmfitcat05,dfComplete)
 CVcatstep01 <- CVlm(lmfitcat01,dfComplete)
 
+null.model <- lm(formula = Exam ~ 1, data = dfComplete)
+CVnull <- CVlm(null.model,dfComplete)
 
-
-Model <- c('post.lasso.Q.min','post.lasso.1se','lmQ2','lmQ3','lmQ4','lmQ5','lmcat2','lmcat3','lmcat4','lmcat5')
-CVmean <- c(mean(CVpostlassomin),mean(CVpostlasso1se),mean(CVsub2),mean(CVsub3),mean(CVsub4),mean(CVsub5),mean(CVsubcat2),mean(CVsubcat3),mean(CVsubcat4),mean(CVsubcat5))
-se <- (1/sqrt(10))*c(sd(CVpostlassomin),sd(CVpostlasso1se),sd(CVsub2),sd(CVsub3),sd(CVsub4),sd(CVsub5),sd(CVsubcat2),sd(CVsubcat3),sd(CVsubcat4),sd(CVsubcat5))
-Parametre <- c(5,2,3,4,5,6,3,4,5,6)
-(ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
+Model <- c('nullmodel','lasso','lmQ2','lmQ3','lmQ4','lmQ5','lmcat2','lmcat3','lmcat4','lmcat5')
+CVmean <- c(mean(CVnull),mean(CVpostlasso1se),mean(CVsub2),mean(CVsub3),mean(CVsub4),mean(CVsub5),mean(CVsubcat2),mean(CVsubcat3),mean(CVsubcat4),mean(CVsubcat5))
+se <- (1/sqrt(10))*c(sd(CVnull),sd(CVpostlasso1se),sd(CVsub2),sd(CVsub3),sd(CVsub4),sd(CVsub5),sd(CVsubcat2),sd(CVsubcat3),sd(CVsubcat4),sd(CVsubcat5))
+Parametre <- c(1,2,3,4,5,6,3,4,5,6)
+(ggplot()+ylab('Cross validation score')+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
   +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
 #lmQ5 is very stable in the bottom
-AIC(post.lasso.min,post.lasso.1se,lmfit2,lmfit3,lmfit4,lmfit5,lmcatfit1,lmcatfit2,lmcatfit3,lmcatfit4,lmcatfit5)
+library(xtable)
+xtable(AIC(null.model,post.lasso.1se,lmfit2,lmfit3,lmfit4,lmfit5,lmcatfit2,lmcatfit3,lmcatfit4,lmcatfit5))
 #It also has the lowest AIC
-AIC(post.lasso.min,post.lasso.1se,lmfit2,lmfit3,lmfit4,lmfit5,lmcatfit1,lmcatfit2,lmcatfit3,lmcatfit4,lmcatfit5,k=log(nrow(dfComplete)))
+xtable(AIC(null.model,post.lasso.1se,lmfit2,lmfit3,lmfit4,lmfit5,lmcatfit2,lmcatfit3,lmcatfit4,lmcatfit5,k=log(nrow(dfComplete))))
 #And BIC
-summary(lmfit5)
+xtable(summary(lmfit5)$coefficients)
 #Everything is significant
+xtable(confint(lmfit5))
 
 
 ##Trying to predict passed failed with classification tree
@@ -478,19 +481,32 @@ CVcat3 <- CVlm(lmcatfittotal3,dfComplete)
 CVcat4 <- CVlm(lmcatfittotal4,dfComplete)
 CVcat5 <- CVlm(lmcatfittotal5,dfComplete)
 
-Model <- c('lasso.Q.min.total','lasso.Q.1se.total','lasso.cat.min.total','nullmodel','lmQ1total','lmQ2total','lmQ3total','lmQ4total','lmQ5total','lmcat1total','lmcat2total','lmcat3total','lmcat4total','lmcat5total')
-CVmean <- c(mean(CVlassoTotalmin),mean(CVlassoTotal1se),mean(CVlassoTotalcatmin),mean(CVnull),mean(CVQ1),mean(CVQ2),mean(CVQ3),mean(CVQ4),mean(CVQ5),mean(CVcat1),mean(CVcat2),mean(CVcat3),mean(CVcat4),mean(CVcat5))
-se <- c(sd(CVlassoTotalmin),sd(CVlassoTotal1se),sd(CVlassoTotalcatmin),sd(CVnull),sd(CVQ1),sd(CVQ2),sd(CVQ3),sd(CVQ4),sd(CVQ5),sd(CVcat1),sd(CVcat2),sd(CVcat3),sd(CVcat4),sd(CVcat5))
-Parametre <- c(5,3,8,1,2,3,4,5,6,2,3,4,5,6)
+Model <- c('lasso.total','nullmodel','lmQ1total','lmQ2total','lmQ3total','lmQ4total','lmQ5total','lmcat1total','lmcat2total','lmcat3total','lmcat4total','lmcat5total')
+CVmean <- c(mean(CVlassoTotal1se),mean(CVnull),mean(CVQ1),mean(CVQ2),mean(CVQ3),mean(CVQ4),mean(CVQ5),mean(CVcat1),mean(CVcat2),mean(CVcat3),mean(CVcat4),mean(CVcat5))
+se <- c(sd(CVlassoTotal1se),sd(CVnull),sd(CVQ1),sd(CVQ2),sd(CVQ3),sd(CVQ4),sd(CVQ5),sd(CVcat1),sd(CVcat2),sd(CVcat3),sd(CVcat4),sd(CVcat5))
+Parametre <- c(3,1,2,3,4,5,6,2,3,4,5,6)
 (ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
   +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
 #none seems to be a clear improvement to the null model
-AIC(post.lasso.min.total,post.lasso.1se.total,post.lasso.min.cat.total,null.model,lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5,lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5)
+xtable(AIC(null.model,post.lasso.1se.total,lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5,lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5))
 #lmfittotal5 lavest AIC
-AIC(post.lasso.min.total,post.lasso.1se.total,post.lasso.min.cat.total,null.model,lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5,lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5,k=log(nrow(dfComplete)))
-#og BIC
-summary(lmfittotal5)
+AIC(null.model,post.lasso.1se.total,lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5,lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5,k=log(nrow(dfComplete)))
+#and BIC
+xtable(summary(lmfittotal5)$coefficients)
 #Everything significant
+xtable(confint(lmfittotal5))
+res <- residuals(lmfittotal5)
+hist(res)
+qqnorm(res)
+qqline(res)
+plot(res)
+plot(res~lmfittotal5$fitted.values)
+plot(res~dfComplete$PeerSubmissionScore)
+plot(res~dfComplete$Q6)
+plot(res~dfComplete$Q56)
+plot(res~dfComplete$Q82)
+plot(res~dfComplete$Q98)
+
 
 ###Q82 shows up pretty often so making some plots with this
 plot(Total~Q82, data = dfComplete)
@@ -538,6 +554,6 @@ names(data2017)[1] <- 'X1_T_mGPA'
 predprop <- predict(logdropout,newdata = data2017, type = 'response')
 predclass <- as.numeric(predprop>0.5)
 predclass
-table(predclass,data2017$Status)
+xtable(table(predclass,data2017$Status))
 #The model actually identifies most of the dropout students. 25 active student are also predicted to
 #dropout and it is yet unknown how acurate this is.

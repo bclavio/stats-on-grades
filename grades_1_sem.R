@@ -1,4 +1,5 @@
 library(ggplot2)
+library(xtable)
 
 setwd("Y:/analysis_data/dropOut/data")
 MedData <- read.csv('MedDataBSc.csv',encoding="UTF-8")
@@ -15,14 +16,16 @@ plot(MedData2012$X1_Pr_mGPA~MedData2012$dropout)
 
 log2012T <- glm(dropout~X1_T_mGPA, data = MedData2012, family = binomial)
 summary(log2012T)
+xtable(summary(log2012T)$coefficients)
+
 exp(-0.18959)-1
 
 log2012NT <- glm(dropout~X1_NT_mGPA, data = MedData2012, family = binomial)
-summary(log2012NT)
+xtable(summary(log2012NT)$coefficients)
 exp(-0.19509)-1
 
 log2012Pr <- glm(dropout~X1_Pr_mGPA, data = MedData2012, family = binomial)
-summary(log2012Pr)
+xtable(summary(log2012Pr)$coefficients)
 exp(-0.10785)-1
 #Thet are all significant. T reduces probability most, but almost the same as NT.
 
@@ -37,7 +40,7 @@ drop1(log2012all,test = 'Chisq')
 log2012update <- update(log2012all,~.-X1_Pr_mGPA)
 drop1(log2012update,test = 'Chisq')
 #Both significant
-summary(log2012update)
+xtable(summary(log2012update)$coefficients)
 #T reduces probability most
 
 #Try again but given they have started on the third semester
@@ -129,13 +132,17 @@ exp(-0.014)-1
 #All grades on first semester seems to be important
 plot(MedData2013$X1_T_mGPA~MedData2013$dropout)
 plot(MedData2013$X1_Pr_mGPA~MedData2013$dropout)
+plot(MedData2013$X1_NT_mGPA~MedData2013$dropout)
+plot(MedData2013$X1_NT_mGPA)
+MedData2013$X1_NT_mGPA
+MedData2013$X1_NT_atpIn
 
 log2013T <- glm(dropout~X1_T_mGPA, data = MedData2013, family = binomial)
-summary(log2013T)
+xtable(summary(log2013T)$coefficients)
 exp(-0.2807)-1
 
 log2013Pr <- glm(dropout~X1_Pr_mGPA, data = MedData2013, family = binomial)
-summary(log2013Pr)
+xtable(summary(log2013Pr)$coefficients)
 exp(-0.18072)-1
 #They are both significant. T reduces probability most.
 
@@ -143,7 +150,7 @@ table(MedData2013$X1_T_mGPA,MedData2013$X1_Pr_mGPA)
 #They seems to be correlated
 
 log2013all <- glm(dropout~X1_T_mGPA+X1_Pr_mGPA, data = MedData2013, family = binomial)
-summary(log2013all)
+xtable(summary(log2013all)$coefficients)
 drop1(log2013all,test = 'Chisq')
 #Both significant
 #T reduces probability most
@@ -213,15 +220,15 @@ plot(MedData2014$X1_Pr_mGPA~MedData2014$dropout)
 #Project does not seem important
 
 log2014T <- glm(dropout~X1_T_mGPA, data = MedData2014, family = binomial)
-summary(log2014T)
+xtable(summary(log2014T)$coefficients)
 exp(-0.2289)-1
 
 log2014NT <- glm(dropout~X1_NT_mGPA, data = MedData2014, family = binomial)
-summary(log2014NT)
+xtable(summary(log2014NT)$coefficients)
 exp(-0.16763)-1
 
 log2014Pr <- glm(dropout~X1_Pr_mGPA, data = MedData2014, family = binomial)
-summary(log2014Pr)
+xtable(summary(log2014Pr)$coefficients)
 exp(-0.1592)-1
 #They are all significant. T reduces probability most, but almost the same as NT.
 #OBS! Maybe -5 should be coded as NA if interested in effect of grades and not of not showing up.
@@ -232,7 +239,7 @@ table(MedData2014$X1_NT_mGPA,MedData2014$X1_Pr_mGPA)
 #They seems to be correlated
 
 log2014all <- glm(dropout~X1_T_mGPA+X1_NT_mGPA+X1_Pr_mGPA, data = MedData2014, family = binomial)
-summary(log2014all)
+xtable(summary(log2014all)$coefficients)
 drop1(log2014all,test = 'Chisq')
 #All significant
 #T reduces probability most
@@ -348,4 +355,13 @@ logCV <- function(fit,k=10, data,thres=0.5){
 MedData2014nna <- MedData2014[!is.na(MedData2014$X1_T_mGPA)&!is.na(MedData2014$X1_NT_mGPA)&!is.na(MedData2014$X1_Pr_mGPA),]
 logCV(log2014all,10,MedData2014nna)
 
+MedData2013nna <- MedData2013[!is.na(MedData2013$X1_T_mGPA)&!is.na(MedData2013$X1_Pr_mGPA),]
+logCV(log2013all,10,MedData2013nna)
 
+MedData2012nna <- MedData2012[!is.na(MedData2012$X1_T_mGPA)&!is.na(MedData2012$X1_NT_mGPA)&!is.na(MedData2012$X1_Pr_mGPA),]
+logCV(log2012all,10,MedData2012nna)
+
+logallyears <- glm(dropout~X1_T_mGPA+X1_Pr_mGPA,family = binomial,data = MedData)
+summary(logallyears)
+MedDatanna <- MedData[!is.na(MedData$X1_T_mGPA)&!is.na(MedData$X1_Pr_mGPA),]
+logCV(logallyears,10,MedDatanna)
