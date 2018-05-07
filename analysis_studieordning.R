@@ -1,5 +1,8 @@
 library(survival)
 library(survminer)
+library(ggplot2)
+encoding <- file('dfEnrolStatusBsc.csv', encoding='UTF8')
+write.csv(dfEnrolStatusBsc, file = encoding)
 
 enrolldata <- dfEnrolStatusBsc
 #dfEnrolstatusBsc from importDataAndgetInShape.R
@@ -99,7 +102,6 @@ navne <- c('2011'='red','2012'='green','2013'='purple','2014'='blue')
 #out drops out on 3. semester and the previous years it was on 5. semester.
 
 ##Looking into how many exam trys they have used
-AAUGradesBsc <- dfAAUGrades[dfAAUGrades$type=='bachelor',]
 enrollMaxExamTry <- merge(enrolldata, dfRetrier, all.x = T)
 enrollMaxExamTry <- enrollMaxExamTry[enrollMaxExamTry$startaar %in% c(2011,2012,2013,2014),]
 
