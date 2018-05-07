@@ -1,5 +1,5 @@
 
-myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/stats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"} # on IMAC "~/Documents/R/stats-on-grades"
+myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/PBLstats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"} # on IMAC "~/Documents/R/stats-on-grades"
 setwd(myWD)
 source('importDataAndgetInShape.R')
 
@@ -47,7 +47,7 @@ dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.grad
                           and (a.bedom_dato<= c.slutdatosn or c.slutdatosn is Null)')
 
 gradesToGPANumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-4,'U'=-5)
-gradesToGPAPFVec<-c('EB'=NA,'U'=NA,'B'=NA,'I'=NA)
+gradesToGPAPFVec<-c('EB'=-4,'U'=-5,'B'=2,'I'=0)
 dfAAUMarriedGrades$fradatoSNsemCalc<-as.Date(format(as.POSIXct(as.numeric(dfAAUMarriedGrades$fradatoSNsemCalc*3600*24), origin='1970-01-01') , format="%Y-%m-%d"))
 dfAAUMarriedGrades$GPAgrade<-ifelse(dfAAUMarriedGrades$gradeType=="PF",gradesToGPAPFVec[as.character(dfAAUMarriedGrades$KARAKTER)],gradesToGPANumsVec[as.character(dfAAUMarriedGrades$KARAKTER)])
 dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
@@ -185,7 +185,7 @@ ForSvante3$studienr<-NULL
 ForSvante$navn<-NULL
 ForSvante2$navn<-NULL
 ForSvante3$navn<-NULL
-ForSvante4$navn<-NULL
+#ForSvante4$navn<-NULL
 
 
 # write stuff out ---------------------------------------------------------

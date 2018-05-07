@@ -195,7 +195,7 @@ write.csv(GPROgradebook2,file = "GPROgradebook2.csv")
 
 # create one for AAL and one for CPH
 for (i in 1:nrow(personalized_infoGPROAAL)){
-  rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs/GPRO-AAL-MailMerge.Rmd",
+  rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/PBLstats-on-grades/docs/GPRO-AAL-MailMerge.Rmd",
                     output_format = "pdf_document",
                     output_file = gsub(" ", "", paste("GPRO-MT_", ifelse(personalized_infoGPROAAL$Campus[i] == 'AAL', 
                                                                        "AAL_Individual-StudentFeedback_", 
