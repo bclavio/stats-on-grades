@@ -8,7 +8,7 @@ library(rpart.plot)
 ############################################
 #######preparing and loading data###########
 ############################################
-setwd('C:/Users/Helle/Downloads/2018_SLERD_Paper_Analysis/Paper')
+setwd('Y:/2018_SLERD_Paper_Analysis/Paper')
 
 ##SSP grades AAL
 SSPAAL<-read.csv("Y:/analysis_data/SSP/SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
@@ -132,6 +132,17 @@ dfComplete<-merge(dfComplete,AALpeerGrade,by='Email address',all.x=TRUE)
 dfComplete<-dfComplete[complete.cases(dfComplete), ]
 # SSP
 dfComplete<-merge(dfComplete,SSP,by='Email address',all.x=TRUE)
+########Making additional dataset with dropout status#########
+dropoutFeb18 <- read.csv("Y:/analysis_data/dropOut/data/dropout-Feb2018-Q999.csv", encoding="UTF-8",stringsAsFactors=FALSE)
+names(dropoutFeb18)[1] <- 'Name'
+names(dropoutFeb18)[5] <- 'ID number'
+names(dropoutFeb18)[2] <- 'Email address'
+dropoutFeb18 <- dropoutFeb18[,c(2,3,5)]
+dropoutFeb18[dropoutFeb18==''] <- NA
+test <- merge(dfComplete,dropoutFeb18,by=c('ID number'));test <- test[,-c(1:3,145)]
+test2 <- merge(dfComplete,dropoutFeb18,by='Email address');test2 <- test2[,-c(1:3,146)]
+dfdropoutgrade <-  rbind(test2,test)
+####################################################
 # Remove all incomplete entries leaves only 77 students
 # This removes all PDP students
 dfComplete<-dfComplete[complete.cases(dfComplete), ]
@@ -143,8 +154,6 @@ dfComplete <- dfComplete[!is.na(dfComplete$Exam),]
 dfComplete$grade <- as.numeric(dfComplete$grade)
 dfComplete$PassFail <- factor(as.numeric(dfComplete$grade<2))
 #Deleting unnecesarry colums
-Email <- dfComplete$`Email address`
-studienr <- dfComplete$`ID number`
 dfComplete <- dfComplete[,-c(1,2,3,6,8,10,18)]
 names(dfComplete)[c(3,9:12)] <- c('midterm','PeerSubmissionScore','PeerFeedbackScore','PeerCombinedScore','SSPGrade')
 names(dfComplete)[123:136] <- c('AttitudeTowardsEducation', "BelongingUncertainty","Demographics", "EducationChoiceFactors", "Grit" ,"GrowthMindset","HighSchoolBehaviour","HighSchoolTrust","PerceivedAcademicAbilities","PersonalTraitComparison","ReasonsforGoingtoUniversity","Selfcontrol","StudyingandWorkingHours","ViewonMedialogy")
@@ -531,17 +540,6 @@ qqline(res)
 ###############################################################
 #######Trying to predict dropout based on exam results#########
 ###############################################################
-dropoutFeb18 <- read.csv("Y:/analysis_data/dropOut/data/dropout-Feb2018-Q999.csv", encoding="UTF-8",stringsAsFactors=FALSE)
-names(dropoutFeb18)[1] <- 'Name'
-dropoutFeb18 <- dropoutFeb18[,c(2,3,5)]
-dropoutFeb18[dropoutFeb18==''] <- NA
-dfComplete$Email <- Email
-dfComplete$studienr <- studienr
-test <- merge(dfComplete,dropoutFeb18,by=c('studienr'))
-test <- test[,-c(1,139,140)]
-test2 <- merge(dfComplete,dropoutFeb18,by='Email')
-test2 <- test2[,-c(1,139,141)]
-dfdropoutgrade <-  rbind(test2,test)
 table(dfdropoutgrade$Status)
 #Not many who have taken the exam has dropped out yet
 

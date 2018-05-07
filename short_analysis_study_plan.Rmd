@@ -12,8 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(survival)
 library(survminer)
 library(ggplot2)
-dfEnrolStatusBsc <- read.csv("~/stats-on-grades/dfEnrolStatusBsc.csv")
-enrollMaxExamTry <- read.csv("~/stats-on-grades/enrollMaxExamTry.csv")
+dfEnrolStatusBsc <- read.csv("Y:/dfEnrolStatusBsc.csv"); dfEnrolStatusBsc[,c(19,20)]<- NA
+enrollMaxExamTry <- read.csv("Y:/enrollMaxExamTry.csv"); enrollMaxExamTry[,c(2,20)]<- NA
 ```
 ```{r,echo=FALSE}
 enrolldata <- dfEnrolStatusBsc
