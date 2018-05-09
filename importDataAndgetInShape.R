@@ -36,8 +36,8 @@ library(RcmdrMisc)
 
 # import all files --------------------------------------------------------
 
-
-SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
+SVNData<-if(grepl("BiancaClavio", getwd())){'Z:/BNC/PBL development project/Data/analysis_data/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
+#SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
 setwd(SVNData)
 
 dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
@@ -269,7 +269,7 @@ dfAAUGrades$GPAgrade<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
 dfAAUGrades$isPassed<-gradesPassedLUVec[as.character(dfAAUGrades$KARAKTER)]
 dfAAUGrades$CourseLocation<-substr(dfAAUGrades$aktiv_kode,3,3)
 dfAAUGrades$aktivitetShort<-CourseAcronymsLUVec[as.character(dfAAUGrades$aktivitet)]
-sqldf('select distinct aktivitet, aktiv_kode from dfAAUGrades order by aktivitet')
+#sqldf('select distinct aktivitet, aktiv_kode from dfAAUGrades order by aktivitet')
 
 dfhard1st<-sqldf('select studienr, aktivitetShort, max(isPassed) as `1`  from dfAAUGrades where "forsoeg.nr." = 1 and aktivitetShort 
                  in ("GPRO",  "PID", "MMA","PFI","ID","AVS") group by studienr, aktivitetShort, karakter')
@@ -364,4 +364,12 @@ dfMed2AalX<-dfMed2Aal[dfMed2Aal$interviewTaken==1 & !is.na(dfMed2Aal$isDropOut) 
 
 #myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/git/AAU/DropOutProject/analysis/"}
 #setwd(myWD1)
+
+
+
+####### runs the aggregation rmarkdown file
+
+rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/PBLstats-on-grades/docs/aggregationOfInformationBySemesters.Rmd", 
+                  output_format = "pdf_document", output_file = "aggregationOfInformationBySemesters.pdf")
+
 

@@ -1,12 +1,16 @@
 
+# set working directory
 myWD<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/PBLstats-on-grades'} else {"~/git/AAU/DropOutProject/analysis/"} # on IMAC "~/Documents/R/stats-on-grades"
 setwd(myWD)
+
+# import a script, but I run it manually, as it doesn't work on my computer
 source('importDataAndgetInShape.R')
 
-# setup ECTS structure ----------------------------------------------------
 
 
-#Setup the ECTS structure of the studyplans
+
+#### setup ECTS structure of the studyplans ----------------------------------------------------
+
 dfECTSstruct$CourseSPVID<-seq(1:nrow(dfECTSstruct))
 dfECTSstruct$CTdf<-as.factor(dfECTSstruct$CTdf)
 dfECTSstruct$aktivitetText<-as.character(dfECTSstruct$aktivitet)
@@ -17,8 +21,10 @@ ectsSumSPbySemAndCT<-sqldf("select SPV, sem, CTdf, aktivitet, sum(nominalECTS) a
 semStruct<-sqldf("select distinct SPV, sem from dfECTSstruct")
 CTdfs<-sqldf("select distinct CTdf from dfECTSstruct")
 semStruct<-merge(semStruct,CTdfs)
+# left join (all rows in x, adding matching columns from y)
 sem<-join(semStruct,ectsSumSPbySemAndCT,by=c("SPV","sem","CTdf"), type="left")
 sem$nominalECTS[is.na(sem$nominalECTS)]<-0
+# alias: semStruct as a, sem as b
 ectsSumSPbySemAndCT<-sqldf('select a.SPV as SPV, 
                            a.sem as sem, a.CTdf as CTdf, round(sum(b.nominalECTS+0),0) as nominalECTS
                            from semStruct as a, sem as b
@@ -26,15 +32,22 @@ ectsSumSPbySemAndCT<-sqldf('select a.SPV as SPV,
                            b.sem<=a.sem and 
                            a.CTdf=b.CTdf 
                            group by a.SPV, a.sem , a.CTdf')
+
+# question: the line below commented out before?
+# ddply: For each subset of a data frame, apply function (transform + cumsum) then combine results into a data frame
+# transform: converts its first argument to a data frame if possible
+# cumsum: Returns a vector whose elements are the cumulative sums, products, minima or maxima of the elements of the argument
 #ectsSumSPbySemAndCT<-ddply(ectsSumSPbySemAndCT,.(SPV,CTdf),transform,nominalECTS=cumsum(nominalECTS))
-ectsSumSPbySemAndCT$CTdf<-gsub("project","Pr",ectsSumSPbySemAndCT$CTdf);ectsSumSPbySemAndCT$CTdf<-gsub("elective","El",ectsSumSPbySemAndCT$CTdf);
+# gsub: substitude string 
+ectsSumSPbySemAndCT$CTdf<-gsub("project","Pr",ectsSumSPbySemAndCT$CTdf);
+ectsSumSPbySemAndCT$CTdf<-gsub("elective","El",ectsSumSPbySemAndCT$CTdf);
 ectsSumSPbySemAndCT$CTdf<-factor(ectsSumSPbySemAndCT$CTdf, levels = c("T", "NT", "El","Pr"))
+# paste string with a seperator
 ectsSumSPbySemAndCT$CTdf<-paste(ectsSumSPbySemAndCT$CTdf, "nom", sep = "_")
-
-
 
 dfAAUGradesWODistEnrol<-dfAAUGrades;
 dfAAUGradesWODistEnrol$DistFromEnrol<- NULL
+# alias: dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c
 dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.gradeType as gradeType, b.courseSPVID, 
                           b.fromDate, c.fradatosn as fradatoSNsemCalc, b.toDate, c.enrolID as enrolID, 
                           a.* from dfAAUGradesWODistEnrol as a, 
@@ -46,19 +59,25 @@ dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.grad
                           and a.bedom_dato>=c.fradatosn 
                           and (a.bedom_dato<= c.slutdatosn or c.slutdatosn is Null)')
 
+# the two variables are also in the import script but with different values for the grades
 gradesToGPANumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-4,'U'=-5)
 gradesToGPAPFVec<-c('EB'=-4,'U'=-5,'B'=2,'I'=0)
+# TODO: I don't understand the meaning of this variable?? The name sounds like it calculates the semester date, but it doesn't
+# the date when enrolled into the education (POSIXct represents calendar dates and times)
 dfAAUMarriedGrades$fradatoSNsemCalc<-as.Date(format(as.POSIXct(as.numeric(dfAAUMarriedGrades$fradatoSNsemCalc*3600*24), origin='1970-01-01') , format="%Y-%m-%d"))
+# converting PF and scale grades to numbers
 dfAAUMarriedGrades$GPAgrade<-ifelse(dfAAUMarriedGrades$gradeType=="PF",gradesToGPAPFVec[as.character(dfAAUMarriedGrades$KARAKTER)],gradesToGPANumsVec[as.character(dfAAUMarriedGrades$KARAKTER)])
 dfAAUMarriedGrades$rid<-seq(1:nrow(dfAAUMarriedGrades))
 
 
+
+
+
 # HKTODO the below overwrites the data already prepared in getin shape --- 
 # need to check this again most likely this is about people taking exams in master that should be taken in BSc and therefore added as e.g. sem 7
+# (exam year - year of current semester) * 2 + ((exam month - 14) - 2) / 7
 dfAAUMarriedGrades$takenInSem<- (as.numeric(format(dfAAUMarriedGrades$bedom_dato,'%Y'))-as.numeric(format(dfAAUMarriedGrades$fradatoSNsemCalc,'%Y')))*2+ 
                               floor((as.numeric(format(dfAAUMarriedGrades$bedom_dato-14,'%m'))-2)/7)
-
-
 
 #here's the partial solution
 #dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
@@ -66,80 +85,116 @@ dfAAUMarriedGrades$takenInSem<- (as.numeric(format(dfAAUMarriedGrades$bedom_dato
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))-2)/6))              
 #                               ,0)
 
+
+
+
+
 #dfSPVSNR<-distinct(dfAAUMarriedGrades, SPV, enrolID)
+# selects the SPV and enrolID where the SVP fromDate is before enrolment date and SVP toDate is after enrolment
 dfSPVSNR<-sqldf('select distinct b.SPV as SPV, c.enrolID as enrolID from dfECTSstruct as b, dfEnrolStatus as c where b.type=c.stype and c.fradatosn>= b.fromDate and c.fradatosn<=b.toDate ')
 
 #dfAAUMarriedGrades2<-merge(dfAAUGradesWODistEnrol,dfECTSstruct,by="aktivitet")
 #dfAAUMarriedGrades2<-dfAAUMarriedGrades2[dfAAUMarriedGrades2$fradatosn >= dfAAUMarriedGrades2$fromDate & dfAAUMarriedGrades2$fradatosn <=dfAAUMarriedGrades2$toDate,]
 testdfAAUGrades<-data.frame(dfAAUGrades[,c("DistFromEnrol")])
 
+
+# ------ finding missing rows and activities
+
 missingRows<- dfAAUGradesWODistEnrol[!dfAAUGradesWODistEnrol$rowID %in% dfAAUMarriedGrades$rowID ,]
 missingActivities<-data.frame(missingRows[!missingRows$aktivitetText %in% dfECTSstruct$aktivitetText, ]$aktivitetText)
-
 missingRows1<-data.frame(missingRows[missingRows$aktivitetText %in% dfECTSstruct$aktivitetText, ])
 missActivitetBefore2010<-sqldf("select reg_dato, aktivitet, fradatosn, startaar from missingRows where startaar<=2009") 
 missingRows1<-missingRows1[!missingRows1$startaar %in% missActivitetBefore2010$startaar, ]
 
+# ------ variables are not used later in the analysis
 
+
+# nominal etcs points for each semester and each SPV
 ectsSumSPbySPVAndCT<-dcast(ectsSumSPbySemAndCT, SPV~sem+CTdf)
 ### Comment: I get errors, and table is long-format.
 ectsSumSPbySemAndCT<-dcast(ectsSumSPbySemAndCT, SPV+sem~CTdf)
 ectsSumSPbySemAndCT[is.na(ectsSumSPbySemAndCT$El_nom),]$El_nom<-0
-
 
 #creating the summaries of achieved ECTS per semester 
 #semester, bctdf, ECTSpassed, 
 #create the structure for all
 #create semesters and edutypes
 semesters<-data.frame(seq(1:10));names(semesters)<-c("semester"); eduType<-data.frame(c("bachelor","kandidat"));names(eduType)<-"type"
-#multiply semesteers with edutypes
+#multiply semesters with edutypes
 semSkeleton<-data.frame(merge(CTdfs,semesters));semSkeleton<-merge(semSkeleton,eduType)
 #used SemEduTYpe multiplication to merge with students Enrolments into Edutypes
 StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("enrolID","stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
-#StudieNRSkeleton<-merge(distinct(dfEnrolStatus[,c("studienr", "stype")]),semSkeleton,by.x =c("stype"),by.y = c("type")  )
 
-ECTSattainedMelted<- merge(dfAAUMarriedGrades[dfAAUMarriedGrades$isPassed>0,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
+# attained ECTS in a study activity of type bctdf (i.e. PR, T, NT, EL) for each enrolID
+ECTSattainedMelted<- merge(dfAAUMarriedGrades[dfAAUMarriedGrades$isPassed>0,
+                          c("bctdf", "enrolID","takenInSem", "ECTS")], 
+                          StudieNRSkeleton,by.x = c("enrolID","bctdf"),
+                          by.y =c("enrolID","CTdf") ,all.y=TRUE)
+# highest possible ETCS in a study activity of type bctdf (i.e. PR, T, NT, EL) for each enrolID
+maxECTSTakenByCourseBySemester<-sqldf('select bctdf, enrolID, takenInSem, aktivitet, type, max(ECTS) as ECTS 
+                                      from dfAAUMarriedGrades group by bctdf, enrolID, takenInSem, aktivitet, type')
 
-maxECTSTakenByCourseBySemester<-sqldf('select bctdf, enrolID, takenInSem, aktivitet, type, max(ECTS) as ECTS from dfAAUMarriedGrades group by bctdf, enrolID, takenInSem, aktivitet, type')
+#ECTSattmptedMelted<- merge(dfAAUMarriedGrades[,c("bctdf", "enrolID","takenInSem", "ECTS")] , 
+#                           StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
 
-#ECTSattmptedMelted<- merge(dfAAUMarriedGrades[,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
+# error: something could be wrong here?
+# attempted ECTs in a study activity of type bctdf (i.e. PR, T, NT, EL) for each enrolID
+ECTSattmptedMelted<- merge(maxECTSTakenByCourseBySemester[,c("bctdf", "enrolID","takenInSem", "ECTS")] , 
+                           StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
 
-ECTSattmptedMelted<- merge(maxECTSTakenByCourseBySemester[,c("bctdf", "enrolID","takenInSem", "ECTS")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
-
-
+# prepare and clean up of attained and attempted ETCS variables
 ECTSattainedMelted$what<-"atnBy"
 ECTSattmptedMelted$what<-"atpIn"
 ECTSattainedMelted[is.na(ECTSattainedMelted$ECTS),]$ECTS<-0
 ECTSattmptedMelted[is.na(ECTSattmptedMelted$ECTS),]$ECTS<-0
+# NAs in takenInSem is replaced with the semester value.
+# TODO: ask if this still makes sense?
 ECTSattainedMelted[is.na(ECTSattainedMelted$takenInSem),]$takenInSem<-ECTSattainedMelted[is.na(ECTSattainedMelted$takenInSem),]$semester
 ECTSattmptedMelted[is.na(ECTSattmptedMelted$takenInSem),]$takenInSem<-ECTSattmptedMelted[is.na(ECTSattmptedMelted$takenInSem),]$semester
 
+
+
+
+
+
+# keep the attained entries where takenInSem <= semester
 ECTSattainedMelted<-ECTSattainedMelted[ECTSattainedMelted$takenInSem<=ECTSattainedMelted$semester,]
+# keep the attempted entries where takenInSem == semester
 ECTSattmptedMelted<-ECTSattmptedMelted[ECTSattmptedMelted$takenInSem==ECTSattmptedMelted$semester,]
 ECTSattmptedMelted$takenInSem<-NULL
 ECTSattainedMelted$takenInSem<-NULL
 
+
+
+
+
+
+# combines attained and attempted ECTS and simplifies data
 ECTSperf<-rbind(ECTSattmptedMelted,ECTSattainedMelted)
 ECTSperf$bctdf<-gsub("project","Pr",ECTSperf$bctdf);ECTSperf$bctdf<-gsub("elective","El",ECTSperf$bctdf);
 ECTSperf$bctdf<-factor(ECTSperf$bctdf, levels = c("T", "NT", "El","Pr"))
-
-
 ECTSattainedMelted$bctdf<-gsub("project","Pr",ECTSattainedMelted$bctdf);ECTSattainedMelted$bctdf<-gsub("elective","El",ECTSattainedMelted$bctdf);
 ECTSattainedMelted$bctdf<-factor(ECTSattainedMelted$bctdf, levels = c("T", "NT", "El","Pr"))
 
-ECTSatt<- dcast(ECTSattainedMelted,enrolID~semester+bctdf,value.var = "ECTS",sum)
-ECTSatmp<-dcast(ECTSattmptedMelted,enrolID~semester+bctdf,value.var = "ECTS",sum)
+# reshapes and merges the data
 ECTSovw<- dcast(ECTSperf,enrolID~semester+bctdf+what,value.var = "ECTS",sum)
 ECTSovw<-merge(ECTSovw,dfSPVSNR,by="enrolID")
+#ECTSatt<- dcast(ECTSattainedMelted,enrolID~semester+bctdf,value.var = "ECTS",sum)
+#ECTSatmp<-dcast(ECTSattmptedMelted,enrolID~semester+bctdf,value.var = "ECTS",sum)
 
+# preparing GPAavg data
 GPAavg<- merge(dfAAUMarriedGrades[,c("bctdf", "enrolID","takenInSem", "GPAgrade")] , StudieNRSkeleton,by.x = c("enrolID","bctdf"),by.y =c("enrolID","CTdf") ,all.y=TRUE)
 #GPAavg<- dfAAUMarriedGrades[!is.na(dfAAUMarriedGrades$GPAgrade),c("bctdf", "enrolID","takenInSem", "GPAgrade","semester")]
 GPAavg<-GPAavg[order(GPAavg$enrolID, GPAavg$bctdf, GPAavg$semester,GPAavg$takenInSem),]
+# keep data where takenInSem <= semester or NAs
 GPAavg<-GPAavg[GPAavg$takenInSem<=GPAavg$semester|is.na(GPAavg$takenInSem),]
+
+# preparing aggregations of GPAavg
 GPAavgagg<-sqldf("select enrolID, bctdf, semester, avg(GPAgrade) as GPAavg from GPAavg group by enrolID, bctdf, semester")
 GPAavgagg$bctdf<-gsub("project","Pr",GPAavgagg$bctdf);GPAavgagg$bctdf<-gsub("elective","El",GPAavgagg$bctdf);
 GPAavgagg$bctdf<-paste(GPAavgagg$bctdf,"mGPA",sep = "_")
 #GPAavgagg<-ddply(GPAavg, .(enrolID, bctdf,semester),  GPAavg=mean(GPAgrade))
+# reshapes data
 GPAavgagg<-dcast(GPAavgagg,enrolID~semester+bctdf,value.var = "GPAavg",sum)
 
 #need to verify we have all the students in ECTSovw TODO
@@ -149,7 +204,7 @@ ectsAggsAll<-merge(ECTSovw,ectsSumSPbySPVAndCT, by="SPV")
 ForSvante<-merge(dfEnrolStatus,ectsAggsAll)
 ForSvante<-ForSvante[ForSvante$startaar>2011,]
 ForSvante<-merge(ForSvante,GPAavgagg)
-sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
+#sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
 
 dfKvote1<-sqldf('select distinct studienr, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
 
@@ -186,7 +241,9 @@ ForSvante$navn<-NULL
 ForSvante2$navn<-NULL
 ForSvante3$navn<-NULL
 #ForSvante4$navn<-NULL
-
+dfAAUMarriedGradeFile <- dfAAUMarriedGrades
+dfAAUMarriedGradeFile$navn <- NULL
+dfAAUMarriedGradeFile$studienr<-NULL
 
 # write stuff out ---------------------------------------------------------
 
@@ -198,6 +255,7 @@ write.csv(ForSvante,file = "MedDataBScMSc-MoreRowsFewerColumns.csv") # 1714 rows
 write.csv(ForSvante2,file = "MedData2.csv") # 1826 rows 145 variables # currently not used
 write.csv(ForSvante3,file = "MedDataBSc.csv") # 1007 rows 184 variables 
 #write.csv(ForSvante4,file = "MedData4.csv") # 1852 rows 139 variables
+write.csv(dfAAUMarriedGradeFile,file = "dfAAUMarriedGrades.csv")
 
 #studenCntKand<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='kandidat' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
 #studenCntBach<-sqldf("SELECT S.startaar, S.stype, C.cnt FROM ForSvante2 S INNER JOIN  (SELECT enrolID, count(enrolID) as cnt FROM ForSvante2 WHERE stype='bachelor' GROUP BY startaar ) C ON S.enrolID = C.enrolID  ")
@@ -218,11 +276,12 @@ ECTSovwx <- dcast(ECTSattmptedMelted,type+studienr~semester+bctdf+what,value.var
 #people that have more than 90 ECTS 
 # e.g. in projects 20082897
 #e.g. 20125436 is missing second sem proj in marriedGradesFrame
-# 
+
+# get errors in the lines below
 testxovw<-merge(ECTSovw[,c("studienr","type")],ECTSovwx[,c("studienr","type")],all.x=TRUE)
 testyovw<-sqldf("select a.studienr, a.type, b.studienr, b.type from ECTSovw as a left outer join ECTSovwx as b using (studienr,type) ")
 
 
-sqldf("select studienr, fradatosn,strftime('%m', fradatosn) from dfEnrolStatus where strftime('%m', fradatosn)<>'09'")
-sqldf("SELECT strftime('%m','now')")
+#sqldf("select studienr, fradatosn,strftime('%m', fradatosn) from dfEnrolStatus where strftime('%m', fradatosn)<>'09'")
+#sqldf("SELECT strftime('%m','now')")
 
