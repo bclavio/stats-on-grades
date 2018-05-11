@@ -210,9 +210,11 @@ for(i in 1:nrow(variables)){
 CVnull <- CVlm(lmnull,MATHSSPQ)
 CVsub <- c(mean(CVnull),CVsub)
 sesub <- c((1/sqrt(10))*sd(CVnull),sesub)
-ggplot()+geom_point(aes(1:5,AICsub,col='AIC'))+geom_line(aes(1:5,AICsub,col='AIC'))+geom_point(aes(1:5,BICsub,col='BIC'))+geom_line(aes(1:5,BICsub,col='BIC'))+guides(colour=guide_legend(title=''))+ylab('Værdi')+xlab('Antal prædiktorer')+scale_x_continuous(breaks = 1:20)
+AICsub <- c(AIC(lmnull),AICsub)
+BICsub <- c(AIC(lmnull,k=log(nrow(MATHSSPQ))),BICsub)
+ggplot()+geom_point(aes(0:5,AICsub,col='AIC'))+geom_line(aes(0:5,AICsub,col='AIC'))+geom_point(aes(0:5,BICsub,col='BIC'))+geom_line(aes(0:5,BICsub,col='BIC'))+guides(colour=guide_legend(title=''))+ylab('Value')+xlab('Number of predictors')+scale_x_continuous(breaks = 0:5)
 
-ggplot()+geom_point(aes(0:5,CVsub)) + geom_errorbar(aes(x=0:5, ymin=CVsub-sesub, ymax=CVsub+sesub),width=0.25) + geom_hline(yintercept=CVsub[which.min(CVsub)]+sesub[which.min(CVsub)], linetype='dashed')+scale_x_continuous(breaks=0:5)+xlab('Antal prædiktorer')+ylab('Krydsvalideringsscore')
+ggplot()+geom_point(aes(0:5,CVsub)) + geom_errorbar(aes(x=0:5, ymin=CVsub-sesub, ymax=CVsub+sesub),width=0.25) + geom_hline(yintercept=CVsub[which.min(CVsub)]+sesub[which.min(CVsub)], linetype='dashed')+scale_x_continuous(breaks=0:5)+xlab('Number of predictors')+ylab('Cross validation score')
 #The addition of one predictor makes a clear improvement to the null model but no more than one seems to be needed
 
 dat5 <- MATHSSPQ[,c('scoreMath',names[variables[5,]])]
@@ -250,9 +252,11 @@ for(i in 1:nrow(variables)){
 
 CVsubcat <- c(mean(CVnull),CVsubcat)
 sesubcat <- c((1/sqrt(10))*sd(CVnull),sesubcat)
-ggplot()+geom_point(aes(1:5,AICsubcat,col='AIC'))+geom_line(aes(1:5,AICsubcat,col='AIC'))+geom_point(aes(1:5,BICsubcat,col='BIC'))+geom_line(aes(1:5,BICsubcat,col='BIC'))+guides(colour=guide_legend(title=''))+ylab('Værdi')+xlab('Antal prædiktorer')+scale_x_continuous(breaks = 1:20)
+AICsubcat <- c(AIC(lmnull),AICsubcat)
+BICsubcat <- c(AIC(lmnull,k=log(nrow(MATHSSPcat))),BICsubcat)
+ggplot()+geom_point(aes(0:5,AICsubcat,col='AIC'))+geom_line(aes(0:5,AICsubcat,col='AIC'))+geom_point(aes(0:5,BICsubcat,col='BIC'))+geom_line(aes(0:5,BICsubcat,col='BIC'))+guides(colour=guide_legend(title=''))+ylab('Value')+xlab('Number of predictors')+scale_x_continuous(breaks = 0:5)
 
-ggplot()+geom_point(aes(0:5,CVsubcat)) + geom_errorbar(aes(x=0:5, ymin=CVsubcat-sesubcat, ymax=CVsubcat+sesubcat),width=0.25) + geom_hline(yintercept=CVsubcat[which.min(CVsubcat)]+sesubcat[which.min(CVsubcat)], linetype='dashed')+scale_x_continuous(breaks=0:5)+xlab('Antal prædiktorer')+ylab('Krydsvalideringsscore')
+ggplot()+geom_point(aes(0:5,CVsubcat)) + geom_errorbar(aes(x=0:5, ymin=CVsubcat-sesubcat, ymax=CVsubcat+sesubcat),width=0.25) + geom_hline(yintercept=CVsubcat[which.min(CVsubcat)]+sesubcat[which.min(CVsubcat)], linetype='dashed')+scale_x_continuous(breaks=0:5)+xlab('Number of predictors')+ylab('Cross validation score')
 #no clear improvements to the null model but choosing the one with one predictor. This is the same as lasso
 
 dat5 <- MATHSSPcat[,c('scoreMath',names[variables[5,]])]
@@ -283,14 +287,19 @@ CVtree
 CVlassoQ <- CVlm(lmQ.post.lasso,MATHSSPQ)
 CVlassoCat <- CVlm(lmcat.post.lasso,MATHSSPcat)
 
-Model <- c('PostLassoQ','PostLassoCat','lmQ1','lmCat1','lmnull','treeQ')
-CVscore <- c(mean(CVlassoQ),mean(CVlassoCat),CVsub[2],CVsubcat[2],mean(CVnull),mean(CVtree))
+Model <- c('PostLassoQ','PostLassoCat','lmQ1','lmnull','treeQ')
+CVscore <- c(mean(CVlassoQ),mean(CVlassoCat),CVsub[2],mean(CVnull),mean(CVtree))
 k <- 1/sqrt(10)
-se <- c(k*sd(CVlassoQ),k*sd(CVlassoCat),sesub[2],sesubcat[2],k*sd(CVnull),k*sd(CVtree))
+se <- c(k*sd(CVlassoQ),k*sd(CVlassoCat),sesub[2],k*sd(CVnull),k*sd(CVtree))
 ggplot()+geom_point(aes(Model,CVscore)) + geom_errorbar(aes(x=Model, ymin=CVscore-se, ymax=CVscore+se),width=0.25) + geom_hline(yintercept=CVscore[which.min(CVscore)]+se[which.min(CVscore)], linetype='dashed')
 #Coose either lmQ1, PostLassoQ or treeQ
 
-
+res <- residuals(lmQ.post.lasso)
+plot(res)
+hist(res)
+qqnorm(res)
+qqline(res)
+plot(res~lmQ.post.lasso$fitted.values)
 ###############trying to predict passed failed###############
 ####With cart###########
 MATHSSPQpf <- math[,c(2:112,127:130)]
@@ -310,10 +319,10 @@ predlmpf <- function(lm,data){
   return(pred)
 }
 pred <- predlmpf(lmQ.post.lasso,MATHSSPQ)
-obs <- math$PassFail[!is.na(math$scoreMath)]
+obs <- math$PassFail[!is.na(math$scoreMath)&!is.na(math$GPROgrade)]
 table(pred,obs)
 
-obs <- factor(MATHSSPQpf$PassFail[!is.na(math$scoreMath)],levels = c('pass','fail'))
+obs <- factor(MATHSSPQpf$PassFail[!is.na(math$scoreMath)&!is.na(math$GPROgrade)],levels = c('pass','fail'))
 CVlmpred <- rep(NA,10)
 FP <- rep(NA,10)
 FN <- rep(NA,10)
