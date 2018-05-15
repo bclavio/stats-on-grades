@@ -6,6 +6,7 @@ library(hydroGOF)
 library(ggplot2)
 library(rpart)
 library(rpart.plot)
+library(xtable)
 ###########################################
 ########Loading and preparing data#########
 ###########################################
@@ -89,8 +90,8 @@ names(math)[c(2,127,128)] <- c('SSPgrade','GPROscore','GPROgrade')
 math$PassFail <- math$scoreMath=='UB'
 math$PassFail[math$PassFail] <- 'UB'
 math$scoreMath <- as.numeric(math$scoreMath)
-math$PassFail[math$scoreMath<15] <- 'fail'
-math$PassFail[math$scoreMath>=15] <- 'pass'
+math$PassFail[math$scoreMath<12.5] <- 'fail'
+math$PassFail[math$scoreMath>=12.5] <- 'pass'
 
 math$GPROPassFail <- math$GPROgrade=='U'|math$GPROgrade=='EB'
 math$GPROPassFail[math$GPROPassFail] <- 'UB'
@@ -109,7 +110,7 @@ math$GPROPassFail <- factor(math$GPROPassFail)
 
 table(math$PassFail)
 mean(math$PassFail=='pass')
-#only 9 percent passed
+#only 16 percent passed
 plot(scoreMath~GPROscore,data = math)
 plot(scoreMath~Q82, data = math)
 plot(scoreMath~SSPgrade, data = math)
@@ -300,6 +301,11 @@ hist(res)
 qqnorm(res)
 qqline(res)
 plot(res~lmQ.post.lasso$fitted.values)
+
+coef <- summary(lmQ.post.lasso)$coefficients
+conf <- confint(lmQ.post.lasso)
+estimates <- cbind(coef,conf)
+xtable(estimates)
 ###############trying to predict passed failed###############
 ####With cart###########
 MATHSSPQpf <- math[,c(2:112,127:130)]
@@ -308,12 +314,12 @@ MATHSSPcatpf <- math[,c(113:130)]
 treepfQ <- rpart(PassFail~.,data = MATHSSPQpf)
 rpart.plot(treepfQ)
 plotcp(treepfQ)
-#No one can pass in this tree and the empty tree is just as good
+#the empty tree is just as good
 
 #####With linear models#########
 predlmpf <- function(lm,data){
   predscore <- predict(lm,data)
-  passfail <- predscore<15
+  passfail <- predscore<12.5
   pred <- rep(NA,nrow(data))
   pred <- ifelse(passfail,'fail','pass')
   return(pred)
