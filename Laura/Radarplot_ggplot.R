@@ -1,7 +1,26 @@
-setwd("C:/Users/BiancaClavio/Documents/Research Assistant/PBL project 2.0/helpers")
+#radarchart w/ggplot2 
+#load library
+library(ggplot2)
+library(miscTools)
+
+setwd("Z:/BNC/PBL development project/Data/analysis_data/SSP")
+
 
 #load point data with pre-calculated median at the end
-data <- read.csv("studentDataToLauraPoints.csv", header = T)
+dfSPPpercentile <- read.csv("studentDataToLauraPercentile.csv", header = T)
+
+# median as the last row in the dataset
+#dfSPPpercentile[nrow(df)+1,] <-NA
+#dfSPPpercentileMedian <- NULL
+#dfSPPpercentileMedian <- c("Median", "None", colMedians(dfSPPpercentile[,3:9]))
+
+#rbind(dfSPPpercentile, data.frame(rowID="Median", Campus="AAL/CPH",t(colMedians(dfSPPpercentile[,3:9]))))
+
+#dfSPPpercentile <-rbind( dfSPPpercentile, dfSPPpercentileMedian)
+
+  
+
+
 
 #some checking
 summary(data)
@@ -24,9 +43,7 @@ df$ID <- rownames(df)
 #check
 df 
 
-#radarchart w/ggplot2 
-#load library
-library(ggplot2)
+
 
 #function to create the coordinates for the radarplot
 coord_radar <- function (theta = "x", start = 0, direction = 1) 
