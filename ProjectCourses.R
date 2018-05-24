@@ -1,4 +1,5 @@
 library(ggplot2)
+library(reshape2)
 Grades <- read.csv("Y:/analysis_data/dropOut/data/dfAAUMarriedGrades.csv", encoding="UTF-8", stringsAsFactors=FALSE)
 Grades <- Grades[,c(2,4,9,12,18,24,27,32,38,39,41,42,43,44,45)]
 #Only interested in first try
@@ -87,6 +88,262 @@ ggplot(data=Data)+
   ylab('Average grade')
 
 #International
+
+ggplot(aes(col=factor(Data$isIntl)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVGallsem))+
+  geom_boxplot(aes(x='Project',y=projectAVGallsem))+
+  scale_color_discrete(name=' ',labels=c('Not international','International'))+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVGallsem))+
+  geom_boxplot(aes(x='Project',y=projectAVGallsem))+
+  facet_wrap(~factor(isIntl),labeller = as_labeller(c('0'='Not internatinal','1'='International')))+
+  xlab('Activity')+
+  ylab('Average grade')
+
+##By semester
+# 1 semester
+#year
+ggplot(aes(col=factor(Data$startaar)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG1sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG1sem))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG1sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG1sem))+
+  facet_wrap(~factor(startaar))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+#campus
+ggplot(aes(col=factor(Data$CourseLocation)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG1sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG1sem))+
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG1sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG1sem))+
+  facet_wrap(~factor(CourseLocation))+
+  stat_summary(aes(x='Courses',y=courseAVG1sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  stat_summary(aes(x='Project',y=projectAVG1sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+#2 semester
+#year
+ggplot(aes(col=factor(Data$startaar)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG2sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG2sem))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG2sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG2sem))+
+  facet_wrap(~factor(startaar))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+#campus
+ggplot(aes(col=factor(Data$CourseLocation)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG2sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG2sem))+
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG2sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG2sem))+
+  facet_wrap(~factor(CourseLocation))+
+  stat_summary(aes(x='Courses',y=courseAVG2sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  stat_summary(aes(x='Project',y=projectAVG2sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+#3 semester
+#year
+ggplot(aes(col=factor(Data$startaar)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG3sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG3sem))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG3sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG3sem))+
+  facet_wrap(~factor(startaar))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+#campus
+ggplot(aes(col=factor(Data$CourseLocation)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG3sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG3sem))+
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG3sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG3sem))+
+  facet_wrap(~factor(CourseLocation))+
+  stat_summary(aes(x='Courses',y=courseAVG3sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  stat_summary(aes(x='Project',y=projectAVG3sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+#4 semester
+#year
+ggplot(aes(col=factor(Data$startaar)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG4sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG4sem))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG4sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG4sem))+
+  facet_wrap(~factor(startaar))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+#campus
+ggplot(aes(col=factor(Data$CourseLocation)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG4sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG4sem))+
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG4sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG4sem))+
+  facet_wrap(~factor(CourseLocation))+
+  stat_summary(aes(x='Courses',y=courseAVG4sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  stat_summary(aes(x='Project',y=projectAVG4sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+#5 semester
+#year
+ggplot(aes(col=factor(Data$startaar)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG5sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG5sem))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG5sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG5sem))+
+  facet_wrap(~factor(startaar))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+#campus
+ggplot(aes(col=factor(Data$CourseLocation)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG5sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG5sem))+
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG5sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG5sem))+
+  facet_wrap(~factor(CourseLocation))+
+  stat_summary(aes(x='Courses',y=courseAVG5sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  stat_summary(aes(x='Project',y=projectAVG5sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+#6 semester
+#year
+ggplot(aes(col=factor(Data$startaar)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG6sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG6sem))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG6sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG6sem))+
+  facet_wrap(~factor(startaar))+
+  scale_color_discrete(name='Year')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+#campus
+ggplot(aes(col=factor(Data$CourseLocation)),data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG6sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG6sem))+
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+ggplot(data=Data)+
+  geom_boxplot(aes(x='Courses',y=courseAVG6sem))+
+  geom_boxplot(aes(x='Project',y=projectAVG6sem))+
+  facet_wrap(~factor(CourseLocation))+
+  stat_summary(aes(x='Courses',y=courseAVG6sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  stat_summary(aes(x='Project',y=projectAVG6sem),fun.y = mean, geom="point",colour="blue", size=2,pch='X') +
+  scale_color_discrete(name='Campus')+
+  xlab('Activity')+
+  ylab('Average grade')
+
+#Comparing semester wise
+sub <- Data[,c(2:10,12:17)]
+Data.m <- melt(sub, id.vars = c('startaar','CourseLocation','isIntl'))
+Data.m$type <- rep(NA,nrow(Data.m))
+Data.m$type <- c(rep('Course',6024),rep('Project',6024))
+Data.m$sem <- rep(NA,nrow(Data.m))
+Data.m$sem[Data.m$variable=='courseAVG1sem'| Data.m$variable=='projectAVG1sem'] <- 1
+Data.m$sem[Data.m$variable=='courseAVG2sem'| Data.m$variable=='projectAVG2sem'] <- 2
+Data.m$sem[Data.m$variable=='courseAVG3sem'| Data.m$variable=='projectAVG3sem'] <- 3
+Data.m$sem[Data.m$variable=='courseAVG4sem'| Data.m$variable=='projectAVG4sem'] <- 4
+Data.m$sem[Data.m$variable=='courseAVG5sem'| Data.m$variable=='projectAVG5sem'] <- 5
+Data.m$sem[Data.m$variable=='courseAVG6sem'| Data.m$variable=='projectAVG6sem'] <- 6
+
+ggplot(data=Data.m,aes(x=factor(sem),y=value,col=type))+
+  geom_boxplot()+
+  scale_color_discrete(name='')+
+  xlab('Semester')+
+  ylab('Average grade')
+
+ggplot(data=Data.m,aes(x=factor(sem),y=value,col=type))+
+  geom_boxplot()+
+  facet_wrap(~factor(startaar))+
+  scale_color_discrete(name='')+
+  xlab('Semester')+
+  ylab('Average grade')
+
+ggplot(data=Data.m,aes(x=factor(sem),y=value,col=type))+
+  geom_boxplot()+
+  facet_wrap(~CourseLocation,labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
+  scale_color_discrete(name='')+
+  xlab('Semester')+
+  ylab('Average grade')
+
+
 
 ##Looking for differences between cohorts
 fit <- lm(projectAVGallsem~courseAVGallsem*factor(startaar), data = Data)
