@@ -1,3 +1,11 @@
+# Boxplots are the best data representation for understanding the dataset, 
+# but the students might gain more from a simpler (and gamified) graph, 
+# such as the radar/spider web chart with their scores in comparison to the average/median student
+# and the percentile rank for each topic.
+
+
+
+
 #radarchart w/ggplot2 
 #load library
 library(ggplot2)
@@ -5,30 +13,34 @@ library(miscTools)
 
 setwd("Z:/BNC/PBL development project/Data/analysis_data/SSP")
 
-
 #load point data with pre-calculated median at the end
-dfSPPpercentile <- read.csv("studentDataToLauraPercentile.csv", header = T)
+dfSPPscore <- read.csv("studentDataToLauraPoints.csv", header = T)
+
+
+######################################
+### TODO: Get the updated script from Laura + ask her to use this below instead. Include average in the chart? 
 
 # median as the last row in the dataset
-#dfSPPpercentile[nrow(df)+1,] <-NA
-#dfSPPpercentileMedian <- NULL
-#dfSPPpercentileMedian <- c("Median", "None", colMedians(dfSPPpercentile[,3:9]))
+dfSPPscoreAddon <- rbind(dfSPPscore, data.frame(rowID="Median", Campus="AAL/CPH",t(colMedians(dfSPPscore[,3:9]))))
 
-#rbind(dfSPPpercentile, data.frame(rowID="Median", Campus="AAL/CPH",t(colMedians(dfSPPpercentile[,3:9]))))
+# average as the last row in the dataset
+#dfSPPscoreAddon <- rbind(dfSPPscoreAddon, data.frame(rowID="Average", Campus="AAL/CPH",t(colMeans(dfSPPscore[,3:9]))))
 
-#dfSPPpercentile <-rbind( dfSPPpercentile, dfSPPpercentileMedian)
 
-  
+####################################
+
+
+
 
 
 
 #some checking
-summary(data)
-dim(data)
+summary(dfSPPscoreAddon)
+dim(dfSPPscoreAddon)
 
 #try to create a suitable input, must be a data frame!
 #5 starting from file with median at the end - works!
-df<- data[c(1,191), 3:9]
+df<- ddfSPPscoreAddon[c(1,191), 3:9]
 #create a vector with axis names
 labs <- c("Understanding of Medialogy", "Time commitments", "Growth mindset", "Grit", "Study habits at AAU", "High school habits", "Social support for studying")
 #use the new vector to change the column names
