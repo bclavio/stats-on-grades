@@ -230,6 +230,12 @@ for (i in 1:nrow(missingInSPV)){
   missingInSPV[i,2] <- count(dfAAUGradesWODistEnrol$aktivitet, missingInSPV[i,1])
 }
 
+
+# add campus variable
+dfAAUMarriedGradeFile <- dfAAUMarriedGrades
+#dfAAUMarriedGradeFile['Campus'] <- NA
+dfAAUMarriedGradeFile <- merge(ForSvante2[,c(2,175)], dfAAUMarriedGradeFile, by="enrolID") # missing data..
+
 #ideally the data frame is empty
 # anonymize ---------------------------------------------------------------
 
@@ -241,7 +247,7 @@ ForSvante$navn<-NULL
 ForSvante2$navn<-NULL
 ForSvante3$navn<-NULL
 #ForSvante4$navn<-NULL
-dfAAUMarriedGradeFile <- dfAAUMarriedGrades
+
 dfAAUMarriedGradeFile$navn <- NULL
 dfAAUMarriedGradeFile$studienr<-NULL
 

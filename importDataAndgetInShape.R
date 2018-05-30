@@ -369,7 +369,7 @@ dfMed2AalX<-dfMed2Aal[dfMed2Aal$interviewTaken==1 & !is.na(dfMed2Aal$isDropOut) 
 
 ####### runs the aggregation rmarkdown file
 
-rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/PBLstats-on-grades/docs/aggregationOfInformationBySemesters.Rmd", 
-                  output_format = "pdf_document", output_file = "aggregationOfInformationBySemesters.pdf")
+#rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/PBLstats-on-grades/docs/aggregationOfInformationBySemesters.Rmd", 
+#                  output_format = "pdf_document", output_file = "aggregationOfInformationBySemesters.pdf")
 
 
