@@ -378,6 +378,10 @@ summary(fit)
 drop1(fit,test = 'F')
 
 
+cor <- round(sapply(split(Data, list(Data$isIntl,Data$startaar)), function(X) cor(X$courseAVGallsem, X$projectAVGallsem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),isIntl=rep(c(0,1),3),startaar=rep(c(2012,2013,2014),each=2))
+
+
 ggplot(aes(courseAVGallsem,projectAVGallsem, col=factor(isIntl)), data = Data)+
   geom_point()+
   geom_smooth(aes(fill=factor(isIntl)),show.legend = F,method='lm',se=T,na.rm = T)+
@@ -385,23 +389,112 @@ ggplot(aes(courseAVGallsem,projectAVGallsem, col=factor(isIntl)), data = Data)+
   scale_color_discrete(labels=c('Not international','international'))+
   facet_wrap(~startaar)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=5,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.x = 0,label.y = c(-5,-7))+
+  geom_text(data=cor_dat,mapping = aes(x=7, y=rep(c(-5,-7),3), label=label),show.legend = F)+
   xlab('Average grade in courses')+
   ylab('Average grade in projects')
 
 ggplot(aes(courseAVGallsem,projectAVGallsem), data = Data)+
   geom_point()+
   geom_smooth(method='lm',se=FALSE,na.rm = T)+
-  facet_wrap(~factor(isIntl)+startaar)+
+  facet_wrap(~factor(isIntl)+startaar,labeller = as_labeller(c('0'='Not international','1'='International','2012'='2012','2013'='2013','2014'='2014')))+
+  geom_text(data=cor_dat,mapping = aes(x=7, y=rep(c(-5,-7),3), label=label),show.legend = F)+
   xlab('Average grade in courses')+
   ylab('Average grade in projects')
+
+fit <- lm(projectAVGallsem~courseAVGallsem*factor(isIntl),data=Data2012)
+summary(fit)
+drop1(fit,test = 'F')
+#difference
+
+fit <- lm(projectAVGallsem~courseAVGallsem*factor(isIntl),data=Data2013)
+summary(fit)
+drop1(fit,test = 'F')
+fit <- lm(projectAVGallsem~courseAVGallsem+factor(isIntl),data=Data2013)
+summary(fit)
+drop1(fit,test = 'F')
+#no difference
+
+fit <- lm(projectAVGallsem~courseAVGallsem*factor(isIntl),data=Data2014)
+summary(fit)
+drop1(fit,test = 'F')
+fit <- lm(projectAVGallsem~courseAVGallsem+factor(isIntl),data=Data2014)
+summary(fit)
+drop1(fit,test = 'F')
+
 
 fit <- lm(projectAVGallsem~courseAVGallsem*factor(isIntl)*CourseLocation, data = Data)
 summary(fit)
 drop1(fit,test = 'F')
 
 ##Looking at data by semester
+
+ggplot(aes(courseAVG1sem,projectAVG1sem), data = Data)+
+  geom_count(alpha=0.5)+geom_smooth(method='lm',se=T,na.rm = T,show.legend = F)+
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.y = -5,label.x = 4)+
+  geom_text(aes(label=paste('r=',round(cor(courseAVG1sem,projectAVG1sem, use = "pairwise.complete.obs"),2)),x=10,y=-5))+
+  guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  xlab('Average grade in courses')+
+  ylab('Average grade in projects')+
+  ggtitle('First semester')
+
+ggplot(aes(courseAVG2sem,projectAVG2sem), data = Data)+
+  geom_count(alpha=0.5)+geom_smooth(method='lm',se=T,na.rm = T,show.legend = F)+
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.y = -5,label.x = 4)+
+  geom_text(aes(label=paste('r=',round(cor(courseAVG2sem,projectAVG2sem, use = "pairwise.complete.obs"),2)),x=10,y=-5))+
+  guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  xlab('Average grade in courses')+
+  ylab('Average grade in projects')+
+  ggtitle('Second semester')
+
+ggplot(aes(courseAVG3sem,projectAVG3sem), data = Data)+
+  geom_count(alpha=0.5)+geom_smooth(method='lm',se=T,na.rm = T,show.legend = F)+
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.y = -5,label.x = 4)+
+  geom_text(aes(label=paste('r=',round(cor(courseAVG3sem,projectAVG3sem, use = "pairwise.complete.obs"),2)),x=10,y=-5))+
+  guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  xlab('Average grade in courses')+
+  ylab('Average grade in projects')+
+  ggtitle('Third semester')
+
+ggplot(aes(courseAVG4sem,projectAVG4sem), data = Data)+
+  geom_count(alpha=0.5)+geom_smooth(method='lm',se=T,na.rm = T,show.legend = F)+
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.y = -5,label.x = 4)+
+  geom_text(aes(label=paste('r=',round(cor(courseAVG4sem,projectAVG4sem, use = "pairwise.complete.obs"),2)),x=10,y=-5))+
+  guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  xlab('Average grade in courses')+
+  ylab('Average grade in projects')+
+  ggtitle('Fourth semester')
+
+ggplot(aes(courseAVG5sem,projectAVG5sem), data = Data)+
+  geom_count(alpha=0.5)+geom_smooth(method='lm',se=T,na.rm = T,show.legend = F)+
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.y = -5,label.x = 4)+
+  geom_text(aes(label=paste('r=',round(cor(courseAVG5sem,projectAVG5sem, use = "pairwise.complete.obs"),2)),x=10,y=-5))+
+  guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  xlab('Average grade in courses')+
+  ylab('Average grade in projects')+
+  ggtitle('Fifth semester')
+
+ggplot(aes(courseAVG6sem,projectAVG6sem), data = Data)+
+  geom_count(alpha=0.5)+geom_smooth(method='lm',se=T,na.rm = T,show.legend = F)+
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.y = -5,label.x = 4)+
+  geom_text(aes(label=paste('r=',round(cor(courseAVG6sem,projectAVG6sem, use = "pairwise.complete.obs"),2)),x=10,y=-5))+
+  guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  xlab('Average grade in courses')+
+  ylab('Average grade in projects')+
+  ggtitle('Sixth semester')
 
 #Year
 fit <- lm(projectAVG1sem~courseAVG1sem*factor(startaar),data = Data)
@@ -411,26 +504,22 @@ fit <- lm(projectAVG1sem~courseAVG1sem+factor(startaar),data = Data)
 summary(fit)
 drop1(fit,test = 'F')
 #No difference between years
-
-fit2012 <- lm(projectAVG1sem~courseAVG1sem,data = Data2012)
-summary(fit2012)
-fit2013 <- lm(projectAVG1sem~courseAVG1sem,data = Data2013)
-summary(fit2013)
-fit2014 <- lm(projectAVG1sem~courseAVG1sem,data = Data2014)
-summary(fit2014)
+cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG1sem, X$projectAVG1sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
 
 ggplot(aes(courseAVG1sem,projectAVG1sem,col=factor(startaar)), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(aes(fill=factor(startaar)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('First semester')
 
-cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG1sem, X$projectAVG1sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
+
 
 
 ggplot(aes(courseAVG1sem,projectAVG1sem), data = Data)+
@@ -438,15 +527,17 @@ ggplot(aes(courseAVG1sem,projectAVG1sem), data = Data)+
   geom_smooth(method='lm',se=T,na.rm = T)+
   facet_wrap(~factor(startaar))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
+  scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('First semester')
 
 ggplot(aes(factor(projectAVG1sem),courseAVG1sem,col=factor(startaar)), data =subset(Data, !is.na(projectAVG1sem) & !is.na(courseAVG1sem)& !projectAVG1sem%in%c(-0.5,0)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
   geom_count(position=position_dodge(0.75),alpha=0.5)+
   guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Grade in project')
 
 ggplot(aes(factor(projectAVG1sem),courseAVG1sem), data =subset(Data, !is.na(projectAVG1sem) & !is.na(courseAVG1sem) & !projectAVG1sem%in%c(-0.5,0)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
@@ -454,7 +545,8 @@ ggplot(aes(factor(projectAVG1sem),courseAVG1sem), data =subset(Data, !is.na(proj
   guides(size=guide_legend(title = 'Number of points'))+
   facet_wrap(~factor(startaar))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Grade in project')+
+  ggtitle('First semester')
 
 
 fit <- lm(projectAVG2sem~courseAVG2sem*factor(startaar),data = Data)
@@ -463,25 +555,23 @@ drop1(fit,test = 'F')
 fit <- lm(projectAVG2sem~courseAVG2sem+factor(startaar),data = Data)
 summary(fit)
 drop1(fit,test = 'F')
-fit2012 <- lm(projectAVG2sem~courseAVG2sem,data = Data2012)
-summary(fit2012)
-fit2013 <- lm(projectAVG2sem~courseAVG2sem,data = Data2013)
-summary(fit2013)
-fit2014 <- lm(projectAVG2sem~courseAVG2sem,data = Data2014)
-summary(fit2014)
+#different intercepts
+
+cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG2sem, X$projectAVG2sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
 
 ggplot(aes(courseAVG2sem,projectAVG2sem,col=factor(startaar)), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(aes(fill=factor(startaar)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Second semester')
 
-cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG2sem, X$projectAVG2sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
 
   
 
@@ -492,7 +582,8 @@ ggplot(aes(courseAVG2sem,projectAVG2sem), data = Data)+
   facet_wrap(~factor(startaar))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Second semester')
 
 ggplot(aes(factor(projectAVG2sem),courseAVG2sem,col=factor(startaar)), data =subset(Data, !is.na(projectAVG2sem) & !is.na(courseAVG2sem)& !projectAVG2sem%in%c(4.5,8.5)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
@@ -507,43 +598,40 @@ ggplot(aes(factor(projectAVG2sem),courseAVG2sem), data =subset(Data, !is.na(proj
   guides(size=guide_legend(title = 'Number of points'))+
   facet_wrap(~factor(startaar))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  ggtitle('Second semester')
 
 fit <- lm(projectAVG3sem~courseAVG3sem*factor(startaar),data = Data)
 summary(fit)
 drop1(fit,test = 'F')
+cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG3sem, X$projectAVG3sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
 
-
-fit2012 <- lm(projectAVG3sem~courseAVG3sem,data = Data2012)
-summary(fit2012)
-fit2013 <- lm(projectAVG3sem~courseAVG3sem,data = Data2013)
-summary(fit2013)
-fit2014 <- lm(projectAVG3sem~courseAVG3sem,data = Data2014)
-summary(fit2014)
 
 ggplot(aes(courseAVG3sem,projectAVG3sem,col=factor(startaar)), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(aes(fill=factor(startaar)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Third semester')
 
-cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG3sem, X$projectAVG3sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
 
   
 
 ggplot(aes(courseAVG3sem,projectAVG3sem), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(method='lm',se=FALSE,na.rm = T)+
+  geom_smooth(method='lm',se=T,na.rm = T)+
   facet_wrap(~factor(startaar))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects') 
+  ylab('Average grade in projects')+
+  ggtitle('Third semester')
 
 ggplot(aes(factor(projectAVG3sem),courseAVG3sem,col=factor(startaar)), data =subset(Data, !is.na(projectAVG3sem) & !is.na(courseAVG3sem) & projectAVG3sem!=5))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
@@ -551,7 +639,8 @@ ggplot(aes(factor(projectAVG3sem),courseAVG3sem,col=factor(startaar)), data =sub
   guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
   ylab('Average grade in courses')+
   xlab('Average grade in projects')+
-  scale_y_continuous(breaks = -8:12)
+  scale_y_continuous(breaks = -8:12)+
+  ggtitle('Third semester')
 
 ggplot(aes(factor(projectAVG3sem),courseAVG3sem), data =subset(Data, !is.na(projectAVG3sem) & !is.na(courseAVG3sem) & projectAVG3sem!=5))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
@@ -559,7 +648,8 @@ ggplot(aes(factor(projectAVG3sem),courseAVG3sem), data =subset(Data, !is.na(proj
   guides(size=guide_legend(title = 'Number of points'))+
   facet_wrap(~factor(startaar))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  ggtitle('Third semester')
 
 fit <- lm(projectAVG4sem~courseAVG4sem*factor(startaar),data = Data)
 summary(fit)
@@ -568,36 +658,34 @@ fit <- lm(projectAVG4sem~courseAVG4sem+factor(startaar),data = Data)
 summary(fit)
 drop1(fit,test = 'F')
 
-fit2012 <- lm(projectAVG4sem~courseAVG4sem,data = Data2012)
-summary(fit2012)
-fit2013 <- lm(projectAVG4sem~courseAVG4sem,data = Data2013)
-summary(fit2013)
-fit2014 <- lm(projectAVG4sem~courseAVG4sem,data = Data2014)
-summary(fit2014)
+cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG4sem, X$projectAVG4sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
+
 
 ggplot(aes(courseAVG4sem,projectAVG4sem,col=factor(startaar)), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(aes(fill=factor(startaar)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Fourth semester')
 
-cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG4sem, X$projectAVG4sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
 
   
 
 ggplot(aes(courseAVG4sem,projectAVG4sem), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(method='lm',se=FALSE,na.rm = T)+
+  geom_smooth(method='lm',se=T,na.rm = T)+
   facet_wrap(~factor(startaar))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Fourth semester')
 
 ggplot(aes(factor(projectAVG4sem),courseAVG4sem,col=factor(startaar)), data =subset(Data, !is.na(projectAVG4sem) & !is.na(courseAVG4sem) & !projectAVG4sem%in%c(5.5,8.5)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
@@ -613,7 +701,8 @@ ggplot(aes(factor(projectAVG4sem),courseAVG4sem), data =subset(Data, !is.na(proj
   guides(size=guide_legend(title = 'Number of points'))+
   facet_wrap(~factor(startaar))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  ggtitle('Fourth semester')
 #5 semester
 fit <- lm(projectAVG5sem~courseAVG5sem*factor(startaar),data = Data)
 summary(fit)
@@ -622,26 +711,23 @@ fit <- lm(projectAVG5sem~courseAVG5sem+factor(startaar),data = Data)
 summary(fit)
 drop1(fit,test = 'F')
 
-fit2012 <- lm(projectAVG5sem~courseAVG5sem,data = Data2012)
-summary(fit2012)
-fit2013 <- lm(projectAVG5sem~courseAVG5sem,data = Data2013)
-summary(fit2013)
-fit2014 <- lm(projectAVG5sem~courseAVG5sem,data = Data2014)
-summary(fit2014)
+cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG5sem, X$projectAVG5sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
+ 
 
 ggplot(aes(courseAVG5sem,projectAVG5sem,col=factor(startaar)), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(aes(fill=factor(startaar)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Fifth semester')
 
-cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG5sem, X$projectAVG5sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
-  
+ 
 
 ggplot(aes(courseAVG5sem,projectAVG5sem), data = Data)+
   geom_count(alpha=0.5)+
@@ -650,7 +736,8 @@ ggplot(aes(courseAVG5sem,projectAVG5sem), data = Data)+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Fifth semester')
 
 ggplot(aes(factor(projectAVG5sem),courseAVG5sem,col=factor(startaar)), data =subset(Data, !is.na(projectAVG5sem) & !is.na(courseAVG5sem) & !projectAVG5sem%in%c(3)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
@@ -666,7 +753,8 @@ ggplot(aes(factor(projectAVG5sem),courseAVG5sem), data =subset(Data, !is.na(proj
   guides(size=guide_legend(title = 'Number of points'))+
   facet_wrap(~factor(startaar))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  ggtitle('Ffifth semester')
 
 #6 semester
 fit <- lm(projectAVG6sem~courseAVG6sem*factor(startaar),data = Data)
@@ -676,26 +764,23 @@ fit <- lm(projectAVG6sem~courseAVG6sem+factor(startaar),data = Data)
 summary(fit)
 drop1(fit,test = 'F')
 
-fit2012 <- lm(projectAVG6sem~courseAVG6sem,data = Data2012)
-summary(fit2012)
-fit2013 <- lm(projectAVG6sem~courseAVG6sem,data = Data2013)
-summary(fit2013)
-fit2014 <- lm(projectAVG6sem~courseAVG6sem,data = Data2014)
-summary(fit2014)
+cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG6sem, X$projectAVG6sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
+  
 
 ggplot(aes(courseAVG6sem,projectAVG6sem,col=factor(startaar)), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(aes(fill=factor(startaar)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Year'),size=guide_legend(title = 'Number of points'))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Sixth semester')
 
-cor <- round(sapply(split(Data, list(Data$startaar)), function(X) cor(X$courseAVG6sem, X$projectAVG6sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),startaar=c(2012,2013,2014))
-  
+
 
 ggplot(aes(courseAVG6sem,projectAVG6sem), data = Data)+
   geom_count(alpha=0.5)+
@@ -704,7 +789,8 @@ ggplot(aes(courseAVG6sem,projectAVG6sem), data = Data)+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Sixth semester')
 
 ggplot(aes(factor(projectAVG6sem),courseAVG6sem,col=factor(startaar)), data =subset(Data, !is.na(projectAVG6sem) & !is.na(courseAVG6sem) & !projectAVG6sem%in%c(8.5,9.5,11)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
@@ -720,196 +806,322 @@ ggplot(aes(factor(projectAVG6sem),courseAVG6sem), data =subset(Data, !is.na(proj
   guides(size=guide_legend(title = 'Number of points'))+
   facet_wrap(~factor(startaar))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  ggtitle('Sixth semester')
 
 #Campus
-#1 semester
+fit <- lm(projectAVG1sem~courseAVG1sem*factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+fit <- lm(projectAVG1sem~courseAVG1sem+factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+#No difference
+cor <- round(sapply(split(Data, list(Data$CourseLocation)), function(X) cor(X$courseAVG1sem, X$projectAVG1sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=c('A','E','K'))
+
 ggplot(aes(courseAVG1sem,projectAVG1sem,col=factor(CourseLocation)), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(aes(fill=CourseLocation),show.legend = F,method='lm',se=T,na.rm = T)+
+  geom_smooth(aes(fill=factor(CourseLocation)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE, label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
+  scale_color_discrete(label=c('Aalboeg','Esbjerg','Copenhagen'))+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('First semester')
 
-cor <- round(sapply(split(Data, list(Data$CourseLocation,Data$startaar)), function(X) cor(X$courseAVG1sem, X$projectAVG1sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=rep(c('A','E','K'),3),startaar=rep(c(2012,2013,2014),each=3))
+
+
 
 ggplot(aes(courseAVG1sem,projectAVG1sem), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(method='lm',se=FALSE,na.rm = T)+
-  facet_wrap(~CourseLocation+startaar,labeller = labeller(CourseLocation=as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen'))))+
+  geom_smooth(method='lm',se=T,na.rm = T)+
+  facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('First semester')
 
-ggplot(aes(factor(projectAVG1sem),courseAVG1sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG1sem) & !is.na(courseAVG1sem) & !projectAVG1sem%in%c()))+
+ggplot(aes(factor(projectAVG1sem),courseAVG1sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG1sem) & !is.na(courseAVG1sem)& !projectAVG1sem%in%c(-0.5,0)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
   geom_count(position=position_dodge(0.75),alpha=0.5)+
-  guides(col=guide_legend(title = 'Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Grade in project')
 
-#2 semester
+ggplot(aes(factor(projectAVG1sem),courseAVG1sem), data =subset(Data, !is.na(projectAVG1sem) & !is.na(courseAVG1sem) & !projectAVG1sem%in%c(-0.5,0)))+
+  geom_boxplot(na.rm = T, outlier.shape = NA)+
+  geom_count(position=position_dodge(0.75),alpha=0.5)+
+  guides(size=guide_legend(title = 'Number of points'))+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
+  ylab('Average grade in courses')+
+  xlab('Grade in project')+
+  ggtitle('First semester')
+
+
+fit <- lm(projectAVG2sem~courseAVG2sem*factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+fit <- lm(projectAVG2sem~courseAVG2sem+factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+#different intercepts
+
+cor <- round(sapply(split(Data, list(Data$CourseLocation)), function(X) cor(X$courseAVG2sem, X$projectAVG2sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=c('A','E','K'))
+
 ggplot(aes(courseAVG2sem,projectAVG2sem,col=factor(CourseLocation)), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(aes(fill=CourseLocation),show.legend = F,method='lm',se=T,na.rm = T)+
+  geom_smooth(aes(fill=factor(CourseLocation)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
+  scale_color_discrete(label=c('Aalboeg','Esbjerg','Copenhagen'))+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Second semester')
 
-cor <- round(sapply(split(Data, list(Data$CourseLocation,Data$startaar)), function(X) cor(X$courseAVG2sem, X$projectAVG2sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=rep(c('A','E','K'),3),startaar=rep(c(2012,2013,2014),each=3))
+
+
 
 ggplot(aes(courseAVG2sem,projectAVG2sem), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(method='lm',se=FALSE,na.rm = T)+
-  facet_wrap(~CourseLocation+startaar,labeller = labeller(CourseLocation=as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen'))))+
-  geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
-xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
+  geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
+  xlab('Average grade in courses')+
+  ylab('Average grade in projects')+
+  ggtitle('Second semester')
 
-ggplot(aes(factor(projectAVG2sem),courseAVG2sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG2sem) & !is.na(courseAVG2sem) & !projectAVG2sem%in%c(4.5,8.5)))+
+ggplot(aes(factor(projectAVG2sem),courseAVG2sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG2sem) & !is.na(courseAVG2sem)& !projectAVG2sem%in%c(4.5,8.5)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
   geom_count(position=position_dodge(0.75),alpha=0.5)+
-  guides(col=guide_legend(title = 'Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
   ylab('Average grade in courses')+
   xlab('Average grade in projects')
 
-#3 semester
+ggplot(aes(factor(projectAVG2sem),courseAVG2sem), data =subset(Data, !is.na(projectAVG2sem) & !is.na(courseAVG2sem) & !projectAVG2sem%in%c(4.5,8.5)))+
+  geom_boxplot(na.rm = T, outlier.shape = NA)+
+  geom_count(position=position_dodge(0.75),alpha=0.5)+
+  guides(size=guide_legend(title = 'Number of points'))+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
+  ylab('Average grade in courses')+
+  xlab('Average grade in projects')+
+  ggtitle('Second semester')
+
+fit <- lm(projectAVG3sem~courseAVG3sem*factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+cor <- round(sapply(split(Data, list(Data$CourseLocation)), function(X) cor(X$courseAVG3sem, X$projectAVG3sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=c('A','E','K'))
+
+
 ggplot(aes(courseAVG3sem,projectAVG3sem,col=factor(CourseLocation)), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(aes(fill=CourseLocation),show.legend = F,method='lm',se=T,na.rm = T)+
+  geom_smooth(aes(fill=factor(CourseLocation)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
+  scale_color_discrete(label=c('Aalboeg','Esbjerg','Copenhagen'))+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Third semester')
 
-cor <- round(sapply(split(Data, list(Data$CourseLocation,Data$startaar)), function(X) cor(X$courseAVG3sem, X$projectAVG3sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=rep(c('A','E','K'),3),startaar=rep(c(2012,2013,2014),each=3))
+
+
 
 ggplot(aes(courseAVG3sem,projectAVG3sem), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(method='lm',se=FALSE,na.rm = T)+
-  facet_wrap(~CourseLocation+startaar,labeller = labeller(CourseLocation=as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen'))))+
+  geom_smooth(method='lm',se=T,na.rm = T)+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Third semester')
 
-ggplot(aes(factor(projectAVG3sem),courseAVG3sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG3sem) & !is.na(courseAVG3sem) & !projectAVG3sem%in%c(5)))+
+ggplot(aes(factor(projectAVG3sem),courseAVG3sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG3sem) & !is.na(courseAVG3sem) & projectAVG3sem!=5))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
   geom_count(position=position_dodge(0.75),alpha=0.5)+
-  guides(col=guide_legend(title = 'Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  scale_y_continuous(breaks = -8:12)+
+  ggtitle('Third semester')
 
-#4 semester
+ggplot(aes(factor(projectAVG3sem),courseAVG3sem), data =subset(Data, !is.na(projectAVG3sem) & !is.na(courseAVG3sem) & projectAVG3sem!=5))+
+  geom_boxplot(na.rm = T, outlier.shape = NA)+
+  geom_count(position=position_dodge(0.75),alpha=0.5)+
+  guides(size=guide_legend(title = 'Number of points'))+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
+  ylab('Average grade in courses')+
+  xlab('Average grade in projects')+
+  ggtitle('Third semester')
+
+fit <- lm(projectAVG4sem~courseAVG4sem*factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+
+
+cor <- round(sapply(split(Data, list(Data$CourseLocation)), function(X) cor(X$courseAVG4sem, X$projectAVG4sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=c('A','E','K'))
+
+
 ggplot(aes(courseAVG4sem,projectAVG4sem,col=factor(CourseLocation)), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(aes(fill=CourseLocation),show.legend = F,method='lm',se=T,na.rm = T)+
+  geom_smooth(aes(fill=factor(CourseLocation)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
+  scale_color_discrete(label=c('Aalboeg','Esbjerg','Copenhagen'))+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Fourth semester')
 
-cor <- round(sapply(split(Data, list(Data$CourseLocation,Data$startaar)), function(X) cor(X$courseAVG4sem, X$projectAVG4sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=rep(c('A','E','K'),3),startaar=rep(c(2012,2013,2014),each=3))
+
+
 
 ggplot(aes(courseAVG4sem,projectAVG4sem), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(method='lm',se=FALSE,na.rm = T)+
-  facet_wrap(~CourseLocation+startaar,labeller = labeller(CourseLocation=as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen'))))+
+  geom_smooth(method='lm',se=T,na.rm = T)+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Fourth semester')
 
 ggplot(aes(factor(projectAVG4sem),courseAVG4sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG4sem) & !is.na(courseAVG4sem) & !projectAVG4sem%in%c(5.5,8.5)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
   geom_count(position=position_dodge(0.75),alpha=0.5)+
-  guides(col=guide_legend(title = 'Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  scale_y_continuous(breaks = -8:12)
+
+ggplot(aes(factor(projectAVG4sem),courseAVG4sem), data =subset(Data, !is.na(projectAVG4sem) & !is.na(courseAVG4sem) & !projectAVG4sem%in%c(5.5,8.5)))+
+  geom_boxplot(na.rm = T, outlier.shape = NA)+
+  geom_count(position=position_dodge(0.75),alpha=0.5)+
+  guides(size=guide_legend(title = 'Number of points'))+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
+  ylab('Average grade in courses')+
+  xlab('Average grade in projects')+
+  ggtitle('Fourth semester')
 #5 semester
+fit <- lm(projectAVG5sem~courseAVG5sem*factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+fit <- lm(projectAVG5sem~courseAVG5sem+factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+
+cor <- round(sapply(split(Data, list(Data$CourseLocation)), function(X) cor(X$courseAVG5sem, X$projectAVG5sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=c('A','E','K'))
+
+
 ggplot(aes(courseAVG5sem,projectAVG5sem,col=factor(CourseLocation)), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(aes(fill=CourseLocation),show.legend = F,method='lm',se=T,na.rm = T)+
+  geom_smooth(aes(fill=factor(CourseLocation)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(x=10,y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
+  scale_color_discrete(label=c('Aalboeg','Esbjerg','Copenhagen'))+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Fifth semester')
 
-cor <- round(sapply(split(Data, list(Data$CourseLocation,Data$startaar)), function(X) cor(X$courseAVG5sem, X$projectAVG5sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=rep(c('A','E','K'),3),startaar=rep(c(2012,2013,2014),each=3))
+
 
 ggplot(aes(courseAVG5sem,projectAVG5sem), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(method='lm',se=FALSE,na.rm = T)+
-  facet_wrap(~CourseLocation+startaar,labeller = labeller(CourseLocation=as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen'))))+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Fifth semester')
 
 ggplot(aes(factor(projectAVG5sem),courseAVG5sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG5sem) & !is.na(courseAVG5sem) & !projectAVG5sem%in%c(3)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
   geom_count(position=position_dodge(0.75),alpha=0.5)+
-  guides(col=guide_legend(title = 'Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  scale_y_continuous(breaks = -8:12)
+
+ggplot(aes(factor(projectAVG5sem),courseAVG5sem), data =subset(Data, !is.na(projectAVG5sem) & !is.na(courseAVG5sem) & !projectAVG5sem%in%c(3)))+
+  geom_boxplot(na.rm = T, outlier.shape = NA)+
+  geom_count(position=position_dodge(0.75),alpha=0.5)+
+  guides(size=guide_legend(title = 'Number of points'))+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
+  ylab('Average grade in courses')+
+  xlab('Average grade in projects')+
+  ggtitle('Ffifth semester')
 
 #6 semester
+fit <- lm(projectAVG6sem~courseAVG6sem*factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+fit <- lm(projectAVG6sem~courseAVG6sem+factor(CourseLocation),data = Data)
+summary(fit)
+drop1(fit,test = 'F')
+
+cor <- round(sapply(split(Data, list(Data$CourseLocation)), function(X) cor(X$courseAVG6sem, X$projectAVG6sem, use="pairwise.complete.obs")),2)
+cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=c('A','E','K'))
+
+
 ggplot(aes(courseAVG6sem,projectAVG6sem,col=factor(CourseLocation)), data = Data)+
   geom_count(alpha=0.5)+
-  geom_smooth(aes(fill=CourseLocation),show.legend = F,method='lm',se=T,na.rm = T)+
+  geom_smooth(aes(fill=factor(CourseLocation)),show.legend = F,method='lm',se=T,na.rm = T)+
   stat_poly_eq(formula = y~x, 
-               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE, position = position_nudge(y=-13))+
+               aes(label = paste(..eq.label..)), 
+               parse = TRUE,label.x = 2,label.y = c(-3,-5,-7))+
   guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  geom_text(data=cor_dat,mapping = aes(x=8, y=c(-3,-5,-7), label=label),show.legend = F)+
+  scale_color_discrete(label=c('Aalboeg','Esbjerg','Copenhagen'))+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Sixth semester')
 
-cor <- round(sapply(split(Data, list(Data$CourseLocation,Data$startaar)), function(X) cor(X$courseAVG6sem, X$projectAVG6sem, use="pairwise.complete.obs")),2)
-cor_dat <- data.frame(label=paste(c('r='),cor),CourseLocation=rep(c('A','E','K'),3),startaar=rep(c(2012,2013,2014),each=3))
+
 
 ggplot(aes(courseAVG6sem,projectAVG6sem), data = Data)+
   geom_count(alpha=0.5)+
   geom_smooth(method='lm',se=FALSE,na.rm = T)+
-  facet_wrap(~CourseLocation+startaar,labeller = labeller(CourseLocation=as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen'))))+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
   geom_text(data=cor_dat,mapping = aes(x=7, y=-5, label=label))+
   scale_size_continuous(name='Number of points')+
   xlab('Average grade in courses')+
-  ylab('Average grade in projects')
+  ylab('Average grade in projects')+
+  ggtitle('Sixth semester')
 
 ggplot(aes(factor(projectAVG6sem),courseAVG6sem,col=factor(CourseLocation)), data =subset(Data, !is.na(projectAVG6sem) & !is.na(courseAVG6sem) & !projectAVG6sem%in%c(8.5,9.5,11)))+
   geom_boxplot(na.rm = T, outlier.shape = NA)+
   geom_count(position=position_dodge(0.75),alpha=0.5)+
-  guides(col=guide_legend(title = 'Campus'),size=guide_legend(title = 'Number of points'))+
-  facet_wrap(~factor(startaar))+
+  guides(col=guide_legend(title='Campus'),size=guide_legend(title = 'Number of points'))+
   ylab('Average grade in courses')+
-  xlab('Average grade in projects')
+  xlab('Average grade in projects')+
+  scale_y_continuous(breaks = -8:12)
+
+ggplot(aes(factor(projectAVG6sem),courseAVG6sem), data =subset(Data, !is.na(projectAVG6sem) & !is.na(courseAVG6sem) & !projectAVG6sem%in%c(8.5,9.5,11)))+
+  geom_boxplot(na.rm = T, outlier.shape = NA)+
+  geom_count(position=position_dodge(0.75),alpha=0.5)+
+  guides(size=guide_legend(title = 'Number of points'))+
+    facet_wrap(~factor(CourseLocation),labeller = as_labeller(c('A'='Aalborg','E'='Esbjerg','K'='Copenhagen')))+
+  ylab('Average grade in courses')+
+  xlab('Average grade in projects')+
+  ggtitle('Sixth semester')
