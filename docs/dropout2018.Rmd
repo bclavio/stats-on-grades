@@ -1,0 +1,368 @@
+---
+title: "Student dropouts 2017/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+
+library(xlsx)
+library(sqldf)
+library(plyr)
+library(dplyr)
+library(reshape2)
+library(MASS)
+library(manipulate)
+library(stringr)
+library(CTT)
+#library(gsubfn)
+library(Hmisc)
+library(psych)
+library(ggplot2)
+library(ggpubr)
+library(gtable)
+library(cowplot)
+
+# Setting the directory for knitr, as the dir is reset after running a code chunk.
+library(knitr)
+library(kableExtra)
+opts_knit$set(root.dir = "Z:/BNC/PBL development project/Data/analysis_data", sep = "")
+
+homeDir<-Sys.getenv("HOME")
+```
+
+Analysis of first year students 2017/2018 at Medialogy. May 2018.
+
+```{r include=FALSE}
+dfEduStatus <- read.csv("dropOut/dropout-May2018-Q999.csv", stringsAsFactors = FALSE) # 148 students
+dfSemesterStart <- read.csv("dropOut/data/bsc.csv", stringsAsFactors = FALSE)
+dfSemesterStartMEA <- subset(dfSemesterStart, startaar==2017 & Uddannelse=="Medialogi") # 180 students
+dfDropoutsMay2018 <- subset(dfSemesterStartMEA, !(dfSemesterStartMEA$navn %in% dfEduStatus$navn) ) # 32 students
+dfQ999May2018  <- subset(dfEduStatus, Status == "Q999") # 15 students
+
+```
+
+
+## 1. Dropouts/Q999
+
+Number of student dropouts
+```{r echo=FALSE}
+dropoutStats <- data.frame(c("AAL", "CPH", "Total"), 
+  c( nrow(subset(dfDropoutsMay2018, Ramme_kode=="DMA1617O")), nrow(subset(dfDropoutsMay2018, Ramme_kode=="DMK1617O")), nrow(dfDropoutsMay2018)),
+  c(nrow(subset(dfQ999May2018, Campus=="AAL")), nrow(subset(dfQ999May2018, Campus=="CPH")), nrow(dfQ999May2018)))
+
+names(dropoutStats) <- c(" ","Dropouts", "Q999")
+
+kable(dropoutStats)
+```
+
+
+## 2. Study verification test 
+Average scores from student dropouts in different topics:
+```{r echo=FALSE}
+dfSSPscoresAAL <- read.csv("SSP/SSPgradesTestAAL 02-10.csv", stringsAsFactors = FALSE,header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8")
+dfSSPscoresAAL <- subset(dfSSPscoresAAL, State=="Finished") # 90 students
+#dfSSPscoresAAL <- subset(dfSSPscoresAAL[,c(1:2,5:6,11:ncol(dfSSPscoresAAL))], State=="Finished") # 90 students
+
+dfSSPscoresCPH <- read.csv("SSP/SSPgradesTestCPH 02-10.csv", stringsAsFactors = FALSE, header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8")
+dfSSPscoresCPH <- subset(dfSSPscoresCPH, State=="Finished") # 100 students
+#dfSSPscoresCPH <- subset(dfSSPscoresCPH[,c(1:2,5:6,11:ncol(dfSSPscoresCPH))], State=="Finished") # 100 students
+
+dfSSPscoresCPH["Campus"]<-"CPH"
+dfSSPscoresAAL["Campus"]<-"AAL"
+dfSSPgrades <- rbind(dfSSPscoresCPH,dfSSPscoresAAL) # 190 students
+#nrow(dfSSPscoresBind)
+
+dfSSPanswersCPH<-read.csv("SSP/SSPanswersTestCPH 10-10.csv", stringsAsFactors=FALSE, header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8")
+dfSSPanswersAAL<-read.csv("SSP/SSPanswersTestAAL 10-10.csv", stringsAsFactors=FALSE, header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8")
+
+dfSSPanswers <- rbind(dfSSPanswersAAL,dfSSPanswersCPH)
+
+```
+
+```{r echo=FALSE}
+# computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
+# Problem Q93, Q95 and Q96 contained strings, so I had to change them manually:
+# Q93 (study hours): 0 > x < 29 (0%) ; 30 > x < 34 (30%) ; 35 > x < 40 (60%) ; 41 > x (100%)
+dfSSPgrades$Q..93..0.09[findInterval(dfSSPanswers$`Response 93`, c(0,30)) == 1L] <- 0
+dfSSPgrades$Q..93..0.09[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.3
+dfSSPgrades$Q..93..0.09[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.6
+dfSSPgrades$Q..93..0.09[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.9
+
+# Q95 (related work): 0 = x (0%) ; 1 > x < 4 (30%) ; 5 > x < 9 (60%) ; 10 > x (100%)
+dfSSPgrades$Q..95..0.09[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0
+dfSSPgrades$Q..95..0.09[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.3
+dfSSPgrades$Q..95..0.09[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.6
+dfSSPgrades$Q..95..0.09[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0.9
+
+# Q95 (unrelated work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
+dfSSPgrades$Q..96..0.09[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.9
+dfSSPgrades$Q..96..0.09[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.6
+dfSSPgrades$Q..96..0.09[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.3
+dfSSPgrades$Q..96..0.09[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) == 1L] <- 0
+```
+
+
+```{r echo=FALSE, warning=FALSE}
+dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
+
+avgGrades <- NULL
+avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:106)])) # removed 5
+avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[93:97]))
+avgGrades['Growth mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
+avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
+avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:68]))
+avgGrades['High school habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
+avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[c(2:4,7:8,55:56)])) # removed 4, added 2
+avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
+
+avgGrades[is.na(avgGrades)] <- 0
+
+# normalizes avg grades
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
+norm.avgGrades["Campus"] <- dfSSPgrades$Campus
+norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
+norm.avgGrades["Email"] <- dfSSPgrades$Email.address
+names(dfSSPgrades)[1] <- "Lastname"
+norm.avgGrades["navn"] <- paste(dfSSPgrades$`First name`, dfSSPgrades$Lastname)
+
+```
+
+```{r echo=FALSE}
+#Combining dropouts and Q999:
+#dfAllStudents <- merge(dfSemesterStartMEA, dfEduStatus) # 148
+#dfDropoutsMay2018['Status'] <- "dropout" 
+#dfDropoutsMay2018['Campus'] <- NA
+#dfDropoutsMay2018['Email'] <- NA
+  #if(grepl(dfDropoutsMay2018$Ramme_kode == "DMA1617O", dfDropoutsMay2018)){"AAL"}else{"CPH"}
+#dfAllStudents <- rbind(dfSemesterStartMEA, dfDropoutsMay2018)
+
+#dfDropoutsQ999 <- dfDropoutsMay2018
+#dfQ999May2018  <- subset(dfEduStatus, Status == "Q999") # 15 students
+
+
+```
+
+Table with avg. scores in SSP for dropouts:
+```{r echo=FALSE}
+dfDropoutsSSP <- merge(dfDropoutsMay2018, norm.avgGrades)
+write.csv(dfDropoutsSSP,file = "SSP/dfDropoutsSSP.csv")
+
+dfDropoutsSSPAAL <- subset(dfDropoutsSSP, Campus=="AAL")
+#colMeans(dfDropoutsSSPAAL[20:26])
+
+dfDropoutsSSPCPH <- subset(dfDropoutsSSP, Campus=="CPH")
+#colMeans(dfDropoutsSSPCPH[20:26])
+
+dfQ999SSP <- merge(dfQ999May2018, norm.avgGrades)
+#colMeans(dfQ999SSP[,5:11])
+
+
+SSPscoresAVG <- data.frame( c(colMeans(dfQ999SSP[,5:11])),
+                   c(colMeans(dfDropoutsSSP[,20:26])), 
+                   c(colMeans(dfDropoutsSSPAAL[20:26])), 
+                   c(colMeans(dfDropoutsSSPCPH[20:26])))
+
+names(SSPscoresAVG) <- c("Q999", "AAL/CPH dropouts", "AAL dropouts", "CPH dropouts")
+kable(SSPscoresAVG, digits = 2)
+
+```
+
+
+Dropout students scored low in study and work hours (time commitment), especially in AAL. Avg. scores in SSP for Q999 looks similar to dropout students.
+
+
+
+\pagebreak
+
+
+
+#### Dropouts' SSP scores superimposed on boxplots of all students
+
+```{r include=FALSE, warning=FALSE}
+personalized_info <- read.csv("SSP/studentData.csv", stringsAsFactors = FALSE)
+personalized_info <- personalized_info[,-1]
+```
+
+
+```{r include=FALSE}
+norm.avgGradesMelt <- melt(norm.avgGrades[,-10], id.vars = c("rowID", "Campus"))
+norm.avgGradesMelt$variable <- gsub("\\.", " ", norm.avgGradesMelt$variable)
+#norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
+norm.avgGradesMelt$variable <- factor(norm.avgGradesMelt$variable, levels = c('Understanding of Medialogy', 'Study and work', 
+                                                                              'Growth mindset','Grit','Study habits',
+                                                                              'High school habits','Social support for studying'),ordered = TRUE)
+
+norm.avgGradesMelt1 <- norm.avgGradesMelt
+norm.avgGradesMelt1$variable <- gsub("Social support for studying","Social support for studying",norm.avgGradesMelt1$variable)
+norm.avgGradesMelt1$variable <- gsub("Study habits","Study habits at AAU",norm.avgGradesMelt1$variable)
+norm.avgGradesMelt1$variable <- gsub("Study and work","Time commitments (study and other)",norm.avgGradesMelt1$variable)
+
+norm.avgGradesMelt1$variable <- factor(norm.avgGradesMelt1$variable,
+  levels = c('Understanding of Medialogy', 'Time commitments (study and other)',
+  'Growth mindset', 'Grit',
+  'Study habits at AAU','High school habits',
+  'Social support for studying'),ordered = TRUE)
+
+
+#student <- subset(norm.avgGradesMelt1, norm.avgGradesMelt1$rowID ==i)
+dropoutStudent <- subset(norm.avgGradesMelt1, norm.avgGrades$navn %in% dfDropoutsMay2018$navn)
+
+pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
+  geom_boxplot() + 
+  coord_flip() +
+  labs(y="Figure 1: Boxplots of student self-ratings in 7 topics.") +
+  geom_dotplot(data = dropoutStudent,
+               aes(x=variable, y=value, fill = "dropout students"),
+               binaxis='y',
+               stackdir='center',
+               binwidth = 0.02) +
+  theme_bw() +
+  #facet_grid(Campus ~ .) +
+  theme(plot.margin = margin(35, 1, 1, 1), # 20
+        axis.title.y=element_blank(),
+        #axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        #axis.title.x=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position="none")
+
+```
+
+
+```{r echo=FALSE}
+pScore
+```
+
+
+
+
+## 3. Self-assessment quizzes (SA) in GPRO
+
+127 students from AAL were enrolled in GPRO on Moodle. 18 dropout students took SA in GPRO. 
+
+Number of students who took an SA at least once (multiple attempts were allowed):
+```{r echo=FALSE, warning=FALSE}
+dfGPROgradebook <- read.csv("GPRO/15-02-2018_GPRO-gradebook.csv", stringsAsFactors = FALSE,header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8")
+dfGPROgradebook['navn'] <- paste(dfGPROgradebook$`First name`,dfGPROgradebook$Surname)
+
+
+dfGPROgradebookDropouts <- merge(dfDropoutsMay2018, dfGPROgradebook) # 18 students
+dfGPROgradebookDropouts[,26:38] <- sapply(dfGPROgradebookDropouts[,26:38], as.numeric)
+dfGPROgradebook[,7:19] <- sapply(dfGPROgradebook[,7:19], as.numeric)
+
+dfGPROgradebook <- subset(dfGPROgradebook, !(is.na(dfGPROgradebook$`ID number`))) # 127
+
+# reorder data
+dfGPROgradebook <- dfGPROgradebook[c(1:14, 19, 15, 17, 16, 18, 20)]
+dfGPROgradebookDropouts <- dfGPROgradebookDropouts[c(1:33, 38, 34, 36, 35, 37, 39:41 )]
+```
+
+```{r echo=FALSE}
+dfSAcount <- data.frame( c( sapply(dfGPROgradebook[,7:19], function(y) nrow(dfGPROgradebook) - sum(length(which(is.na(y)))))),
+                         c( sapply(dfGPROgradebookDropouts[,26:38], function(y) nrow(dfGPROgradebookDropouts) - sum(length(which(is.na(y)))))))
+
+names(dfSAcount) <- c("Students", "Dropouts")
+
+kable(dfSAcount)
+```
+
+
+```{r echo=FALSE}
+# Avg. SA scores for dropouts when ignoring uncompleted quizzes (NA in data):
+# colMeans(dfGPROgradebookDropouts[,26:38], na.rm=TRUE)
+```
+
+
+
+
+\pagebreak
+
+
+
+Avg. SA scores for each SA when replacing NA's with zeros:
+```{r echo=FALSE}
+dfGPROgradebook[is.na(dfGPROgradebook)] <- 0
+dfGPROgradebookDropouts[is.na(dfGPROgradebookDropouts)] <- 0
+
+dfSAcolMeans <- data.frame( c(colMeans(dfGPROgradebook[,7:19])),
+                            c(colMeans(dfGPROgradebookDropouts[,26:38])))
+
+names(dfSAcolMeans) <- c("Students", "Dropouts")
+kable(dfSAcolMeans)
+
+```
+
+
+
+
+## 4. Tutoring in GPRO (AAL)
+- We invited 52 students to tutoring after the midterm exam. 
+
+- 9 students attended the first session.
+
+- 2 students attended the second session.
+
+- 8 of the invited Medialogy students dropped out, only 1 dropout student attended the first tutoring session.
+
+
+```{r echo=FALSE}
+dfTutoring <- read.csv("GPRO/tutoring.csv", stringsAsFactors = FALSE) # 52
+
+dfTutoringDropouts <- subset(dfTutoring, dfTutoring$Email %in% dfGPROgradebookDropouts$`Email address`)
+```
+
+
+
+
+
+
+
+## 5. Student interviews 
+
+- In December 2017, we conducted interviews with struggling students (based on SSP score and Midterm exam score in GPRO). 
+
+- We invited 10 students from each campus (20 invites in total). 
+
+- AAL conducted single interviews with students, whereas CPH conducted a focus group interview. Not all students attended the interviews.
+
+- Total dropouts of the invited students: 6 (4 from AAL, 2 from CPH)
+
+- Total Q999 of the invited students: 3 (2 from AAL, 1 from CPH)
+
+```{r echo=FALSE}
+dfInterviewsDec2017 <- read.csv("highRiskStudents/studentInterviewInviteDec2017.csv", stringsAsFactors = FALSE) # 20 students
+dfInterviewsDec2017Dropouts <- subset(dfDropoutsMay2018, dfDropoutsMay2018$navn %in% dfInterviewsDec2017$navn) 
+#nrow(dfInterviewsDec2017Dropouts) # 6
+```
+
+
+```{r echo=FALSE}
+#Dropouts of the interviewed students in AAL:
+#nrow(subset(dfInterviewsDec2017Dropouts, Ramme_kode=="DMA1617O")) #4
+```
+
+
+```{r echo=FALSE}
+# Dropouts of the interviewed students in CPH:
+#nrow(subset(dfInterviewsDec2017Dropouts, Ramme_kode=="DMK1617O")) #2
+```
+
+
+```{r echo=FALSE}
+# Total Q999 of interviewed students:
+dfInterviewsDec2017Q999 <- subset(dfQ999May2018, dfQ999May2018$navn %in% dfInterviewsDec2017$navn) #3
+#nrow(dfInterviewsDec2017Q999)
+```
+
+
+
+
+
+
+
+
+
