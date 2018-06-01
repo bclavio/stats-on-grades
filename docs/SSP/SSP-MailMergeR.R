@@ -178,15 +178,15 @@ personalized_info <- read.csv(file = "studentData.csv")
 highRiskStudents <- read.csv(file = "highRiskStudents.csv")
 
 # The for loop renders the student report pdf files
-for (i in 1:nrow(personalized_info)){
-  rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs/SSP-MailMerge.Rmd",
-                    output_format = "pdf_document",
-                    output_file = gsub(" ", "", paste("SSP_", ifelse(personalized_info$Campus[i] == 'AAL', 
-                                                     "AAL_Individual-student-feedback_", 
-                                                     "CPH_Individual-student-feedback_"),
-                                                      personalized_info$initials[i], ".pdf", sep='')),
-                    output_dir = "handouts/")
-}
+# for (i in 1:nrow(personalized_info)){
+#   rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs/SSP-MailMerge.Rmd",
+#                     output_format = "pdf_document",
+#                     output_file = gsub(" ", "", paste("SSP_", ifelse(personalized_info$Campus[i] == 'AAL', 
+#                                                      "AAL_Individual-student-feedback_", 
+#                                                      "CPH_Individual-student-feedback_"),
+#                                                       personalized_info$initials[i], ".pdf", sep='')),
+#                     output_dir = "handouts/")
+# }
 
 ############################################################################
 
