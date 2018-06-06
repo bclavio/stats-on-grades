@@ -1,6 +1,8 @@
 ---
 title: "Student dropouts 2017/2018"
-output: pdf_document
+output:
+  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -174,7 +176,12 @@ Dropout students scored low in study and work hours (time commitment), especiall
 
 
 #### Dropouts' SSP scores superimposed on boxplots of all students
+Data from SSP:
+- 11 students dropped out in September 2017 and did not take the SSP. These students never showed up on semester start or any other study activities. 
 
+- 2 students dropped out in April 2018 and 1 student in May 2018 and did not did not take the SSP. The reason is unknown, but they could be late comers from other study directions or retaking the first year ("Opbrugt prøveforsøg").
+
+- The following boxplots contains data of 27 dropout students who took the SSP.  
 
 ```{r include=FALSE}
 norm.avgGradesMelt <- melt(norm.avgGrades, id.vars = c("rowID", "Campus","navn"))
@@ -227,6 +234,44 @@ pScore
 
 \pagebreak
 
+Colored dropout reasons in boxplot:
+
+```{r echo=FALSE}
+
+dropoutStudent['Status'] <- NA
+dropoutStudent$Status <- dfDropoutsMay2018$Status[match(dropoutStudent$navn, dfDropoutsMay2018$Navn)]
+
+pScore3 <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
+  geom_boxplot() + 
+  coord_flip() +
+  labs(y="Figure 1: Boxplots of student self-ratings in 7 topics.") +
+  geom_dotplot(data = dropoutStudent,
+               aes(x=variable, y=value, fill = Status),
+               binaxis='y',
+               stackdir='center',
+               binwidth = 0.02) +
+  theme_bw() +
+  #facet_grid(Campus ~ .) +
+  theme(plot.margin = margin(35, 1, 1, 1), # 20
+        axis.title.y=element_blank(),
+        #axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        #axis.title.x=element_blank(),
+        legend.position="top",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  guides(fill = guide_legend(nrow = 4))
+
+```
+
+
+```{r echo=FALSE}
+pScore3
+```
+
+
+\pagebreak
+
 Categorized dropout reasons:
 
 ```{r echo=FALSE}
@@ -238,14 +283,18 @@ Categorized dropout reasons:
 #                    c( "Afmeldt af studieservice", "Ikke deltaget i førsteårsprøven","Udmeldt pga. afvist dispensation til førsteårsprøven",
 #                       "Manglende studieaktivitet inden for 1 år", "Udmeldt pga. afvist dispensation til flere prøveforsøg", ""))
 
-dropoutReasons <- data.frame( c("Det faglige niveau er for hoejt", "Det faglige  niveau er for lavt", "Studieformen",
-                       "Skift til anden uddannelse paa AAU", "Skift til anden uddannelsesinstitution", ""),
+dropoutReasons <- data.frame(c("", "", "", "", "", "", "Total\n students"), 
+                             c( "Det faglige niveau er for hoejt", "Det faglige  niveau er for lavt", "Studieformen",
+                       "Skift til anden uddannelse paa AAU", "Skift til anden uddannelsesinstitution", "", 
+                       nrow(subset(dfDropoutsMay2018, Kode=="A")) ),
                    c( "Flytter til anden by", "Helbredsmaessige aarsager", "Oekonomiske aarsager", "Oensker en pause", 
-                      "Oensker ikke at svare", "Afbrudt af den studerende"),
-                   c( "Afmeldt af studieservice", "Ikke deltaget i foersteaarsproeven", "Manglende studieaktivitet inden for 1 aar",
-                      "Udmeldt pga. afvist dispensation til foersteaarsproeven", "Udmeldt pga. afvist dispensation til flere proeveforsoeg",
-                      "Udmeldt pba. Sekretaeroplysning"))
-names(dropoutReasons) <- c("Educational reasons (A)", "Personal reasons (B)", "Participation reasons (C)")
+                      "Oensker ikke at svare", "Afbrudt af den studerende",
+                      nrow(subset(dfDropoutsMay2018, Kode=="B"))),
+                   c("Afmeldt af studieservice", "Ikke deltaget i foersteaarsproeven", 
+                     "Manglende studieaktivitet inden for 1 aar", "Udmeldt pga. afvist dispensation til foersteaarsproeven", 
+                     "Udmeldt pga. afvist dispensation til flere proeveforsoeg", "Udmeldt pba. Sekretaeroplysning", 
+                      nrow(subset(dfDropoutsMay2018, Kode=="C"))))
+names(dropoutReasons) <- c(" ", "Educational reasons (A)", "Personal reasons (B)", "Participation reasons (C)")
 
 pander(dropoutReasons,  split.cells = 30, split.table = Inf)
 
@@ -254,7 +303,7 @@ pander(dropoutReasons,  split.cells = 30, split.table = Inf)
 ```
 
 
-Colored dropout reasons in boxplot:
+Colored cateories of dropout reasons in boxplot:
 
 ```{r echo=FALSE}
 
@@ -287,14 +336,80 @@ pScore2 <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
 pScore2
 ```
 
+\pagebreak 
+
+All Q999 students took the SSP, resulting in 14 students. 
+Colored Q999 students in boxplot:
+
+```{r echo=FALSE}
+
+dropoutStudent1 <- subset(norm.avgGradesMelt1, norm.avgGrades$navn %in% dfEduStatus$Navn)
+dropoutStudent1['Kode'] <- NA
+dropoutStudent1$Kode <- dfEduStatus$Kode[match(dropoutStudent1$navn, dfEduStatus$Navn)]
+dropoutStudent1 <- subset(dropoutStudent1, Kode=="D")
 
 
+pScore4 <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
+  geom_boxplot() + 
+  coord_flip() +
+  labs(y="Figure 1: Boxplots of student self-ratings in 7 topics.") +
+  geom_dotplot(data = dropoutStudent1,
+               aes(x=variable, y=value, fill = Kode),
+               binaxis='y',
+               stackdir='center',
+               binwidth = 0.02) +
+  theme_bw() +
+  #facet_grid(Campus ~ .) +
+  theme(plot.margin = margin(35, 1, 1, 1), # 20
+        axis.title.y=element_blank(),
+        #axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        #axis.title.x=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+```
 
 
+```{r echo=FALSE}
+pScore4
+```
+
+\pagebreak
+ 
+
+Colored registered dropout month in boxplot:
+
+```{r echo=FALSE}
+
+dropoutStudent['Month'] <- NA
+dropoutStudent$Month <- dfDropoutsMay2018$Month[match(dropoutStudent$navn, dfDropoutsMay2018$Navn)]
+
+pScore5 <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
+  geom_boxplot() + 
+  coord_flip() +
+  labs(y="Figure 1: Boxplots of student self-ratings in 7 topics.") +
+  geom_dotplot(data = dropoutStudent,
+               aes(x=variable, y=value, fill = factor(Month)),
+               binaxis='y',
+               stackdir='center',
+               binwidth = 0.02) +
+  theme_bw() +
+  #facet_grid(Campus ~ .) +
+  theme(plot.margin = margin(35, 1, 1, 1), # 20
+        axis.title.y=element_blank(),
+        #axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        #axis.title.x=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+```
 
 
-
-
+```{r echo=FALSE}
+pScore5
+```
 
 
 
