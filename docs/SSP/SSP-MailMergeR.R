@@ -95,15 +95,25 @@ names(dfSSPgrades)[1]<-"Surname"
 
 #########################
 ### melting the data ####
+########################
 
 dfSSPgradesMelt <- dfSSPgrades[,-c(1:4,6:9,122:123)]
-dfSSPgradesMelt <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
-dfSSPgradesMelt1 <- data.frame(dfSSPgradesMelt[1], lapply(dfSSPgradesMelt[2:113], function(x) as.numeric(as.character(x))) )
-dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("Email.address"))
+dfSSPgradesMelt1 <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
+dfSSPgradesMelt1 <- data.frame(dfSSPgradesMelt1[1], lapply(dfSSPgradesMelt1[2:113], function(x) as.numeric(as.character(x))) )
+names(dfSSPgradesMelt1) <- names(dfSSPgradesMelt)
+dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("`Email address`"))
 
 setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
 
 write.csv(dfSSPgradesMelt1,file = "dfSSPgradesMelt1DB.csv")
+
+
+## different question naming
+dfSSPgradesMelt2 <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
+dfSSPgradesMelt2 <- data.frame(dfSSPgradesMelt2[1], lapply(dfSSPgradesMelt2[2:113], function(x) as.numeric(as.character(x))) )
+dfSSPgradesMelt2 <-melt(dfSSPgradesMelt2, by = c("Email.address"))
+write.csv(dfSSPgradesMelt2,file = "dfSSPgradesMelt2DB.csv")
+
 
 #######################
 

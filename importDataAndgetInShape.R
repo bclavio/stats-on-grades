@@ -20,6 +20,15 @@ library(car)
 library(sandwich)
 library(RcmdrMisc)
 
+library(RMySQL)
+libloc= Sys.getenv("R_LIBS_USER")
+### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
+source(paste(libloc,"//config.R",sep='')) # MAC and Windows
+
+mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
+rs<-dbSendQuery(mydb, "select * from map_SPVCmapping") # remember to change name of tables when changed in database
+dfECTSstruct<- fetch(rs, n=-1)
+
 
 ################ import ######################################
 #steps to take - get data from qlikview (grades, enrolStatus) and from Cristina Draghici the kvote and GymData
@@ -66,8 +75,8 @@ courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, se
 #dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
 #used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 #courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8") 
-dfECTSstruct<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-
+#dfECTSstruct<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
++#NOW THIS GETS READ DIRECTLY FROM THE DATABASE SERVER LA
 
 #dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
