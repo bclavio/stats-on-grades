@@ -1,0 +1,11 @@
+ODBCUID<-"hknoche"
+ODBCID<-"hknoche"
+pass<-“passwordXYZ222”
+ODBCServer<-"CreateServer"
+DaneGameServer<- "mysql23.unoeuro.com"
+DGSUID<- "danegames_com"
+DGSpass<-"repsak88"
+LAserver<-"192.38.56.104"
+LAdb<-"LA"
+LAuserID<-"bcch"
+LAuserpass<-"wEXzpusSbnOeXhXv"

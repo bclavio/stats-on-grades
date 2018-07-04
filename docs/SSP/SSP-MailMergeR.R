@@ -90,10 +90,30 @@ names(studyHoursTable)[1]<-"AAL"
 names(studyHoursTable)[2]<-"CPH"
 names(dfSSPgrades)[1]<-"Surname"
 
+
+
+
+#########################
+### melting the data ####
+
+dfSSPgradesMelt <- dfSSPgrades[,-c(1:4,6:9,122:123)]
+dfSSPgradesMelt <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
+dfSSPgradesMelt1 <- data.frame(dfSSPgradesMelt[1], lapply(dfSSPgradesMelt[2:113], function(x) as.numeric(as.character(x))) )
+dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("Email.address"))
+
+setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
+
+write.csv(dfSSPgradesMelt1,file = "dfSSPgradesMelt1DB.csv")
+
+#######################
+
+
 dfSSPgrades$`First name` <- gsub("-", " ", dfSSPgrades$`First name`)
 dfSSPgrades$Surname <- gsub("-", " ", dfSSPgrades$Surname)
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
+
+
 
 avgGrades <- NULL
 avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:106)])) # removed 5
