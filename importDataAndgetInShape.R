@@ -278,15 +278,14 @@ dfGradesPerson<-sqldf('select studienr, GYMFAG, NIVEAU, max(KARAKTER) as avgGrad
 gradeCheck<-sqldf('select studienr, GYMFAG,  count (avgGrade) from dfGradesPerson group by studienr, GYMFAG having count (avgGrade)>1 ')
 lookupNIVEAUVector=c('A'= 36, 'B'=24, 'C'=12)
 dfGradesPerson$GradeCorrN<-dfGradesPerson$avgGrade+lookupNIVEAUVector[as.character(dfGradesPerson$NIVEAU)]
+#create helper structure to identify maximum grade attained with A>B>C
 GradeHelpx<-sqldf('select studienr, GYMFAG, max(GradeCorrN) as GradeCorrN from dfGradesPerson group by studienr, gymfag')
-dfGradesPerson<-merge(dfGradesPerson,GradeHelpx,all.x = TRUE)
+#use the helper to limit grades to max grades
+dfGradesPerson<-merge(dfGradesPerson,GradeHelpx)
 
 matGrade<-sqldf('select studienr, NIVEAU as "MAT_Niveau", avgGrade as MATGrade from dfGradesPerson where GYMFAG = "MAT" group by studienr, NIVEAU order by studienr, NIVEAU')
 MATCheck<-sqldf('select studienr, count(MATGrade) from matGrade group by studienr')
 matGrade<-matGrade[ !duplicated(matGrade$studienr), ]
-
-#need to create new column for level multiplier A 36, B 24, C12, get max from that query that adds level plus grade, and then uses this as the match on the original data
-#same for ENG and DAN
 
 engGrade<-sqldf('select studienr, NIVEAU as "ENG_Niveau", avgGrade as ENGGrade from dfGradesPerson where GYMFAG = "ENG" group by studienr, NIVEAU order by studienr, NIVEAU')
 engGrade<-engGrade[ !duplicated(engGrade$studienr), ]
