@@ -16,7 +16,7 @@ library(splines)
 library(car)
 library(sandwich)
 library(RcmdrMisc)
-library(RMySQL)
+
 library(DBI)
 
 s.odd <- function(x) x %% 2 != 0 
@@ -31,16 +31,39 @@ libloc= Sys.getenv("R_LIBS_USER")
 ### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
 source(paste(libloc,"//config.R",sep='')) # MAC and Windows
 
-mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
+library(RMySQL)
+mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver);dbSendQuery(mydb,"SET NAMES utf8")
 
 ############################
 ## get data from database ##
 #rs<-dbSendQuery(mydb, "select * from map_SPVCmapping") # remember to change name of tables when changed in database
 #dfECTSstruct<- fetch(rs, n=-1)
 #rs<-dbSendQuery(mydb, "SELECT * FROM LA.tbl_SSPQmelt")
-dfECTSstruct<- fetch(rs, n=-1)
-dbClearResult(dbListResults(mydb)[[1]])
+
+rs<-dbSendQuery(mydb, "SELECT * FROM tbl_optag")
+dfEnrolStatusBsc<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
+rs<-dbSendQuery(mydb, "SELECT * FROM map_SPVCmapping")
+dfECTSstruct<- fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+rs<-dbSendQuery(mydb, "SELECT * FROM tbl_HSgrades")
+dfSchoolGrades<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+rs<-dbSendQuery(mydb, "SELECT * FROM tbl_AAUgrades")
+dfAAUGrades<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
+rs<-dbSendQuery(mydb, "SELECT * FROM tbl_frafaldAAUmed")
+dfDropMed<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
+rs<-dbSendQuery(mydb, "SELECT * FROM tbl_frafaldAAUall")
+dfDropAAUall<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
+rs<-dbSendQuery(mydb, "SELECT * FROM tbl_Q999")
+Q999<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
+rs<-dbSendQuery(mydb, "call SSPWide()")
+SSPWide<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
 dbDisconnect(mydb)
+detach("package:RMySQL", unload=TRUE)
 
 ###########################
 
@@ -69,9 +92,9 @@ SVNData<-if(grepl("BiancaClavio", getwd())){'Z:/BNC/PBL development project/Data
 #SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
 setwd(SVNData)
 
-dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = "",fileEncoding = "UTF-8", check.names=FALSE)
-dfMed1Q999<-dfMed1Q999[,1:7]
+# dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+# dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = "",fileEncoding = "UTF-8", check.names=FALSE)
+# dfMed1Q999<-dfMed1Q999[,1:7]
 #dfMed1Q999$Name <-NULL
 
 highSchoolData<-read.csv("RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
@@ -81,48 +104,46 @@ highSchoolData<-read.csv("RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep 
 #myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/SVN/01Projects/dropOut/data/"}
 #setwd(myWD1)
 
-dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+#dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
   #gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
-dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8",check.names=FALSE)
+#dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8",check.names=FALSE)
     
   #gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
 #dfMed1Q999$Name <-NULL
-dfMed1Q999<-dfMed1Q999[,1:7]
+# dfMed1Q999<-dfMed1Q999[,1:7]
 
-courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+#OLD courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
 
 #dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
 #used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 #courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8") 
 #dfECTSstruct<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-+#NOW THIS GETS READ DIRECTLY FROM THE DATABASE SERVER LA
+#NOW THIS GETS READ DIRECTLY FROM THE DATABASE SERVER LA
 
 #dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
-dfEnrolStatusMsc<-read.csv("MedEnrolMScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-dfEnrolStatusMsc$fradatosn<-as.Date(as.character(dfEnrolStatusMsc$fradatosn) , "%d.%m.%Y")
-dfEnrolStatusMsc$stype<-as.factor("kandidat")
-dfEnrolStatusBsc<-read.csv("MedEnrolBScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-dfEnrolStatusBsc$fradatosn<-as.Date(as.character(dfEnrolStatusBsc$fradatosn), "%d.%m.%Y")
+
+dfEnrolStatusBsc$fradatosn = as.Date(as.character(dfEnrolStatusBsc$fra_dato), "%d/%m/%Y")
 dfEnrolStatusBsc$stype<-as.factor("bachelor")
 dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
-dfEnrolStatus<-rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
-dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeldsn=='Afvist på grund af manglende kvalifikationer'),]
+dfEnrolStatus<-dfEnrolStatusBsc
+#FOR FUTURE WORK WHEN MSC data becomes relevant rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
+dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeld_begrundelse=='Afvist på grund af manglende kvalifikationer'),]
+dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeld_begrundelse=='Ikke accepteret tilbudt plads'),]
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
 #dfEnrolStatus$navn<-NULL
 
-#remove all students who did not start in september 
-dfEnrolStatus<-dfEnrolStatus[as.numeric(format(dfEnrolStatus$fradatosn,'%m'))==9,]
+#remove all students who did not start in september / HK: this will be problematic and solved differently
+#dfEnrolStatus<-dfEnrolStatus[as.numeric(format(dfEnrolStatus$fradatosn,'%m'))==9,]
 
 #dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.%Y")
-dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
-dfEnrolStatus$yearOfEnrolment <- dfEnrolStatus$startaar
-dfEnrolStatus$startaar<-as.numeric(as.character(dfEnrolStatus$startaar))
+dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$udmeld_dato) , "%d/%m/%Y")
+dfEnrolStatus$yearOfEnrolment <- as.numeric(format(dfEnrolStatus$fradatosn,'%Y'))
+dfEnrolStatus$startaar<-as.numeric(format(dfEnrolStatus$fradatosn,'%Y'))
 dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) , NA,
                                     ifelse(as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))>1 & as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))<9,
                                            (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2, 
-                                           
                                            (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2+ floor((as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))-2)/7)
                                            )
                                   )                                  
@@ -131,14 +152,14 @@ dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) , NA,
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7))  
 
-dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
 
-dfKvote<-read.csv("kot_medialogi_2011_2016_kvote.csv",header = TRUE, fill=TRUE, sep = ",")
-dfAAUGrades<-read.csv("MEDgradesTilAug32017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-dfAAUGrades$isLastTry<- ifelse(dfAAUGrades$`Sidste.Fors.`=="Ja",1,0)
+
+# dfKvote<-read.csv("kot_medialogi_2011_2016_kvote.csv",header = TRUE, fill=TRUE, sep = ",") /HK need to check later whether all names are the same
+#dfAAUGrades<-read.csv("MEDgradesTilAug32017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+dfAAUGrades$isLastTry<- ifelse(dfAAUGrades$`Seneste Fors.`=="Ja",1,0)
 dfAAUGrades$isProj<- ifelse(dfAAUGrades$ECTS>5,1,0)
 
-dfRetrier<-sqldf("select studienr, max(`Forsoeg.nr.`) as MaxTry from dfAAUGrades group by studienr")
+dfRetrier<-sqldf("select studienr, max(`Forsoeg nr.`) as MaxTry from dfAAUGrades group by studienr")
 dfRetrier$isOffender <-ifelse(dfRetrier$MaxTry>3,1,0)
 
 dfAAUGrades<-merge(dfAAUGrades,dfRetrier)
@@ -148,9 +169,18 @@ dfAktivitetsKode<-sqldf("select distinct aktiv_kode, aktivitet from dfAAUGrades"
 dfAAUGrades$bedom_dato<- as.Date(as.character(dfAAUGrades$bedom_dato) , "%d.%m.%Y")
 dfAAUGrades$reg_dato<- as.Date(as.character(dfAAUGrades$reg_dato) , "%d.%m.%Y")
 
+dfDropMed$fradatosn<-as.Date(as.character(dfDropMed$fradatosn) , "%d.%m.%Y")
+dfDropMed$fra_dato<-dfDropMed$fradatosn
+
+dfEnrolStatus<-merge(dfEnrolStatus,dfDropMed[,c("studienr","statussn","udmeldsn","fradatosn")],by=c("studienr","fradatosn"),all.x=TRUE)
+
+
 #match grades with enrolment data
 dfAAUGrades<-merge(dfAAUGrades,dfEnrolStatus[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn","stype")],by.x = c("studienr","type"),by.y = c("studienr","stype"))
+#NEEDS CHECKING this removes a few rows 
 dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn+1|is.na(dfAAUGrades$slutdatosn)),]
+
+
 
 #dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>dfAAUGrades$fradatosn,]
 dfAAUGrades$isIntl<-ifelse(dfAAUGrades$Land=="Danmark",0,1)
@@ -168,20 +198,12 @@ dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
 #HKtodo: need to work on people who did not start in september
 dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
-                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
+                                                                 (as.numeric(format(dfAAUGrades$bedom_dato-14,'%Y'))-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
                                #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
 
 
 #hard coded data corrections for three students 
-dfAAUGrades[dfAAUGrades$studienr==20133942 & dfAAUGrades$aktivitetText=="Bachelorprojekt (Design af int"]$aktivitetText<-"Bachelorprojekt"
-dfAAUGrades[dfAAUGrades$studienr==20133942 & dfAAUGrades$aktivitetText=="Bachelorprojekt",]$bedom_dato<- -1 + dfAAUGrades[dfAAUGrades$studienr==20133942 & dfAAUGrades$aktivitetText=="Bachelorprojekt",]$bedom_dato
-dfAAUGrades[dfAAUGrades$aktivitetText=="Interaktionsdesign - sammenlø",]$aktivitetText<-"Interaktionsdesign - sammenl"
-
-dfAAUGrades[dfAAUGrades$studienr==20133634 & dfAAUGrades$aktivitetText=="Bachelorprojekt (Design af int",]$aktivitetText<-"Bachelorprojekt"
-dfAAUGrades[dfAAUGrades$studienr==20133634 & dfAAUGrades$aktivitetText=="Bachelorprojekt",]$ECTS<-20
-
-dfAAUGrades[dfAAUGrades$studienr==20133951 & dfAAUGrades$aktivitetText=="Bachelorprojekt (Design af int",]$aktivitetText<-"Bachelorprojekt"   
-dfAAUGrades[dfAAUGrades$studienr==20133951 & dfAAUGrades$aktivitetText=="Bachelorprojekt",]$ECTS<-20
+#need to check whether this is important or not... hard coded corrections
 dfAAUGrades[dfAAUGrades$aktivitetText=="Sansning af medier (Computerg",]$aktivitetText<-"Sansning af medier (Computergr"
 
 #1+(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2) 
@@ -206,80 +228,61 @@ gradesPassedLUVec<-c('02'=1,'4'=1,'7'=1,'10'=1,'12'=1,'00'=0,'-3'=0,'B'=2,'EB'=0
 gradesToNumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-5,'U'=-8,'B'=2,'I'=0)
 
 
-jobHoursVector<-c('10+ hours a week'=12,'0-5 hours a week'=2.5,'5-10 hours a week'=7.5,'No'=0)
-pensumVector<-c('Need to catch up a little'=-1,'Far behind'=-3,'Following just fine'=0,"I'm way ahead"=2) #### Comment: Why do the students ahead have value 2? 
-EduPrioVector<-c('1st priority'=1,'2nd priority'=2)
-EducationLevelVector<-c('Upper secondary school'=13,'Lower secondary school'=10,'Vocational education'=14,'Academic degree'=17)
-
-dfMed1Interviews$jobHoursPerWeek<-jobHoursVector[as.character(dfMed1Interviews$'Are you currently/planning on having a student job?')]
-dfMed1Interviews$AVSCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [AVS]')]
-dfMed1Interviews$PVCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [PV]')]
-dfMed1Interviews$GPROCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [GPRO]')]
-dfMed1Interviews$MedStudyPrio<-EduPrioVector[as.character(dfMed1Interviews$'How did you prioritize the Medialogy education when you applied?')]
-dfMed1Interviews$FatherEduYrs<-EducationLevelVector[as.character(dfMed1Interviews$'What is the background of your parents? [Father]')]
-dfMed1Interviews$MotherEduYrs<-EducationLevelVector[as.character(dfMed1Interviews$'What is the background of your parents? [Mother]')]
-dfMed1Interviews$ParentsEduMax<-ifelse(dfMed1Interviews$FatherEduYrs>dfMed1Interviews$MotherEduYrs,dfMed1Interviews$FatherEduYrs,dfMed1Interviews$MotherEduYrs)
-dfMed1Interviews$ParentsEduAvg<-(dfMed1Interviews$FatherEduYrs+dfMed1Interviews$MotherEduYrs)/2
-dfMed1Interviews$MedHappyWith<-dfMed1Interviews$'How happy are you with studying Medialogy?'
-dfMed1Interviews$MedBelongHere<-dfMed1Interviews$'What is your sense of belonging to Medialogy?'
-dfMed1Interviews$WantMScDeg<-ifelse(dfMed1Interviews$'Do you plan on taking a master degree?'!="",grepl("Yes", dfMed1Interviews$'Do you plan on taking a master degree?', fixed=TRUE),NA) 
-dfMed1Interviews$WantMedMScDeg<-ifelse(dfMed1Interviews$'Do you plan on taking a master degree?'!="",grepl("Medialogy", dfMed1Interviews$'Do you plan on taking a master degree?', fixed=TRUE),NA) 
-colsdfmInt <- sapply(dfMed1Interviews, is.logical)
-dfMed1Interviews[,colsdfmInt] <- lapply(dfMed1Interviews[,colsdfmInt], as.numeric)
-
-#library(Rcmdr)
-
-factorListFromInterviews<-c("studienr", "picOnMoodle","hoursWorkedPerWeek", "jobHoursPerWeek","AVSCatchUp","GPROCatchUp","MedStudyPrio","ParentsEduMax","ParentsEduAvg","MedHappyWith","MedBelongHere", "WantMScDeg","WantMedMScDeg")
-dfInterviews<-dfMed1Interviews[,factorListFromInterviews]
-
-CourseAcronymsLUVec<-c('Grundlæggende programmering'='GPRO',
-                       'Problembaseret læring i videns'='PV',
-                       'Animation og grafisk design'='AGD',
-                       'Audio-Visuel Sketching'='AVS',
-                       'Fysisk interface design'='PID',
-                       'Matematik til multimedie-appli'='MMA',
-                       'Programmering af interaktive s'='PFI',
-                       'Interaktionsdesign'='ID',
-                       'A/V produktion'='AVP',
-                       'Avanceret A/V-produktion'='AAVP',
-                       'Billedbehandling'='IP',
-                       'Computergrafik programmering'='CGP',
-                       'Design af brugeroplevelsen for'='UXD',
-                       'Design og analyse af eksperime'='DAE',
-                       'Embodied Interaction'='EI',
-                       'Forskning i Medialogi'='RIM',
-                       'Foundations in Medialogy'='FoM',
-                       'Foundations in Medialogy (Comp'='FoCG',
-                       'Foundations in Medialogy (Inte'='FoI',
-                       'Foundations in Medialogy (Spil'='FoG',
-                       'Kreativ innovation og entrepre'='Ent',
-                       'Kreativ leg - teknologisk udfo'='P0',
-                       'Lyd- og musikbehandling'='AMP',
-                       'Lydbehandling'='AP',
-                       'Mediesociologi og psykologi'='MSP',
-                       'Multimodal perception og kogni'='MMPC',
-                       'Modellering af fysiske systeme'='MPS',
-                       'Multivariat statistik og mønst'='MVSP',
-                       'Narrativer i digital kultur'='NDK',
-                       'Objektorienteret Software Engi'='OSE',
-                       'Perception'='Per',
-                       'Proceduremæssig programmering'='PP',
-                       'Programmering af komplekse sof'='PCS',
-                       'Prototyping og fremstillingste'='PFT',
-                       'Realtids interfaces og interak'='RTII',
-                       'Rendering af computergrafik'='CGR',
-                       'Rendering og animation'='RaA',
-                       'Screen Media'='SM'
-)
+#CHECK if these are all accounted for in AAU grades with entries in map_SPVCmapping
+# CourseAcronymsLUVec<-c('Grundlæggende programmering'='GPRO',
+#                        'Problembaseret læring i videns'='PV',
+#                        'Animation og grafisk design'='AGD',
+#                        'Audio-Visuel Sketching'='AVS',
+#                        'Fysisk interface design'='PID',
+#                        'Matematik til multimedie-appli'='MMA',
+#                        'Programmering af interaktive s'='PFI',
+#                        'Interaktionsdesign'='ID',
+#                        'A/V produktion'='AVP',
+#                        'Avanceret A/V-produktion'='AAVP',
+#                        'Billedbehandling'='IP',
+#                        'Computergrafik programmering'='CGP',
+#                        'Design af brugeroplevelsen for'='UXD',
+#                        'Design og analyse af eksperime'='DAE',
+#                        'Embodied Interaction'='EI',
+#                        'Forskning i Medialogi'='RIM',
+#                        'Foundations in Medialogy'='FoM',
+#                        'Foundations in Medialogy (Comp'='FoCG',
+#                        'Foundations in Medialogy (Inte'='FoI',
+#                        'Foundations in Medialogy (Spil'='FoG',
+#                        'Kreativ innovation og entrepre'='Ent',
+#                        'Kreativ leg - teknologisk udfo'='P0',
+#                        'Lyd- og musikbehandling'='AMP',
+#                        'Lydbehandling'='AP',
+#                        'Mediesociologi og psykologi'='MSP',
+#                        'Multimodal perception og kogni'='MMPC',
+#                        'Modellering af fysiske systeme'='MPS',
+#                        'Multivariat statistik og mønst'='MVSP',
+#                        'Narrativer i digital kultur'='NDK',
+#                        'Objektorienteret Software Engi'='OSE',
+#                        'Perception'='Per',
+#                        'Proceduremæssig programmering'='PP',
+#                        'Programmering af komplekse sof'='PCS',
+#                        'Prototyping og fremstillingste'='PFT',
+#                        'Realtids interfaces og interak'='RTII',
+#                        'Rendering af computergrafik'='CGR',
+#                        'Rendering og animation'='RaA',
+#                        'Screen Media'='SM'
+# )
 
 
 
 # prep entry grades dfEntryGradesAll -------------------------------------------------------
 
-dfGradesPerson<-sqldf('select studienr, GYMFAG, NIVEAU, avg(KARAKTER) as avgGrade from dfSchoolGrades group by studienr, GYMFAG, NIVEAU')
+dfGradesPerson<-sqldf('select studienr, GYMFAG, NIVEAU, max(KARAKTER) as avgGrade, count(KARAKTER) as GCount  from dfSchoolGrades group by studienr, GYMFAG, NIVEAU')
+#check that nobody has multiple entries level A and B in a subject - the below dataframe should be empty
+gradeCheck<-sqldf('select studienr, GYMFAG,  count (avgGrade) from dfGradesPerson group by studienr, GYMFAG having count (avgGrade)>1 ')
+
 matGrade<-sqldf('select studienr, NIVEAU as "MAT_Niveau", avgGrade as MATGrade from dfGradesPerson where GYMFAG = "MAT" group by studienr, NIVEAU order by studienr, NIVEAU')
+MATCheck<-sqldf('select studienr, count(MATGrade) from matGrade group by studienr')
 matGrade<-matGrade[ !duplicated(matGrade$studienr), ]
 
+#need to create new column for level multiplier A 36, B 24, C12, get max from that query that adds level plus grade, and then uses this as the match on the original data
+#same for ENG and DAN
 engGrade<-sqldf('select studienr, NIVEAU as "ENG_Niveau", avgGrade as ENGGrade from dfGradesPerson where GYMFAG = "ENG" group by studienr, NIVEAU order by studienr, NIVEAU')
 engGrade<-engGrade[ !duplicated(engGrade$studienr), ]
 danGrade<-sqldf('select studienr, NIVEAU as "DAN_Niveau", avgGrade as DANGrade from dfGradesPerson where GYMFAG = "DAN" group by studienr, NIVEAU order by studienr, NIVEAU')
@@ -287,7 +290,9 @@ danGrade<-danGrade[ !duplicated(danGrade$studienr), ]
 dfAllGradesXTab <-merge(merge(matGrade,engGrade,all.x = TRUE,all.y = TRUE),danGrade,all.x = TRUE,all.y = TRUE)
 rm("matGrade","engGrade","danGrade")
 #now contains all SchoolGrades and Kvote information
-dfEntryGradesAll<-merge(dfAllGradesXTab,dfKvote,all.y = TRUE,all.x = TRUE)
+#NEED TO use subset of dfoptag
+dfEntryGradesAll<-merge(dfAllGradesXTab,dfEnrolStatusBsc[,c("studienr","kvotient","priop","kvote")],all.y = TRUE,all.x = TRUE)
+
 dfEntryGradesAll$DANGradeX<-ifelse(is.na(dfEntryGradesAll$DANGrade),dfEntryGradesAll$ENGGrade,dfEntryGradesAll$DANGrade)
 
 # prep AAU grades allHardByStudent---------------------------------------------------------
