@@ -12,23 +12,25 @@ library(base)
 library(stringr)
 library(corrplot)
 library(Amelia)
-is.odd <- function(x) x %% 2 != 0 
 library(gsheet)
-trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 library(splines)
 library(car)
 library(sandwich)
 library(RcmdrMisc)
-
 library(RMySQL)
+
+is.odd <- function(x) x %% 2 != 0 
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+
 libloc= Sys.getenv("R_LIBS_USER")
 ### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
-source(paste(libloc,"//config.R",sep='')) # MAC and Windows
+source(paste(libloc,"//config.R",sep=''))
 
 mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
-rs<-dbSendQuery(mydb, "select * from map_SPVCmapping") # remember to change name of tables when changed in database
+rs<-dbSendQuery(mydb, "select * from map_SPVCmapping")
 dfECTSstruct<- fetch(rs, n=-1)
-
+dbClearResult(dbListResults(mydb)[[1]])
+dbDisconnect(mydb)
 
 ################ import ######################################
 #steps to take - get data from qlikview (grades, enrolStatus) and from Cristina Draghici the kvote and GymData
