@@ -16,7 +16,7 @@ library(splines)
 library(car)
 library(sandwich)
 library(RcmdrMisc)
-library(DBI)
+#library(DBI)
 
 
 is.odd <- function(x) x %% 2 != 0 
@@ -72,6 +72,7 @@ SSPWide<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 dbDisconnect(mydb)
 #not detaching RMySQL will make sqldf not work
 detach("package:RMySQL", unload=TRUE)
+
 
 ###########################
 
@@ -300,7 +301,6 @@ dfEntryGradesAll$DANGradeX<-ifelse(is.na(dfEntryGradesAll$DANGrade),dfEntryGrade
 
 # prep AAU grades allHardByStudent---------------------------------------------------------
 
-
 dfAAUGrades$gradeNum<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
 dfAAUGrades$GPAgrade<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
 dfAAUGrades$isPassed<-gradesPassedLUVec[as.character(dfAAUGrades$KARAKTER)]
@@ -308,15 +308,15 @@ dfAAUGrades$CourseLocation<-substr(dfAAUGrades$aktiv_kode,3,3)
 dfAAUGrades$aktivitetShort<-CourseAcronymsLUVec[as.character(dfAAUGrades$aktivitet)]
 #sqldf('select distinct aktivitet, aktiv_kode from dfAAUGrades order by aktivitet')
 
-dfhard1st<-sqldf('select studienr, aktivitetShort, max(isPassed) as `1`  from dfAAUGrades where "forsoeg.nr." = 1 and aktivitetShort 
+dfhard1st<-sqldf('select studienr, aktivitetShort, max(isPassed) as `1`  from dfAAUGrades where "forsoeg nr." = 1 and aktivitetShort 
                  in ("GPRO",  "PID", "MMA","PFI","ID","AVS") group by studienr, aktivitetShort, karakter')
-dfhard2nd<-sqldf('select studienr, aktivitetShort, max(isPassed) as `2` from dfAAUGrades where "forsoeg.nr." < 3  and aktivitetShort 
+dfhard2nd<-sqldf('select studienr, aktivitetShort, max(isPassed) as `2` from dfAAUGrades where "forsoeg nr." < 3  and aktivitetShort 
                  in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort, karakter')
-df1stGrades<-sqldf('select studienr, aktivitetShort, gradeNum as `1g` from dfAAUGrades where "forsoeg.nr." = 1  and aktivitetShort 
+df1stGrades<-sqldf('select studienr, aktivitetShort, gradeNum as `1g` from dfAAUGrades where "forsoeg nr." = 1  and aktivitetShort 
                    in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
-df2ndGrades<-sqldf('select studienr, aktivitetShort, max(gradeNum) as `2g` from dfAAUGrades where "forsoeg.nr." =2 and aktivitetShort 
+df2ndGrades<-sqldf('select studienr, aktivitetShort, max(gradeNum) as `2g` from dfAAUGrades where "forsoeg nr." =2 and aktivitetShort 
                    in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
-dfLastGrades<-sqldf('select studienr, aktivitetShort, gradeNum as Lg, avg(takenInSem) as takenInSem from dfAAUGrades where "Sidste.Fors." = "Ja"  and aktivitetShort in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
+dfLastGrades<-sqldf('select studienr, aktivitetShort, gradeNum as Lg, avg(takenInSem) as takenInSem from dfAAUGrades where "Seneste Fors." = "Ja"  and aktivitetShort in ("GPRO",  "PID", "MMA","PFI","ID","AVS")  group by studienr, aktivitetShort ')
 
 sqldf("select aktivitetShort, avg(takenInSem) from dfLastGrades group by aktivitetshort")
 #head(sqldf('select studienr from dfhard2nd where studienr not in (select studienr from dfhard1st)'))
