@@ -276,6 +276,10 @@ gradesToNumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-5,'U'
 dfGradesPerson<-sqldf('select studienr, GYMFAG, NIVEAU, max(KARAKTER) as avgGrade, count(KARAKTER) as GCount  from dfSchoolGrades group by studienr, GYMFAG, NIVEAU')
 #check that nobody has multiple entries level A and B in a subject - the below dataframe should be empty
 gradeCheck<-sqldf('select studienr, GYMFAG,  count (avgGrade) from dfGradesPerson group by studienr, GYMFAG having count (avgGrade)>1 ')
+lookupNIVEAUVector=c('A'= 36, 'B'=24, 'C'=12)
+dfGradesPerson$GradeCorrN<-dfGradesPerson$avgGrade+lookupNIVEAUVector[as.character(dfGradesPerson$NIVEAU)]
+GradeHelpx<-sqldf('select studienr, GYMFAG, max(GradeCorrN) as GradeCorrN from dfGradesPerson group by studienr, gymfag')
+dfGradesPerson<-merge(dfGradesPerson,GradeHelpx,all.x = TRUE)
 
 matGrade<-sqldf('select studienr, NIVEAU as "MAT_Niveau", avgGrade as MATGrade from dfGradesPerson where GYMFAG = "MAT" group by studienr, NIVEAU order by studienr, NIVEAU')
 MATCheck<-sqldf('select studienr, count(MATGrade) from matGrade group by studienr')
@@ -283,6 +287,7 @@ matGrade<-matGrade[ !duplicated(matGrade$studienr), ]
 
 #need to create new column for level multiplier A 36, B 24, C12, get max from that query that adds level plus grade, and then uses this as the match on the original data
 #same for ENG and DAN
+
 engGrade<-sqldf('select studienr, NIVEAU as "ENG_Niveau", avgGrade as ENGGrade from dfGradesPerson where GYMFAG = "ENG" group by studienr, NIVEAU order by studienr, NIVEAU')
 engGrade<-engGrade[ !duplicated(engGrade$studienr), ]
 danGrade<-sqldf('select studienr, NIVEAU as "DAN_Niveau", avgGrade as DANGrade from dfGradesPerson where GYMFAG = "DAN" group by studienr, NIVEAU order by studienr, NIVEAU')
@@ -336,6 +341,7 @@ dfM<-dfEnrolStatus
 lookupDropOutsVector=c('afslutte'= 0, 'afbrudt'=1, '~ben'=0,'orlov'=0)
 lookupDropOutsiUniVector=c(Afsluttet= 0, Afbrudt=1, Indskrevet=0, 'Afbrudt (School skift)'=0,'Afbrudt(Fak skift)'=0,'Afbrudt (SN skift)'=0)
 lookupDropOutsUdMeldsn=c('Afbrudt af institutionen'= 1, 'Afbrudt af den studerende'=1, 'Afbrudt ved studieskift'=1,Indskrevet=0, 'Indskrevet'=0,'Afsluttet'=0)
+
 
 # MISSING FIELD IN CURRENT FILE dfM$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfM$statussn)]
 #dfM$isDropOut<-lookupDropOutsVector[as.character(dfM$statussn)]
