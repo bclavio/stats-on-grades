@@ -1,5 +1,7 @@
 library(tidyr)
 library(ggplot2)
+library(car)
+library(data.table)
 
 #SSP
 questions<-read.csv("Y:/analysis_data/SSP/QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE)
@@ -8,7 +10,6 @@ SSPCPH <- read.csv("Y:/analysis_data/SSP/SSPgradesTestCPH 02-10.csv", header = T
 SSPAAL$Campus <- 'AAL'
 SSPCPH$Campus <- 'CPH'
 SSPAAL <- SSPAAL[-nrow(SSPAAL),]
-SSPCPH <- SSPCPH[-nrow(SSPCPH),]
 names(SSPAAL)[1] <- 'Surname'
 SSPAAL <- unite_(SSPAAL,'Name', c("First name","Surname"), sep = ' ')
 names(SSPCPH)[1] <- 'Surname'
@@ -65,13 +66,12 @@ SSPIncStudyNo <- merge(SSP,namestudyno, by.x='Name',by.y='navn')
 
 which(duplicated(SSPIncStudyNo[,-22]))
 SSPIncStudyNo <- SSPIncStudyNo[-c(29,33,76,77,103,107,108,110,138),]
-SSPIncStudyNo$studienr[!SSPIncStudyNo$studienr%in%dropincQ999$studienr]
 
 #Dropout status without Q999 and other predictors
-dropandADGGRU <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/Optag_2017_bac_medialogi_adggru.csv", header = TRUE, fill=TRUE, sep = ";", check.names=FALSE, stringsAsFactors=FALSE, encoding="ANSI")
+dropandADGGRU <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/Optag_2017_bac_medialogi_adggru.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
 dropandADGGRU <- dropandADGGRU[,-c(2:10,12,20,22)]
 #exclude students who didn't show up
-dropandADGGRU <- dropandADGGRU[!dropandADGGRU$udmeld_aarsag%in%c('Ikke fremmødt','Ikke accepteret tilbudt plads'),]
+dropandADGGRU <- dropandADGGRU[!dropandADGGRU$udmeld_aarsag %in%c('Ikke fremmødt','Ikke accepteret tilbudt plads'),]
 
 #Dropout status with Q999
 dropincQ999 <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/dropoutMed2017incQ999.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="ANSI")
@@ -95,15 +95,28 @@ highschool$studienr <- as.character(highschool$studienr)
 highschool <- highschool[,-c(1,5,6,7)]
 test <- aggregate(highschool$KARAKTER, by = list('Studienr'=highschool$studienr,'NIVEAU'=highschool$NIVEAU,'GYMFAG'=highschool$GYMFAG), max)
 names(test)[4] <- 'maxKarakter'
-dataMAT <- test[test$GYMFAG=='MAT',]
-names(dataMAT)[c(1,2,4)]<- c('studienr','NiveauENG','GradeENG')
+test$NIVEAU <- as.numeric(factor(test$NIVEAU))
+
+which(!dropSSPADGGRU$studienr %in% test$Studienr)
+
+test2 <- as.data.table(test)
+test2 <- test2[test2[, .I[which.min(NIVEAU)], by=list(Studienr,GYMFAG)]$V1]
+test2 <- data.frame(test2)
+test2$NIVEAU <- recode(test2$NIVEAU,"1='A';2='B';3='C'")
+
+
+dataMAT <- test2[test2$GYMFAG=='MAT',]
+names(dataMAT)[c(1,2,4)]<- c('studienr','NiveauMAT','GradeMAT')
 dataMAT <- dataMAT[,-3]
 
-dataDAN <- test[test$GYMFAG=='DAN',]
-names(dataDAN)[c(1,2,4)]<- c('studienr','NiveauENG','GradeENG')
+dataDAN <- test2[test2$GYMFAG=='DAN',]
+names(dataDAN)[c(1,2,4)]<- c('studienr','NiveauDAN','GradeDAN')
 dataDAN <- dataDAN[,-3]
 
-dataENG <- test[test$GYMFAG=='ENG',]
+dataENG <- test2[test2$GYMFAG=='ENG',]
 names(dataENG)[c(1,2,4)]<- c('studienr','NiveauENG','GradeENG')
 dataENG <- dataENG[,-3]
 
+dataAll <- merge(dropSSPADGGRU,dataMAT,by='studienr',all.x = T)
+dataAll <- merge(dataAll,dataDAN,by='studienr',all.x = T)
+dataAll <- merge(dataAll,dataENG,by='studienr',all.x = T)
