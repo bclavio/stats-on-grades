@@ -27,15 +27,20 @@ libloc= Sys.getenv("R_LIBS_USER")
 ### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
 source(paste(libloc,"//config.R",sep=''))
 
-library(RMySQL)
-mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver);dbSendQuery(mydb,"SET NAMES utf8")
+
+################ import ######################################
+#steps to take - get data from qlikview (grades, enrolStatus) and from Cristina Draghici the kvote and GymData
+#with clickview data import into GoogleSheets go to bottom: REMOVE::::  Selection Status: Uddannelse: Medialogiand 
+# export i.e. download  as CSV and move to folder /Users/hendrik/Google Drive/dropOutInitiative/data/
+#grades B-passed, I-failed, EB - not graded (not allowed to sit exam), U - no show but they specific meanings regarding when you can take the re-exam.
 
 
 ############################
 ## get data from database ##
-#rs<-dbSendQuery(mydb, "select * from map_SPVCmapping") # remember to change name of tables when changed in database
-#dfECTSstruct<- fetch(rs, n=-1)
-#rs<-dbSendQuery(mydb, "SELECT * FROM LA.tbl_SSPQmelt")
+############################
+
+library(RMySQL)
+mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver);dbSendQuery(mydb,"SET NAMES utf8")
 
 rs<-dbSendQuery(mydb, "select * from map_SPVCmapping")
 dfECTSstruct<- fetch(rs, n=-1)
@@ -65,6 +70,7 @@ rs<-dbSendQuery(mydb, "call SSPWide()")
 SSPWide<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
 dbDisconnect(mydb)
+#not detaching RMySQL will make sqldf not work
 detach("package:RMySQL", unload=TRUE)
 
 ###########################
@@ -72,16 +78,6 @@ detach("package:RMySQL", unload=TRUE)
 #setwd('Z:/BNC/PBL development project/Data/analysis_data/dropOut/data_2017cohortCPHAAL')
 #dfTidlOptag<-read.csv("Tidligere_indskrivninger_optag_2017_bac_medialogi.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
 #dbWriteTable(mydb, value = dfTidlOptag, name = "tbl_dfTidlOptag", append = TRUE)
-
-
->>>>>>> 6429e269fb572ea06bf7c575bcd8364ff702b42e
-
-################ import ######################################
-#steps to take - get data from qlikview (grades, enrolStatus) and from Cristina Draghici the kvote and GymData
-#with clickview data import into GoogleSheets go to bottom: REMOVE::::  Selection Status: Uddannelse: Medialogiand 
-# export i.e. download  as CSV and move to folder /Users/hendrik/Google Drive/dropOutInitiative/data/
-#grades B-passed, I-failed, EB - not graded (not allowed to sit exam), U - no show but they specific meanings regarding when you can take the re-exam.
-
 
 #ThisYear=2017
 #dfMed2SS2<-dfMed2SS2[as.numeric(format(as.Date(dfMed2SS2$Timestamp, format="%d/%m/%Y %H:%M:%S"),"%Y"))==ThisYear,]
@@ -91,16 +87,16 @@ detach("package:RMySQL", unload=TRUE)
 
 # import all files --------------------------------------------------------
 
-SVNData<-if(grepl("BiancaClavio", getwd())){'Z:/BNC/PBL development project/Data/analysis_data/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
+#SVNData<-if(grepl("BiancaClavio", getwd())){'Z:/BNC/PBL development project/Data/analysis_data/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
 #SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
-setwd(SVNData)
+#setwd(SVNData)
 
 # dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 # dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = "",fileEncoding = "UTF-8", check.names=FALSE)
 # dfMed1Q999<-dfMed1Q999[,1:7]
 #dfMed1Q999$Name <-NULL
 
-highSchoolData<-read.csv("RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
+#highSchoolData<-read.csv("RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
 
 
 
