@@ -17,6 +17,14 @@ library(ggplot2)
 library(reshape2)
 
 library(ecdfHT)
+library(RMysSQL)
+
+libloc= Sys.getenv("R_LIBS_USER")
+### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
+source(paste(libloc,"//config.R",sep='')) # MAC and Windows
+
+mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
+ 
 
 
 
@@ -100,19 +108,22 @@ names(dfSSPgrades)[1]<-"Surname"
 dfSSPgradesMelt <- dfSSPgrades[,-c(1:4,6:9,122:123)]
 dfSSPgradesMelt1 <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
 dfSSPgradesMelt1 <- data.frame(dfSSPgradesMelt1[1], lapply(dfSSPgradesMelt1[2:113], function(x) as.numeric(as.character(x))) )
+colnames(dfSSPgradesMelt) <- gsub(" ","",colnames(dfSSPgradesMelt))
 names(dfSSPgradesMelt1) <- names(dfSSPgradesMelt)
-dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("`Email address`"))
+names(dfSSPgradesMelt1)[1] <- "email"
+dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("email"))
 
-setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
+## write to database:
+dbWriteTable(mydb, value = dfSSPgradesMelt1, name = "tbl_SSPQmelted2", append = TRUE )
 
-write.csv(dfSSPgradesMelt1,file = "dfSSPgradesMelt1DB.csv")
-
+#setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
+#write.csv(dfSSPgradesMelt1,file = "dfSSPgradesMelt1DB.csv")
 
 ## different question naming
-dfSSPgradesMelt2 <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
-dfSSPgradesMelt2 <- data.frame(dfSSPgradesMelt2[1], lapply(dfSSPgradesMelt2[2:113], function(x) as.numeric(as.character(x))) )
-dfSSPgradesMelt2 <-melt(dfSSPgradesMelt2, by = c("Email.address"))
-write.csv(dfSSPgradesMelt2,file = "dfSSPgradesMelt2DB.csv")
+#dfSSPgradesMelt2 <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
+#dfSSPgradesMelt2 <- data.frame(dfSSPgradesMelt2[1], lapply(dfSSPgradesMelt2[2:113], function(x) as.numeric(as.character(x))) )
+#dfSSPgradesMelt2 <-melt(dfSSPgradesMelt2, by = c("Email.address"))
+#write.csv(dfSSPgradesMelt2,file = "dfSSPgradesMelt2DB.csv")
 
 
 #######################

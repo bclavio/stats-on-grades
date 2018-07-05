@@ -21,13 +21,24 @@ library(sandwich)
 library(RcmdrMisc)
 
 library(RMySQL)
+library(DBI)
 libloc= Sys.getenv("R_LIBS_USER")
 ### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
 source(paste(libloc,"//config.R",sep='')) # MAC and Windows
 
 mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
-rs<-dbSendQuery(mydb, "select * from map_SPVCmapping") # remember to change name of tables when changed in database
-dfECTSstruct<- fetch(rs, n=-1)
+
+
+#rs<-dbSendQuery(mydb, "select * from map_SPVCmapping") # remember to change name of tables when changed in database
+#dfECTSstruct<- fetch(rs, n=-1)
+
+
+setwd('Z:/BNC/PBL development project/Data/analysis_data/dropOut/data_2017cohortCPHAAL')
+
+dfTidlOptag<-read.csv("Tidligere_indskrivninger_optag_2017_bac_medialogi.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
+
+
+dbWriteTable(mydb, value = dfTidlOptag, name = "tbl_dfTidlOptag", append = TRUE)
 
 
 ################ import ######################################
@@ -50,7 +61,7 @@ SVNData<-if(grepl("BiancaClavio", getwd())){'Z:/BNC/PBL development project/Data
 setwd(SVNData)
 
 dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
+dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = "",fileEncoding = "UTF-8", check.names=FALSE)
 dfMed1Q999<-dfMed1Q999[,1:7]
 #dfMed1Q999$Name <-NULL
 
