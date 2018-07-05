@@ -33,8 +33,8 @@ source(paste(libloc,"//config.R",sep='')) # MAC and Windows
 
 mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
 
-############################
-## get data from database ##
+##################
+## get from data
 #rs<-dbSendQuery(mydb, "select * from map_SPVCmapping") # remember to change name of tables when changed in database
 #dfECTSstruct<- fetch(rs, n=-1)
 #rs<-dbSendQuery(mydb, "SELECT * FROM LA.tbl_SSPQmelt")
@@ -42,12 +42,9 @@ dfECTSstruct<- fetch(rs, n=-1)
 dbClearResult(dbListResults(mydb)[[1]])
 dbDisconnect(mydb)
 
-###########################
-
 #setwd('Z:/BNC/PBL development project/Data/analysis_data/dropOut/data_2017cohortCPHAAL')
 #dfTidlOptag<-read.csv("Tidligere_indskrivninger_optag_2017_bac_medialogi.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
 #dbWriteTable(mydb, value = dfTidlOptag, name = "tbl_dfTidlOptag", append = TRUE)
-
 
 
 ################ import ######################################

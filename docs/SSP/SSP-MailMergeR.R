@@ -30,8 +30,9 @@ mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=
 
 ### Import SSP data
 
-SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP/'} else {"~/SVN/01Projects/SSP/"}
-setwd(SVNData)
+#SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP/'} else {"~/SVN/01Projects/SSP/"}
+#setwd(SVNData)
+setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
 
 dfQAGrades<-read.csv("QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
 dfSSPgradesCPH<-read.csv("SSPgradesTestCPH 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
@@ -59,26 +60,33 @@ dfSSPgradesCPH <- dfSSPgradesCPH[-nrow(dfSSPgradesCPH),]
 dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
 dfSSPgrades <- dfSSPgrades[!grepl("In progress", dfSSPgrades$State),]
 dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
+dfSSPanswers <- dfSSPanswers[-nrow(dfSSPanswers),]
 
+# get hours not score
+dfSSPgrades$`Q. 93 /0.09`<- dfSSPanswers$`Response 93`
+dfSSPgrades$`Q. 95 /0.09`<- dfSSPanswers$`Response 95`
+dfSSPgrades$`Q. 96 /0.09`<- dfSSPanswers$`Response 96`
+
+###############################################
 # computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
 # Problem Q93, Q95 and Q96 contained strings, so I had to change them manually:
 # Q93 (study hours): 0 > x < 29 (0%) ; 30 > x < 34 (30%) ; 35 > x < 40 (60%) ; 41 > x (100%)
-dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(0,30)) == 1L] <- 0
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.3
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.6
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.9
+#dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(0,30)) == 1L] <- 0
+#dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.3
+#dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.6
+#dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.9
 
 # Q95 (related work): 0 = x (0%) ; 1 > x < 4 (30%) ; 5 > x < 9 (60%) ; 10 > x (100%)
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.3
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.6
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0.9
+#dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0
+#dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.3
+#dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.6
+#dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0.9
 
-# Q95 (unrelated work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.9
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.6
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.3
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) == 1L] <- 0
+# Q96 (unrelated work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
+#dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.9
+#dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.6
+#dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.3
+#dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) == 1L] <- 0
 
 # counts study hours for the campi
 studyHoursTable <- data.frame(
@@ -114,7 +122,7 @@ names(dfSSPgradesMelt1)[1] <- "email"
 dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("email"))
 
 ## write to database:
-dbWriteTable(mydb, value = dfSSPgradesMelt1, name = "tbl_SSPQmelted2", append = TRUE )
+#dbWriteTable(mydb, value = dfSSPgradesMelt1, name = "tbl_SSPQmelt1", append = TRUE )
 
 #setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
 #write.csv(dfSSPgradesMelt1,file = "dfSSPgradesMelt1DB.csv")
@@ -124,6 +132,9 @@ dbWriteTable(mydb, value = dfSSPgradesMelt1, name = "tbl_SSPQmelted2", append = 
 #dfSSPgradesMelt2 <- data.frame(dfSSPgradesMelt2[1], lapply(dfSSPgradesMelt2[2:113], function(x) as.numeric(as.character(x))) )
 #dfSSPgradesMelt2 <-melt(dfSSPgradesMelt2, by = c("Email.address"))
 #write.csv(dfSSPgradesMelt2,file = "dfSSPgradesMelt2DB.csv")
+
+
+
 
 
 #######################
