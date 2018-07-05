@@ -2,6 +2,7 @@
 library(knitr)
 library(rmarkdown)
 library(xlsx)
+library(openxlsx)
 library(sqldf)
 library(plyr)
 library(dplyr)
@@ -122,7 +123,7 @@ names(dfSSPgradesMelt1)[1] <- "email"
 dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("email"))
 
 ## write to database:
-#dbWriteTable(mydb, value = dfSSPgradesMelt1, name = "tbl_SSPQmelt1", append = TRUE )
+#dbWriteTable(mydb, value = dfSSPgradesMelt1, name = "tbl_SSPQmelt1", append = TRUE, row.names=FALSE)
 
 #setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
 #write.csv(dfSSPgradesMelt1,file = "dfSSPgradesMelt1DB.csv")
@@ -133,9 +134,29 @@ dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("email"))
 #dfSSPgradesMelt2 <-melt(dfSSPgradesMelt2, by = c("Email.address"))
 #write.csv(dfSSPgradesMelt2,file = "dfSSPgradesMelt2DB.csv")
 
+setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
+dfOptag<-read.csv("Optag_2017_bac_medialogi_adggru2.csv", header = TRUE, sep = ",", encoding="utf8")
+## write to database:
+#dbWriteTable(mydb, value = dfOptag, name = "tbl_dfOptag1", temporary = TRUE, row.names=FALSE)
+
+dfAAUgradesDB<-read.csv("AAUgrades.csv", header = TRUE, sep = ",", encoding="utf8", check.names=FALSE, stringsAsFactors=FALSE)
+row.names(dfAAUgradesDB) <- NULL
+## write to database:
+dbWriteTable(mydb, value = dfAAUgradesDB, name = "tbl_AAUgrades", temporary = TRUE, row.names=FALSE)
+
+
+dffrafaldAAUmedDB<-read.csv("frafaldAAUmed.csv", header = TRUE, sep = ",", encoding="utf8")
+## write to database:
+dbWriteTable(mydb, value = dffrafaldAAUmedDB, name = "tbl_frafaldAAUmed2", temporary = TRUE, row.names=FALSE)
+
+dffrafaldAAUallDB<-read.csv("frafaldAAUalls.csv", header = TRUE, sep = ",", encoding="utf8")
+## write to database:
+dbWriteTable(mydb, value = dffrafaldAAUallDB, name = "tbl_frafaldAAUall1", temporary = TRUE, row.names=FALSE)
 
 
 
+#dbClearResult(dbListResults(mydb)[[1]]) # after each fetch
+#dbDisconnect(mydb) # after working with the database
 
 #######################
 
