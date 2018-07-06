@@ -42,11 +42,14 @@ source(paste(libloc,"//config.R",sep=''))
 library(RMySQL)
 mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver);dbSendQuery(mydb,"SET NAMES utf8")
 
-rs<-dbSendQuery(mydb, "select * from map_SPVCmapping")
-dfECTSstruct<- fetch(rs, n=-1)
-
+rs<-dbGetQuery(mydb, 'set character set latin1') # didn't work
 rs<-dbSendQuery(mydb, "SELECT * FROM tbl_optag")
 dfEnrolStatusBsc<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
+# local check that character_set_results and character_set_server are of the similar values
+# this might be different on other pc's
+dbGetQuery(mydb, "show variables like 'character_set%'") # In my case: latin1 and latin1
+# TODO: perhaps we can solve this by changing character_set_server to UTF8, e.g. in a config file?
 
 rs<-dbSendQuery(mydb, "SELECT * FROM map_SPVCmapping")
 dfECTSstruct<- fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
@@ -62,17 +65,19 @@ dfDropMed<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
 rs<-dbSendQuery(mydb, "SELECT * FROM tbl_frafaldAAUall")
 dfDropAAUall<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
-dfDropMedsFromAll<-dfDropAAUall[dfDropAAUall$startsn=='Medieteknologi'|dfDropAAUall$slutsn=='Medieteknologi',]
-uniqueDropMedsFrAll<-sqldf('select distinct navn as fullName, studienr from dfDropMedsFromAll group by navn') 
 
 rs<-dbSendQuery(mydb, "SELECT * FROM tbl_Q999")
 Q999<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
+rs<-dbSendQuery(mydb, "SELECT * FROM LA.SPP_participation") # removed ;
+SSPparticipation<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
 rs<-dbSendQuery(mydb, "call SSPWide()")
 SSPWide<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
-rs<-dbSendQuery(mydb, "SELECT * FROM LA.SPP_participation;")
-SSPparticipation<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+#setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
+#write.csv(SSPWide,file = "SSPWide.csv")
+
 
 dbDisconnect(mydb)
 #not detaching RMySQL will make sqldf not work
@@ -80,6 +85,12 @@ detach("package:RMySQL", unload=TRUE)
 
 
 ###########################
+
+# subsetting based on startsn and slutsn
+dfDropMedsFromAll<-dfDropAAUall[dfDropAAUall$startsn=='Medieteknologi'|dfDropAAUall$slutsn=='Medieteknologi',] # 2624
+uniqueDropMedsFrAll<-sqldf('select distinct navn as fullName, studienr from dfDropMedsFromAll group by navn') 
+count(uniqueDropMedsFrAll) # check: 2581
+
 
 #setwd('Z:/BNC/PBL development project/Data/analysis_data/dropOut/data_2017cohortCPHAAL')
 #dfTidlOptag<-read.csv("Tidligere_indskrivninger_optag_2017_bac_medialogi.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
@@ -127,6 +138,14 @@ detach("package:RMySQL", unload=TRUE)
 #NOW THIS GETS READ DIRECTLY FROM THE DATABASE SERVER LA
 
 #dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+
+
+
+# TODO: add students from dfDropMedsFromAll
+
+dfEnrolStatusBsc1 <- merge(dfEnrolStatusBsc,dfDropMedsFromAll[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn")],  by.x = c("studienr"),by.y = c("studienr"))
+# loosing 6 students (203->197)
+
 
 
 dfEnrolStatusBsc$fradatosn = as.Date(as.character(dfEnrolStatusBsc$fra_dato), "%d/%m/%Y")
@@ -178,10 +197,12 @@ dfDropMed$fradatosn<-as.Date(as.character(dfDropMed$fradatosn) , "%d.%m.%Y")
 dfDropMed$fra_dato<-dfDropMed$fradatosn
 
 dfEnrolStatus<-merge(dfEnrolStatus,dfDropMed[,c("studienr","statussn","udmeldsn","fradatosn")],by=c("studienr","fradatosn"),all.x=TRUE)
-dfEnrolStatus
 
-#match grades with enrolment data
+#match grades with enrolment data / BC: used columns from dfDropMedsFromAll instead to include statussn for Tidl-optag students (added in previous step)
 dfAAUGrades<-merge(dfAAUGrades,dfEnrolStatus[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn","stype")],by.x = c("studienr","type"),by.y = c("studienr","stype"))
+
+count(dfAAUGrades)
+
 #NEEDS CHECKING this removes a few rows 
 dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn+1|is.na(dfAAUGrades$slutdatosn)),]
 
