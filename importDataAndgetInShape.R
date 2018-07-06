@@ -62,12 +62,17 @@ dfDropMed<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
 rs<-dbSendQuery(mydb, "SELECT * FROM tbl_frafaldAAUall")
 dfDropAAUall<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+dfDropMedsFromAll<-dfDropAAUall[dfDropAAUall$startsn=='Medieteknologi'|dfDropAAUall$slutsn=='Medieteknologi',]
+uniqueDropMedsFrAll<-sqldf('select distinct navn as fullName, studienr from dfDropMedsFromAll group by navn') 
 
 rs<-dbSendQuery(mydb, "SELECT * FROM tbl_Q999")
 Q999<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
 rs<-dbSendQuery(mydb, "call SSPWide()")
 SSPWide<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
+rs<-dbSendQuery(mydb, "SELECT * FROM LA.SPP_participation;")
+SSPparticipation<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
 dbDisconnect(mydb)
 #not detaching RMySQL will make sqldf not work
@@ -173,7 +178,7 @@ dfDropMed$fradatosn<-as.Date(as.character(dfDropMed$fradatosn) , "%d.%m.%Y")
 dfDropMed$fra_dato<-dfDropMed$fradatosn
 
 dfEnrolStatus<-merge(dfEnrolStatus,dfDropMed[,c("studienr","statussn","udmeldsn","fradatosn")],by=c("studienr","fradatosn"),all.x=TRUE)
-
+dfEnrolStatus
 
 #match grades with enrolment data
 dfAAUGrades<-merge(dfAAUGrades,dfEnrolStatus[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn","stype")],by.x = c("studienr","type"),by.y = c("studienr","stype"))
@@ -332,7 +337,16 @@ dfGradesByTry<-melt(dfGradesByTry,id.vars=c("studienr","aktivitetShort"))
 dfGradesByTry<-dcast(dfGradesByTry,studienr~aktivitetShort+variable,fun.aggregate = sum,fill=NA_real_)
 
 #dfLastGrades<-melt(dfLastGrades,id.vars=c("studienr","aktivitetShort"))
+studentsWithoutEnrolStatus<-dfEnrolStatus[is.na(dfEnrolStatus$statussn),c("studienr", "statussn","enrolID","email")]
+#NEEDS TO BE UPDATED WITH a clear matching to a medialogy studienr (in case students have multiple studienr) or match to the studienr that is closest to this one, 
+# looking into the past of fra_datos from the date of the SSP  
+studienrAndNames<-dfDropMedsFromAll[,c("navn","studienr")];studienrAndNames<-sqldf('select distinct navn as fullName, studienr from studienrAndNames')
+#check  head(dfDropMed[(dfDropMed$studienr %in% dfDropMedsFromAll$studienr),]$studienr)
 
+SSPWide<-merge(SSPWide, SSPparticipation)
+SSPWide$SSPdate<-as.Date(SSPWide$`Started on`, format = "%d/%m/%Y %I:%M")
+#HK: careful, currently the next command will lose rows in SSPWide (without all.x=TRUE) or with all.x=TRUE some will not have a studienr.... WHY?
+SSPWide<-merge(SSPWide,studienrAndNames,all.x = TRUE)
 
 # prep enrol info dfM has Enrol status ---------------------------------------------------------
 dfM<-dfEnrolStatus
@@ -346,7 +360,7 @@ lookupDropOutsUdMeldsn=c('Afbrudt af institutionen'= 1, 'Afbrudt af den studeren
 dfM$isDropOut<-lookupDropOutsUdMeldsn[as.character(dfM$udmeldsn)]
 
 dfM<-merge(dfM,dfEntryGradesAll,by= 'studienr', all.y = TRUE,all.x = TRUE)
-dfM$snapShotYear<-2017
+dfM$snapShotYear<-2018
 dfM$campus<-factor(dfM$Campus,levels=c("Aalborg","Kbh.","Esbjerg"))
 
 dfM<-merge(dfM,allHardByStudent,by="studienr",all.x = TRUE,all.y = TRUE)
@@ -361,13 +375,13 @@ dfM$mathGradeBinned<-cut(dfM$MATGrade,breaks=c(-6,-1,1.5,3,5.5,8.5,11,18))
 dfM$mathGradeBinHighGran<-cut(dfM$MATGrade,breaks=c(-6,1,3,4,5,6,7,9,11,18),right = FALSE)
 dfM$ENGGradeBinned<-cut(dfM$ENGGrade,breaks=c(-6,-1,1.5,3,5.5,8.5,11,18),right = FALSE)
 
-
+#the following will drop a few students - not sure why we drop people that might not be necessary and better to carry them forward
 dfM<-dfM[!is.na(dfM$MATGrade),]
 dfM$mathLevelABC<-dfM$MAT_Niveau
 dfM$mathLevel<-ifelse(dfM$MAT_Niveau %in% c("B","C"),"B","A" )
 dfM$NAVN<-NULL
 dfM$Campus<-NULL
-dfPFI<-dfM[dfM$startaar==2015 & !is.na(dfM$startaar),]
+#dfPFI<-dfM[dfM$startaar==2015 & !is.na(dfM$startaar),]
 
 dfAll<-merge(dfMed1Q999,dfEnrolStatus,all.x = TRUE)
 dfAll<-merge(dfAll,dfInterviews,by="studienr")
