@@ -3,6 +3,10 @@ library(cluster)
 library(factoextra)
 library(tidyr)
 library(ggplot2)
+library(DeducerExtras)
+library(class)
+library(NbClust)
+library(mclust)
 
 libloc= Sys.getenv("R_LIBS_USER")
 ### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
@@ -41,7 +45,10 @@ CH
 plot(1:10,CH,type = 'b')
 
 fviz_nbclust(SSPscaled, kmeans, method = "silhouette")+
-  theme_classic()
+  theme_classic()+
+  scale_y_continuous(breaks = seq(0,0.12,0.01))+
+  geom_text(aes(label=round(y,3)), vjust=2)+
+  ggtitle('Average silhouette method for k-means')
 
 clust <- kmeans(SSPscaled,centers = 2,nstart = 5)
 
@@ -55,16 +62,15 @@ fviz_cluster(clust,
 )
 
 clust$size
-SSPscaled$cluster <- clust$cluster
-for(i in 1:17){
-  plot(SSPscaled[,i]~factor(SSPscaled$cluster),ylab = names(SSPscaled)[i],xlab='Cluster')
-}
+SSPclust <- data.frame(SSPscaled,'clustkmeans2'=clust$cluster)
 
-
-dataLong <- gather(SSPscaled, variable, score, Att2Edu:whyUni)
-ggplot(data=dataLong,aes(x=variable,y=score,col=factor(cluster)))+
-  geom_boxplot()+
-  scale_color_discrete(name='Cluster')
+dataLong <- gather(SSPclust, variable, score, Att2Edu:whyUni)
+ggplot(data=dataLong,aes(x=variable,y=score,col=factor(clustkmeans2)))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_count(position = position_dodge(0.7),alpha=0.5)+
+  scale_color_discrete(name='Cluster')+
+  scale_size_continuous(name='Point count')+
+  ggtitle('k-means')
 
 clust3 <- kmeans(SSPscaled,centers = 3,nstart = 5)
 
@@ -77,16 +83,26 @@ fviz_cluster(clust3,
 )
 
 clust3$size
-SSPscaled$cluster3 <- clust3$cluster
+SSPclust$clustkmeans3 <- clust3$cluster
 
-dataLong <- gather(SSPscaled, variable, score, Att2Edu:whyUni)
-ggplot(data=dataLong,aes(x=variable,y=score,col=factor(cluster3)))+
-  geom_boxplot()+
-  scale_color_discrete(name='Cluster')
+dataLong <- gather(SSPclust, variable, score, Att2Edu:whyUni)
+ggplot(data=dataLong,aes(x=variable,y=score,col=factor(clustkmeans3)))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_count(position = position_dodge(0.7),alpha=0.5)+
+  scale_color_discrete(name='Cluster')+
+  ggtitle('kmeans 3 clusters')
 
-#Using medioids instead
+#For allocation of groups to new data insert object=kmean-model and data=Newdata. Rememeber to standardize the data.
+#predict(object=,data=)
+
+#Using medoids instead
 fviz_nbclust(SSPscaled, pam, method = "silhouette")+
-  theme_classic()
+  theme_classic()+
+  scale_y_continuous(breaks=seq(0,0.12,0.01),limits = c(0,0.12))+
+  geom_text(aes(label=round(y,3)), vjust=2)+
+  ggtitle('Average silhouette method for k-medoids')
+
+
 
 fit <- pam(SSPscaled,2)
 
@@ -98,9 +114,87 @@ fviz_cluster(fit,
              ggtheme = theme_classic()
 )
 
-SSPscaled$clusterMedioids <- fit$clustering
+SSPclust$clustermedoids <- fit$clustering
 
-dataLong <- gather(SSPscaled, variable, score, Att2Edu:whyUni)
-ggplot(data=dataLong,aes(x=variable,y=score,col=factor(clusterMedioids)))+
-  geom_boxplot()+
-  scale_color_discrete(name='Cluster')
+dataLong <- gather(SSPclust, variable, score, Att2Edu:whyUni)
+ggplot(data=dataLong,aes(x=variable,y=score,col=factor(clustermedoids)))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_count(position = position_dodge(0.7),alpha=0.5)+
+  scale_color_discrete(name='Cluster')+
+  ggtitle('kmedoids')
+
+#hierarchical
+dmatrix <- dist(SSPscaled, upper = T,diag = T)
+
+hcomplete <- hclust(dmatrix,method = 'complete')
+plot(hcomplete)
+rect.hclust(hcomplete, k=2, border="red")
+rect.hclust(hcomplete, k=3, border="blue")
+rect.hclust(hcomplete, k=4, border="green")
+
+nc <- NbClust(SSPscaled, min.nc = 2, method = 'complete')
+fviz_nbclust(SSPscaled, hcut, method = "silhouette", hc_func='hclust', hc_method='complete')+
+  theme_classic()+
+  scale_y_continuous(breaks = seq(0,0.12,0.01),limits = c(0,0.12))+
+  geom_text(aes(label=round(y,3)), vjust=2)+
+  ggtitle('Average silhouette method for hierarchical, complete linkage')
+
+
+
+
+groupscomplete3 <- cutree(hcomplete,k=3)
+
+hsingle <- hclust(dmatrix,method = 'single')
+plot(hsingle)
+rect.hclust(hsingle, k=2, border="red")
+#not a good structure
+
+haverage <- hclust(dmatrix,method = 'average')
+plot(haverage)
+rect.hclust(haverage, k=2, border="red")
+#not a good structure
+
+hward <- hclust(dmatrix,method = 'ward.D')
+plot(hward)
+rect.hclust(hward, k=2, border="red")
+rect.hclust(hward, k=3, border="red")
+rect.hclust(hward, k=4, border="red")
+
+nc <- NbClust(SSPscaled, min.nc = 2, method = 'ward.D')
+fviz_nbclust(SSPscaled, hcut, method = "silhouette", hc_func='hclust', hc_method='ward.D')+
+  theme_classic()+
+  scale_y_continuous(breaks = seq(0,0.12,0.01),limits = c(0,0.12))+
+  geom_text(aes(label=round(y,3)), vjust=2)+
+  ggtitle('Average silhouette method for hierarchical, Wards method')
+
+
+
+
+groupsward2 <- cutree(hward,k=2)
+
+SSPclust[,c('hclustcomp3','hclustward2')] <- cbind(groupscomplete3,groupsward2)
+dataLong <- gather(SSPclust, variable, score, Att2Edu:whyUni)
+
+ggplot(data=dataLong,aes(x=variable,y=score,col=factor(hclustcomp3)))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_count(position = position_dodge(0.7),alpha=0.5)+
+  scale_color_discrete(name='Cluster')+
+  ggtitle('hierarchical clustering, complete linkage')
+
+ggplot(data=dataLong,aes(x=variable,y=score,col=factor(hclustward2)))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_count(position = position_dodge(0.7),alpha=0.5)+
+  scale_color_discrete(name='Cluster')+
+  scale_size_continuous(name='Point count')+
+  ggtitle('Hierarchical clustering, Wards method')
+
+
+#For allocation of groups to new data insert the scaled data and the desired grouping vektor into
+#For instance for complete linkage
+#knn(SSPscaled,newdata.scaled,groupscomplete3)
+
+
+table(SSPclust$clustermedoids)/nrow(SSPclust)
+table(SSPclust$clustkmeans2)/nrow(SSPclust)
+table(SSPclust$hclustcomp3)/nrow(SSPclust)
+table(SSPclust$hclustward2)/nrow(SSPclust)
