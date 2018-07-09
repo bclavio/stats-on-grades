@@ -206,18 +206,40 @@ ForSvante<-ForSvante[ForSvante$startaar>2011,]
 ForSvante<-merge(ForSvante,GPAavgagg)
 #sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
 
-dfKvote1<-sqldf('select distinct studienr, priop, UDD_KODE, kvotient, kvote, land, Campus from dfKvote ')
+setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
+write.csv(ForSvante,file = "MedDataBSc2017.csv",row.names=FALSE) 
 
-dfM1<-sqldf('select distinct studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
-KvoteHSGrades<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
-ForSvante2<-merge(ForSvante,KvoteHSGrades, by = "studienr")
+##################################################################
+#### Write dataset to database
+##################################################################
+MedDataBSc2017 <- read.csv("MedDataBSc2017.csv", header = TRUE, sep = ",", encoding="utf8") 
 
-highSchoolData1<-sqldf('select fullname as navn, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
-highSchoolVariables<-unique(merge(dfKvote1,dfM1, by = "studienr"))
+libloc= Sys.getenv("R_LIBS_USER")
+### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
+source(paste(libloc,"//config.R",sep=''))
 
-ForSvante3<-merge(highSchoolVariables,ForSvante2)
-ForSvante3<-merge(highSchoolData1,ForSvante3,by = c("navn"))
-ForSvante3<-ForSvante3[ForSvante3$stype=="bachelor",]
+library(RMySQL)
+mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
+dbSendQuery(mydb,"SET NAMES utf8")
+dbWriteTable(mydb, value = MedDataBSc2017, name = "tbl_ForSvante7", temporary = TRUE, row.names=FALSE)
+dbDisconnect(mydb)
+
+##################################################################
+#### HK and BC stopped here - OLD code below
+##################################################################
+
+
+#dfKvote1<-sqldf('select distinct land from dfKvote ')
+#dfM1<-sqldf('select distinct studienr, MAT_Niveau, MATGrade, ENG_Niveau, ENGGrade, DAN_Niveau, DANGrade from dfM ')
+#KvoteHSGrades<-merge(dfKvote1,dfM1) # need to remove studienr duplicates
+#ForSvante2<-merge(ForSvante,KvoteHSGrades, by = "studienr")
+
+#highSchoolData1<-sqldf('select fullname as navn, gender, ADGGRU, zip, residenceBeforeEnrolment, ageAtEnrolment from highSchoolData')
+#highSchoolVariables<-unique(merge(dfKvote1,dfM1, by = "studienr"))
+
+#ForSvante3<-merge(highSchoolVariables,ForSvante2)
+#ForSvante3<-merge(highSchoolData1,ForSvante3,by = c("navn"))
+#ForSvante3<-ForSvante3[ForSvante3$stype=="bachelor",]
 
 perc.rank <- function(x) trunc(rank(x))/length(x)
 MScstudentsGPAavgs<-sqldf("select type, enrolID, sum(ECTS/5*GPAgrade)/(sum(ECTS)/5) as GPAavg, sum(ECTS) as ECTS from dfAAUMarriedGrades where GPAgrade is not Null and type='kandidat'  group by type, enrolID having sum(ECTS)>=80")

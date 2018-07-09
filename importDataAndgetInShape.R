@@ -42,7 +42,7 @@ source(paste(libloc,"//config.R",sep=''))
 library(RMySQL)
 mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver);dbSendQuery(mydb,"SET NAMES utf8")
 
-rs<-dbGetQuery(mydb, 'set character set latin1') # didn't work
+rs<-dbGetQuery(mydb, 'set character set latin1')
 rs<-dbSendQuery(mydb, "SELECT * FROM tbl_optag")
 dfEnrolStatusBsc<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
@@ -75,10 +75,6 @@ SSPparticipation<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 rs<-dbSendQuery(mydb, "call SSPWide()")
 SSPWide<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
-#setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
-#write.csv(SSPWide,file = "SSPWide.csv")
-
-
 dbDisconnect(mydb)
 #not detaching RMySQL will make sqldf not work
 detach("package:RMySQL", unload=TRUE)
@@ -90,63 +86,6 @@ detach("package:RMySQL", unload=TRUE)
 dfDropMedsFromAll<-dfDropAAUall[dfDropAAUall$startsn=='Medieteknologi'|dfDropAAUall$slutsn=='Medieteknologi',] # 2624
 uniqueDropMedsFrAll<-sqldf('select distinct navn as fullName, studienr from dfDropMedsFromAll group by navn') 
 count(uniqueDropMedsFrAll) # check: 2581
-
-
-#setwd('Z:/BNC/PBL development project/Data/analysis_data/dropOut/data_2017cohortCPHAAL')
-#dfTidlOptag<-read.csv("Tidligere_indskrivninger_optag_2017_bac_medialogi.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-#dbWriteTable(mydb, value = dfTidlOptag, name = "tbl_dfTidlOptag", append = TRUE)
-
-#ThisYear=2017
-#dfMed2SS2<-dfMed2SS2[as.numeric(format(as.Date(dfMed2SS2$Timestamp, format="%d/%m/%Y %H:%M:%S"),"%Y"))==ThisYear,]
-
-
-
-
-# import all files --------------------------------------------------------
-
-#SVNData<-if(grepl("BiancaClavio", getwd())){'Z:/BNC/PBL development project/Data/analysis_data/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
-#SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
-#setwd(SVNData)
-
-# dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-# dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = "",fileEncoding = "UTF-8", check.names=FALSE)
-# dfMed1Q999<-dfMed1Q999[,1:7]
-#dfMed1Q999$Name <-NULL
-
-#highSchoolData<-read.csv("RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-
-
-
-#myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/SVN/01Projects/dropOut/data/"}
-#setwd(myWD1)
-
-#dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-  #gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
-#dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8",check.names=FALSE)
-    
-  #gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
-#dfMed1Q999$Name <-NULL
-# dfMed1Q999<-dfMed1Q999[,1:7]
-
-#OLD courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-
-
-#dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
-#used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-#courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8") 
-#dfECTSstruct<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-#NOW THIS GETS READ DIRECTLY FROM THE DATABASE SERVER LA
-
-#dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-
-
-
-# TODO: add students from dfDropMedsFromAll
-
-dfEnrolStatusBsc1 <- merge(dfEnrolStatusBsc,dfDropMedsFromAll[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn")],  by.x = c("studienr"),by.y = c("studienr"))
-# loosing 6 students (203->197)
-
-
 
 dfEnrolStatusBsc$fradatosn = as.Date(as.character(dfEnrolStatusBsc$fra_dato), "%d/%m/%Y")
 dfEnrolStatusBsc$stype<-as.factor("bachelor")
@@ -162,7 +101,9 @@ dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
 #dfEnrolStatus<-dfEnrolStatus[as.numeric(format(dfEnrolStatus$fradatosn,'%m'))==9,]
 
 #dfEnrolStatus$fradatosn<-as.Date(as.character(dfEnrolStatus$fradatosn) , "%d.%m.%Y")
-dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$udmeld_dato) , "%d/%m/%Y")
+
+# BC commented this out and moved: 
+####dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$udmeld_dato) , "%d/%m/%Y")
 dfEnrolStatus$yearOfEnrolment <- as.numeric(format(dfEnrolStatus$fradatosn,'%Y'))
 dfEnrolStatus$startaar<-as.numeric(format(dfEnrolStatus$fradatosn,'%Y'))
 dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) , NA,
@@ -179,7 +120,6 @@ dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) , NA,
 
 
 # dfKvote<-read.csv("kot_medialogi_2011_2016_kvote.csv",header = TRUE, fill=TRUE, sep = ",") /HK need to check later whether all names are the same
-#dfAAUGrades<-read.csv("MEDgradesTilAug32017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 dfAAUGrades$isLastTry<- ifelse(dfAAUGrades$`Seneste Fors.`=="Ja",1,0)
 dfAAUGrades$isProj<- ifelse(dfAAUGrades$ECTS>5,1,0)
 
@@ -189,23 +129,48 @@ dfRetrier$isOffender <-ifelse(dfRetrier$MaxTry>3,1,0)
 dfAAUGrades<-merge(dfAAUGrades,dfRetrier)
 #sqldf("select isOffender, isProj, avg(GPAgrade) from dfAAUGrades where isLastTry=1 group by isOffender, isProj")
 dfAktivitetsKode<-sqldf("select distinct aktiv_kode, aktivitet from dfAAUGrades")
-#OLD data: dfAAUGrades<-read.csv("gradesTil2017Mar.csv",header = TRUE, fill=TRUE, sep = ",")
 dfAAUGrades$bedom_dato<- as.Date(as.character(dfAAUGrades$bedom_dato) , "%d.%m.%Y")
 dfAAUGrades$reg_dato<- as.Date(as.character(dfAAUGrades$reg_dato) , "%d.%m.%Y")
 
-dfDropMed$fradatosn<-as.Date(as.character(dfDropMed$fradatosn) , "%d.%m.%Y")
-dfDropMed$fra_dato<-dfDropMed$fradatosn
+#OLD: dfDropMed$fradatosn<-as.Date(as.character(dfDropMed$fradatosn) , "%d.%m.%Y")
+#OLD: dfDropMed$fra_dato<-dfDropMed$fradatosn
+dfDropMedsFromAll$fradatosn<-as.Date(as.character(dfDropMedsFromAll$fradatosn) , "%d.%m.%Y")
+dfDropMedsFromAll$fra_dato<-dfDropMedsFromAll$fradatosn
 
-dfEnrolStatus<-merge(dfEnrolStatus,dfDropMed[,c("studienr","statussn","udmeldsn","fradatosn")],by=c("studienr","fradatosn"),all.x=TRUE)
+
+# BC: changed the merge to include slutdatosn for students with "tidligere-optag"
+dfEnrolStatus<-merge(dfEnrolStatus,dfDropMedsFromAll[,c("studienr","statussn","udmeldsn","fradatosn","slutdatosn")],by=c("studienr","fradatosn"),all.x=TRUE)
+count(dfEnrolStatus) # 203
+
+# BC: handling early dropouts with no registration
+dfEnrolStatus$statussn <- ifelse(is.na(dfEnrolStatus$slutdatosn), "afbrudt", dfEnrolStatus$statussn)
+dfEnrolStatus$udmeldsn <- ifelse(is.na(dfEnrolStatus$slutdatosn), dfEnrolStatus$udmeld_aarsag, dfEnrolStatus$udmeldsn)
+dfEnrolStatus$udmeld_dato<-as.Date(as.character(dfEnrolStatus$udmeld_dato) , "%d/%m/%Y")
+dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
+dfEnrolStatus$slutdatosn<-if_else(is.na(dfEnrolStatus$slutdatosn), dfEnrolStatus$udmeld_dato, dfEnrolStatus$slutdatosn)
+
+# BC: assumming that students with slutdatosn before 2017-08-31 are active,
+# whereas students with slutdatosn after 2017-08-31 dropped out (
+dfEnrolStatus$statussn <- if_else(dfEnrolStatus$slutdatosn <= as.Date('2017-08-31'), "åben", dfEnrolStatus$statussn)
+dfEnrolStatus$statussn <- ifelse(is.na(dfEnrolStatus$slutdatosn), "åben", dfEnrolStatus$statussn)
+dfEnrolStatus$udmeldsn <- ifelse(dfEnrolStatus$statussn == "åben", "Indskrevet", dfEnrolStatus$udmeldsn)
 
 #match grades with enrolment data / BC: used columns from dfDropMedsFromAll instead to include statussn for Tidl-optag students (added in previous step)
 dfAAUGrades<-merge(dfAAUGrades,dfEnrolStatus[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn","stype")],by.x = c("studienr","type"),by.y = c("studienr","stype"))
+count(dfAAUGrades) #1622
 
-count(dfAAUGrades)
+#NEEDS CHECKING this removes a few rows / BC: changed so we are loosing one student only with old grades
+dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn,] # & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn+1|is.na(dfAAUGrades$slutdatosn)),]
+count(dfAAUGrades) #1607
+# OK: first condition removes 15 old grades from one student (20126013)
+# Perhaps OK: second condition removes 4 grades entries, don't understand this
 
-#NEEDS CHECKING this removes a few rows 
-dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn+1|is.na(dfAAUGrades$slutdatosn)),]
-
+################
+#test <- dfAAUGrades[ !(dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn+1|is.na(dfAAUGrades$slutdatosn))) ,]
+# 4 students in test
+#test2 <- dfAAUGrades[ !(dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn) ,]
+# 1 student in test2
+################
 
 
 #dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>dfAAUGrades$fradatosn,]
@@ -221,7 +186,7 @@ dfAAUGrades$startMonth <-ifelse(as.numeric(format(dfAAUGrades$fradatosn,'%m'))>4
 dfAAUGrades$examMonth<-as.numeric(format(dfAAUGrades$bedom_dato,'%m'))
 dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
 
-#HKtodo: need to work on people who did not start in september
+#HKtodo: need to work on people who did not start in september / BC: I believe that we fixed this
 dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
                                                                  (as.numeric(format(dfAAUGrades$bedom_dato-14,'%Y'))-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
@@ -229,8 +194,8 @@ dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$exa
 
 
 #hard coded data corrections for three students 
-#need to check whether this is important or not... hard coded corrections
-dfAAUGrades[dfAAUGrades$aktivitetText=="Sansning af medier (Computerg",]$aktivitetText<-"Sansning af medier (Computergr"
+#need to check whether this is important or not... hard coded corrections / BC: I don't think so for 2017, but maybe for other years
+#OLD:dfAAUGrades[dfAAUGrades$aktivitetText=="Sansning af medier (Computerg",]$aktivitetText<-"Sansning af medier (Computergr"
 
 #1+(dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2) 
 #as.numeric(format(dfAAUGrades$bedom_dato,'%Y')) ,2)
@@ -369,18 +334,27 @@ SSPWide$SSPdate<-as.Date(SSPWide$`Started on`, format = "%d/%m/%Y %I:%M")
 #HK: careful, currently the next command will lose rows in SSPWide (without all.x=TRUE) or with all.x=TRUE some will not have a studienr.... WHY?
 SSPWide<-merge(SSPWide,studienrAndNames,all.x = TRUE)
 
+
 # prep enrol info dfM has Enrol status ---------------------------------------------------------
+# BC: include CourseLocation ala campus
+dfEnrolStatus <- merge(dfEnrolStatus,dfAAUGrades[,c("CourseLocation","studienr")], by = c("studienr"))
+
 dfM<-dfEnrolStatus
 lookupDropOutsVector=c('afslutte'= 0, 'afbrudt'=1, '~ben'=0,'orlov'=0)
 lookupDropOutsiUniVector=c(Afsluttet= 0, Afbrudt=1, Indskrevet=0, 'Afbrudt (School skift)'=0,'Afbrudt(Fak skift)'=0,'Afbrudt (SN skift)'=0)
 lookupDropOutsUdMeldsn=c('Afbrudt af institutionen'= 1, 'Afbrudt af den studerende'=1, 'Afbrudt ved studieskift'=1,Indskrevet=0, 'Indskrevet'=0,'Afsluttet'=0)
 
 
+
+
 # MISSING FIELD IN CURRENT FILE dfM$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfM$statussn)]
 #dfM$isDropOut<-lookupDropOutsVector[as.character(dfM$statussn)]
 dfM$isDropOut<-lookupDropOutsUdMeldsn[as.character(dfM$udmeldsn)]
 
-dfM<-merge(dfM,dfEntryGradesAll,by= 'studienr', all.y = TRUE,all.x = TRUE)
+removeColumns <- c("kvotient", "priop", "kvote")
+dfEntryGradesAll1 <- dfEntryGradesAll
+dfEntryGradesAll1 <- dfEntryGradesAll1[ , !(names(dfEntryGradesAll1) %in% removeColumns)]
+dfM<-merge(dfM,dfEntryGradesAll1,by= 'studienr', all.y = TRUE,all.x = TRUE)
 dfM$snapShotYear<-2018
 dfM$campus<-factor(dfM$Campus,levels=c("Aalborg","Kbh.","Esbjerg"))
 
@@ -401,8 +375,17 @@ dfM<-dfM[!is.na(dfM$MATGrade),]
 dfM$mathLevelABC<-dfM$MAT_Niveau
 dfM$mathLevel<-ifelse(dfM$MAT_Niveau %in% c("B","C"),"B","A" )
 dfM$NAVN<-NULL
-dfM$Campus<-NULL
+#dfM$Campus<-NULL
 #dfPFI<-dfM[dfM$startaar==2015 & !is.na(dfM$startaar),]
+
+
+
+
+
+
+
+##################################################################
+#### HK stopped here, as dfALL and dfMed2Aal are not used
 
 dfAll<-merge(dfMed1Q999,dfEnrolStatus,all.x = TRUE)
 dfAll<-merge(dfAll,dfInterviews,by="studienr")
@@ -424,9 +407,9 @@ dfMed2Aal<-merge(dfMed2Aal,dfInterviews,by="studienr",all.x = TRUE)
 dfMed2Aal<-merge(dfMed2Aal,dfEntryGradesAll,by="studienr",all.x = TRUE)
 dfMed2Aal<-merge(dfMed2Aal,dfGradesByTry,by="studienr",all.x = TRUE)
 dfMed2Aal<-merge(dfMed2Aal,allHardByStudent,by="studienr",all.x = TRUE)
-dfMed2Aal$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfMed2Aal$udmeldsn)]
-dfMed2Aal$isDropOut<-lookupDropOutsVector[as.character(dfMed2Aal$udmeldsn)]
-dfMed2Aal$DropOutQ999Combo<-ifelse(dfMed2Aal$isDropOut==1|dfMed2Aal$P0Q999==1|dfMed2Aal$P1Q999==1|dfMed2Aal$P2Q999==1,1,0)
+#OLD: dfMed2Aal$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfMed2Aal$udmeldsn)]
+#OLD: dfMed2Aal$isDropOut<-lookupDropOutsVector[as.character(dfMed2Aal$udmeldsn)]
+dfMed2Aal$DropOutQ999Combo<-ifelse(dfMed2Aal$statussn=="afbrudt"|dfMed2Aal$P0Q999==1|dfMed2Aal$P1Q999==1|dfMed2Aal$P2Q999==1,1,0)
 dfMed2Aal$interviewTaken<-ifelse(is.na(dfMed2Aal$MedHappyWith),0,1)
 dfPredList<-c("interviewTaken","picOnMoodle","MATGrade","MAT_Niveau")
 dfPredListAndInterview<-c(dfPredList, factorListFromInterviews)
