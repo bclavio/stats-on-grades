@@ -104,8 +104,8 @@ dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
 
 # BC commented this out and moved: 
 ####dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$udmeld_dato) , "%d/%m/%Y")
-dfEnrolStatus$yearOfEnrolment <- as.numeric(format(dfEnrolStatus$fradatosn,'%Y'))
-dfEnrolStatus$startaar<-as.numeric(format(dfEnrolStatus$fradatosn,'%Y'))
+#dfEnrolStatus$yearOfEnrolment <- as.numeric(format(dfEnrolStatus$fradatosn,'%Y'))
+dfEnrolStatus$startaar <- as.numeric(format(dfEnrolStatus$fradatosn,'%Y'))
 dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) , NA,
                                     ifelse(as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))>1 & as.numeric(format(dfEnrolStatus$slutdatosn,'%m'))<9,
                                            (as.numeric(format(dfEnrolStatus$slutdatosn,'%Y'))-dfEnrolStatus$startaar)*2, 
@@ -286,7 +286,8 @@ dfAllGradesXTab <-merge(merge(matGrade,engGrade,all.x = TRUE,all.y = TRUE),danGr
 rm("matGrade","engGrade","danGrade")
 #now contains all SchoolGrades and Kvote information
 #NEED TO use subset of dfoptag
-dfEntryGradesAll<-merge(dfAllGradesXTab,dfEnrolStatusBsc[,c("studienr","kvotient","priop","kvote")],all.y = TRUE,all.x = TRUE)
+#OLD: dfEntryGradesAll<-merge(dfAllGradesXTab,dfEnrolStatusBsc[,c("studienr","kvotient","priop","kvote")],all.y = TRUE,all.x = TRUE)
+dfEntryGradesAll<-merge(dfAllGradesXTab,dfEnrolStatus[,c("studienr","kvotient","priop","kvote")],all.y = TRUE,all.x = TRUE)
 
 dfEntryGradesAll$DANGradeX<-ifelse(is.na(dfEntryGradesAll$DANGrade),dfEntryGradesAll$ENGGrade,dfEntryGradesAll$DANGrade)
 
@@ -295,7 +296,8 @@ dfEntryGradesAll$DANGradeX<-ifelse(is.na(dfEntryGradesAll$DANGrade),dfEntryGrade
 dfAAUGrades$gradeNum<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
 dfAAUGrades$GPAgrade<-gradesToNumsVec[as.character(dfAAUGrades$KARAKTER)]
 dfAAUGrades$isPassed<-gradesPassedLUVec[as.character(dfAAUGrades$KARAKTER)]
-dfAAUGrades$CourseLocation<-substr(dfAAUGrades$aktiv_kode,3,3)
+#OLD:dfAAUGrades$CourseLocation<-substr(dfAAUGrades$aktiv_kode,3,3)
+dfAAUGrades$CourseLocation <-ifelse( (dfAAUGrades$CourseLocation<-substr(dfAAUGrades$aktiv_kode,3,3)) == 'K',3,4) #map to tbl_campi
 dfAAUGrades$aktivitetShort<-CourseAcronymsLUVec[as.character(dfAAUGrades$aktivitet)]
 #sqldf('select distinct aktivitet, aktiv_kode from dfAAUGrades order by aktivitet')
 
@@ -334,15 +336,35 @@ SSPWide$SSPdate<-as.Date(SSPWide$`Started on`, format = "%d/%m/%Y %I:%M")
 #HK: careful, currently the next command will lose rows in SSPWide (without all.x=TRUE) or with all.x=TRUE some will not have a studienr.... WHY?
 SSPWide<-merge(SSPWide,studienrAndNames,all.x = TRUE)
 
+###################################################
+# BC: checks student numbers - I dont understand???
+n <- data.frame(unique(dfAAUGrades$studienr)) #189
+m <- data.frame(unique(dfEnrolStatus$studienr)) #203
+s <- data.frame(SSPWide$studienr) #190
+names(m) <- "studienr"
+names(n) <- "studienr"
+names(s) <- "studienr"
+sqldf('SELECT * FROM m EXCEPT SELECT * FROM n') #14 studienr in dfEnrolStatus
+sqldf('SELECT * FROM m EXCEPT SELECT * FROM s') #18 studienr
+
+m <- m[!n]
+m
+##################################################
 
 # prep enrol info dfM has Enrol status ---------------------------------------------------------
-# BC: include CourseLocation ala campus
-dfEnrolStatus <- merge(dfEnrolStatus,dfAAUGrades[,c("CourseLocation","studienr")], by = c("studienr"))
+# BC: add Q999 to dfEnrolStatus
+Q999 <- merge(Q999,uniqueDropMedsFrAll)
+dfEnrolStatus$Q999 <- ifelse(dfEnrolStatus$studienr %in% Q999$studienr, 1,0)
+
+# BC: include CourseLocation and nationality (country) 
+dfEnrolStatus <- merge(dfEnrolStatus,dfAAUGrades[,c("CourseLocation","Land","studienr")], by = c("studienr"))
+dfEnrolStatus<- dfEnrolStatus[!duplicated(dfEnrolStatus), ]
 
 dfM<-dfEnrolStatus
 lookupDropOutsVector=c('afslutte'= 0, 'afbrudt'=1, '~ben'=0,'orlov'=0)
 lookupDropOutsiUniVector=c(Afsluttet= 0, Afbrudt=1, Indskrevet=0, 'Afbrudt (School skift)'=0,'Afbrudt(Fak skift)'=0,'Afbrudt (SN skift)'=0)
 lookupDropOutsUdMeldsn=c('Afbrudt af institutionen'= 1, 'Afbrudt af den studerende'=1, 'Afbrudt ved studieskift'=1,Indskrevet=0, 'Indskrevet'=0,'Afsluttet'=0)
+
 
 
 
@@ -359,12 +381,8 @@ dfM$snapShotYear<-2018
 dfM$campus<-factor(dfM$Campus,levels=c("Aalborg","Kbh.","Esbjerg"))
 
 dfM<-merge(dfM,allHardByStudent,by="studienr",all.x = TRUE,all.y = TRUE)
-
 dfM<-merge(dfM,dfGradesByTry,by="studienr",all.x = TRUE,all.y = TRUE)
 dfM<-merge(dfM,dfAAUGrades[!duplicated(dfAAUGrades$studienr),c("studienr","isIntl")],by="studienr",all.x = TRUE)
-#dfM<-merge(dfM,dfInterviews,by="studienr")
-
-#dfAll$aktivitet<-as.factor(dfAll$aktivitet)
 
 dfM$mathGradeBinned<-cut(dfM$MATGrade,breaks=c(-6,-1,1.5,3,5.5,8.5,11,18))
 dfM$mathGradeBinHighGran<-cut(dfM$MATGrade,breaks=c(-6,1,3,4,5,6,7,9,11,18),right = FALSE)
@@ -377,50 +395,6 @@ dfM$mathLevel<-ifelse(dfM$MAT_Niveau %in% c("B","C"),"B","A" )
 dfM$NAVN<-NULL
 #dfM$Campus<-NULL
 #dfPFI<-dfM[dfM$startaar==2015 & !is.na(dfM$startaar),]
-
-
-
-
-
-
-
-##################################################################
-#### HK stopped here, as dfALL and dfMed2Aal are not used
-
-dfAll<-merge(dfMed1Q999,dfEnrolStatus,all.x = TRUE)
-dfAll<-merge(dfAll,dfInterviews,by="studienr")
-
-lookupDropOutsVector=c('Afsluttet'= 0, 'Afbrudt'=1, 'Indskrevet'=0, 'Afbrudt (School skift)'=1,'Afbrudt(Fak skift)'=1,'Afbrudt (SN skift)'=1,'Afbrudt af den studerende'=1,'Afbrudt af institutionen'=1)
-lookupDropOutsiUniVector=c('Afsluttet'= 0, 'Afbrudt'=1, 'Indskrevet'=0, 'Afbrudt (School skift)'=0,'Afbrudt(Fak skift)'=0,'Afbrudt (SN skift)'=0,'Afbrudt af den studerende'=1,'Afbrudt af institutionen'=1)
-dfAll$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfAll$udmeldsn)]
-dfAll$isDropOut<-lookupDropOutsVector[as.character(dfAll$udmeldsn)]
-
-dfAll$DropOutQ999Combo<-ifelse(dfAll$isDropOut==1|dfAll$P0Q999==1|dfAll$P1Q999==1|dfAll$P2Q999==1,1,0)
-
-#remove side entries without data - need from Christina draghizi = missing 10 data points including
-dfAll<-dfAll[!is.na(dfAll$isDropOutButInUni),]
-dfAll<-merge(dfM,dfAll,all.y = TRUE)
-
-
-dfMed2Aal<-merge(dfMed1Q999,dfEnrolStatus,all.x = TRUE)
-dfMed2Aal<-merge(dfMed2Aal,dfInterviews,by="studienr",all.x = TRUE)
-dfMed2Aal<-merge(dfMed2Aal,dfEntryGradesAll,by="studienr",all.x = TRUE)
-dfMed2Aal<-merge(dfMed2Aal,dfGradesByTry,by="studienr",all.x = TRUE)
-dfMed2Aal<-merge(dfMed2Aal,allHardByStudent,by="studienr",all.x = TRUE)
-#OLD: dfMed2Aal$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfMed2Aal$udmeldsn)]
-#OLD: dfMed2Aal$isDropOut<-lookupDropOutsVector[as.character(dfMed2Aal$udmeldsn)]
-dfMed2Aal$DropOutQ999Combo<-ifelse(dfMed2Aal$statussn=="afbrudt"|dfMed2Aal$P0Q999==1|dfMed2Aal$P1Q999==1|dfMed2Aal$P2Q999==1,1,0)
-dfMed2Aal$interviewTaken<-ifelse(is.na(dfMed2Aal$MedHappyWith),0,1)
-dfPredList<-c("interviewTaken","picOnMoodle","MATGrade","MAT_Niveau")
-dfPredListAndInterview<-c(dfPredList, factorListFromInterviews)
-
-FirstSemFactorList<-c('isDropOut', "interviewTaken", "DANGradeX","MATGrade","ENGGrade", "picOnMoodle","hoursWorkedPerWeek", "jobHoursPerWeek","AVSCatchUp","GPROCatchUp","MedStudyPrio","ParentsEduMax","ParentsEduAvg","MedHappyWith","MedBelongHere", "WantMScDeg","WantMedMScDeg")
-
-dfMed2AalX<-dfMed2Aal[dfMed2Aal$interviewTaken==1 & !is.na(dfMed2Aal$isDropOut) &!is.na(dfMed2Aal$ENGGrade) &!is.na(dfMed2Aal$MATGrade) & !is.na(dfMed2Aal$DANGradeX) & !is.na(dfMed2Aal$GPROCatchUp) & !is.na(dfMed2Aal$hoursWorkedPerWeek),FirstSemFactorList]
-
-#myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/git/AAU/DropOutProject/analysis/"}
-#setwd(myWD1)
-
 
 
 ####### runs the aggregation rmarkdown file

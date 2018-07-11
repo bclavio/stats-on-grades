@@ -199,30 +199,50 @@ GPAavgagg<-dcast(GPAavgagg,enrolID~semester+bctdf,value.var = "GPAavg",sum)
 
 #need to verify we have all the students in ECTSovw TODO
 ectsAggsAll<-merge(ECTSovw,ectsSumSPbySPVAndCT, by="SPV")
+count(ectsAggsAll)
 
 #From2010s<-dfEnrolStatus[dfEnrolStatus$startaar>2009,]
-ForSvante<-merge(dfEnrolStatus,ectsAggsAll)
+ForSvante<-merge(dfEnrolStatus,dfEntryGradesAll) 
+ForSvante<-merge(ForSvante, ectsAggsAll)
 ForSvante<-ForSvante[ForSvante$startaar>2011,]
 ForSvante<-merge(ForSvante,GPAavgagg)
 #sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
 
+
 setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
-write.csv(ForSvante,file = "MedDataBSc2017.csv",row.names=FALSE) 
+write.csv(ForSvante,file = "MedDataBSc2017_1107NEW.csv",row.names=FALSE) 
+
+
+
 
 ##################################################################
 #### Write dataset to database
 ##################################################################
-MedDataBSc2017 <- read.csv("MedDataBSc2017.csv", header = TRUE, sep = ",", encoding="utf8") 
+#MedDataBSc2017 <- read.csv("MedDataBSc2017.csv", header = TRUE, sep = ",", encoding="utf8") 
 
 libloc= Sys.getenv("R_LIBS_USER")
 ### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
-source(paste(libloc,"//config.R",sep=''))
+source(paste(libloc,"/config.R",sep=''))
 
 library(RMySQL)
-mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
-dbSendQuery(mydb,"SET NAMES utf8")
-dbWriteTable(mydb, value = MedDataBSc2017, name = "tbl_ForSvante7", temporary = TRUE, row.names=FALSE)
+mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver);dbSendQuery(mydb,"SET NAMES utf8")
+#  fileEncoding = "UTF-8", overwrite = T,
+#dbWriteTable(mydb, value = MedDataBSc2017, name = "tbl_ForSvante2", temporary = TRUE, row.names=FALSE)
+
+# tbl_personIDs
+personIDs <- dfEnrolStatusBsc[,c(2,3)]
+personIDs <- subset(personIDs,  personIDs$studienr %in% uniqueDropMedsFrAll$studienr)
+personIDs <- merge(personIDs, uniqueDropMedsFrAll,by="studienr")
+personIDs$idNumber <- NA
+personIDs$map_personIDsID <- seq(1:nrow(personIDs))
+write.csv(personIDs,file = "personIDs.csv",row.names=FALSE) 
+#dbWriteTable(mydb, value = personIDs, name = "tbl_personIDs", temporary = TRUE, row.names=FALSE, append=TRUE)
+
+
 dbDisconnect(mydb)
+
+
+
 
 ##################################################################
 #### HK and BC stopped here - OLD code below
