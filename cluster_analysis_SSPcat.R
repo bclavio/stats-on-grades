@@ -198,3 +198,38 @@ table(SSPclust$clustermedoids)/nrow(SSPclust)
 table(SSPclust$clustkmeans2)/nrow(SSPclust)
 table(SSPclust$hclustcomp3)/nrow(SSPclust)
 table(SSPclust$hclustward2)/nrow(SSPclust)
+
+############Comparing to dropout###################
+MedDataBSc2017 <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/MedDataBSc2017.csv", encoding="ANSI", stringsAsFactors=FALSE)
+MedDataBSc2017 <- MedDataBSc2017[!duplicated(MedDataBSc2017),]
+dropout <- MedDataBSc2017[,c(2,31)]
+
+SSPAAL<-read.csv("Y:/analysis_data/SSP/SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
+SSPCPH <- read.csv("Y:/analysis_data/SSP/SSPgradesTestCPH 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
+SSP <- rbind(SSPAAL,SSPCPH)
+names(SSP)[1] <- 'Surname'
+SSP <- unite_(SSP,'Name', c("First name","Surname"), sep = ' ')
+SSP <- SSP[,c(1,4)]
+which(!SSPWide$email %in% SSP$`Email address`)
+namestudyno <- read.csv("Y:/analysis_data/dropOut/data/bsc.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="ANSI")
+namestudyno <- namestudyno[,c(18,19)]
+namestudyno <- namestudyno[!duplicated(namestudyno),]
+SSPIncStudyNo <- merge(SSP,namestudyno, by.x='Name',by.y='navn')
+studienrEmail <- SSPIncStudyNo[,-1]
+names(studienrEmail)[1] <- 'email'
+
+SSPclust$email <- SSPWide$email
+test <- merge(SSPclust,studienrEmail)
+test2 <- merge(test,dropout)
+
+tab <- table(test2$clustkmeans2,test2$statussn)
+tab/rowSums(tab)
+
+tab <- table(test2$clustermedoids,test2$statussn)
+tab/rowSums(tab)
+
+tab <- table(test2$hclustcomp3,test2$statussn)
+tab/rowSums(tab)
+
+tab <- table(test2$hclustward2,test2$statussn)
+tab/rowSums(tab)
