@@ -11,40 +11,50 @@
 library(ggplot2)
 library(miscTools)
 library(extrafont)
-font_import(pattern="[A/a]rial")
-loadfonts(device="win")
+library(ggrepel)
+#font_import(pattern="[A/a]rial")
+#loadfonts(device="win")
 
 
 
 setwd("Z:/BNC/PBL development project/Data/analysis_data/SSP")
 
-#load point data with pre-calculated median at the end
-dfSPPscore <- read.csv("studentDataToLauraPoints.csv", header = T)
+#create a vector with axis names
+labs <- c("Campus","name","Understanding of\n Medialogy", "Time com-\n mitment", "Growth\n mindset", "Grit", "Study habits\n at AAU", "High school\n habits", "Social support\n for studying")
+#use the new vector to change the column names
+#colnames(dfStudentMedian)<- labs
+
+# import percentiles
+dfSPPscore <- read.csv("studentData.csv", header = T)
+# calculate the median of the scores times 100 to be on the same scale as percentiles, not the percentiles
+SSPmedian <- data.frame(Campus="AAL/CPH",name="Median",t(colMedians(dfSPPscore[,7:13])*100))
+colnames(SSPmedian)<- labs
+
+#SSPmean <- data.frame(Campus="AAL/CPH",name="Mean",t(colMeans(dfSPPscore[,7:13])*100))
+#colnames(SSPmean)<- labs
+
+dfSPPscore <- dfSPPscore[,c(3:4,21:15)]
+colnames(dfSPPscore)<- labs
 
 # median as the last row in the dataset
-dfSPPscoreAddon <- rbind(dfSPPscore, data.frame(rowID="Median", Campus="AAL/CPH",t(colMedians(dfSPPscore[,3:9]))))
+dfSPPscoreAddon <- rbind(dfSPPscore, SSPmedian)
 
-# average as the last row in the dataset
-#dfSPPscoreAddon <- rbind(dfSPPscoreAddon, data.frame(rowID="Average", Campus="AAL/CPH",t(colMeans(dfSPPscore[,3:9]))))
+
 
 #some checking
 summary(dfSPPscoreAddon)
 dim(dfSPPscoreAddon)
+#dfStudentMedian <-NULL
+# selecting current student and median
+dfStudentMedian<- dfSPPscoreAddon[c(1,nrow(dfSPPscoreAddon)), 3:9]
 
-#try to create a suitable input, must be a data frame!
-#5 starting from file with median at the end - works!
-df<- dfSPPscoreAddon[c(1,191), 3:9]
-#create a vector with axis names
-labs <- c("Understanding of\n Medialogy", "Time com-\n mitment", "Growth\n mindset", "Grit", "AAU study\n habits", "High school\n habits", "Social support\n for studying")
-#use the new vector to change the column names
-colnames(df)<- labs
 #check
-df
+dfStudentMedian
 #add rownames to identify median and individual in the plot
-rownames(df) <- c("You", "Median")
+rownames(dfStudentMedian) <- c("You", "Median")
 #convert rownames to column -needed for melt function
 #Must be done AFTER setting column names, otherwise it creates problems
-df$ID <- rownames(df)
+dfStudentMedian$ID <- rownames(dfStudentMedian)
 
 # function to create the coordinates for the radarplot and remove outer line
 coord_radar <- function (theta = "x", start = 0, direction = 1) 
@@ -133,19 +143,20 @@ RadarTheme<-theme(panel.background=element_blank(),
                   axis.text.y = element_blank(),
                   axis.line.x=element_line(size=0.5),
                   panel.grid.major=element_line(size=0.3,linetype = 2,colour="grey"),
-                  theme(text=element_text(size=8, family="Arial"))) # changed font
+                  line = element_blank(),
+                  title = element_blank())
 
 #melt data
-dfmelt<- reshape2::melt(df)
+dfmelt<- reshape2::melt(dfStudentMedian)
 dfmelt['axis'] <- NA
 #dfmelt$axis <- list(seq(0.0, 1.0, 0.20),seq(0.0, 1.0, 0.20),seq(0.0, 1.0, 0.20),seq(0.0, 1.0, 0.20),
 #                    0,0,0,0,0,0,0,0,0,0)
-dfmelt$axis1 <- 0.2
-dfmelt$axis2 <- 0.4
-dfmelt$axis3 <- 0.6
-dfmelt$axis4 <- 0.8
-dfmelt$axis5 <- 1.0
-dfmelt$axis6 <- 0.5
+dfmelt$axis1 <- 20
+dfmelt$axis2 <- 40
+dfmelt$axis3 <- 60
+dfmelt$axis4 <- 80
+dfmelt$axis5 <- 100
+dfmelt$axis6 <- 50
 
 #plot
 p<- ggplot(dfmelt, aes(x=variable, y= value))+
@@ -154,25 +165,24 @@ p<- ggplot(dfmelt, aes(x=variable, y= value))+
   geom_text(aes(y = axis3,label = axis3)) +
   geom_text(aes(y = axis4,label = axis4)) +
   #geom_text(aes(y = axis6,label = axis6)) +
-  geom_text(aes(y = axis5,label = "1.0")) +
-  annotate("text", x= 0.0, y= 0, label = "0.0")+
+  geom_text(aes(y = axis5,label = "100")) +
+  annotate("text", x= 0.0, y= 0, label = "0")+
   geom_polygon(aes(group=ID, color= ID, fill= ID), alpha = 0.4, size = 1, show.legend = T)+
   RadarTheme+
   xlab("")+ ylab("")+
-  scale_y_continuous(limits = c(0.0, 1.2), breaks = seq(0.0, 1.0, 0.10))+
+  scale_y_continuous(limits = c(0, 120), breaks = seq(0, 100, 10))+
   #annotate("text", x= 0.0, y= seq(0.0, 1.0, 0.20), label = seq(0.0, 1.0, 0.20))+
-  geom_label_repel(aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
- # geom_label(data=subset(dfmelt, dfmelt$ID=="Median"), aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
-#  geom_label(data=subset(dfmelt, dfmelt$ID=="You"), aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
-  theme(line = element_blank(),
-        title = element_blank()) +
+  #geom_label_repel(aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
+  #geom_label(data=subset(dfmelt, dfmelt$ID=="Median"), aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
+  geom_label(data=subset(dfmelt, dfmelt$ID=="You"), aes(color=factor(ID), y = value,label = round(value, digits = 0), size=7)) +
+  guides(size=FALSE) +
   coord_radar()
 
 #check
 p
 
 #export as jpg
-jpeg("Radarplot_5.jpeg", height= 12, width=15, units = 'in', quality= 100, res= 300)
+jpeg("Radarplot_7.jpeg", height= 12, width=15, units = 'in', quality= 100, res= 300)
 p
 dev.off()
 

@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 
 ```{r setup, include=FALSE}
 library(xlsx)
@@ -8,19 +13,29 @@ library(reshape2)
 library(MASS)
 library(manipulate)
 library(stringr)
-library(CTT)
+#library(CTT)
 #library(gsubfn)
 library(Hmisc)
-library(psych)
+#library(psych)
 library(ggplot2)
 library(ggpubr)
 library(gtable)
 library(cowplot)
 
+
+#radarchart w/ggplot2 
+#load library
+library(miscTools)
+library(extrafont)
+library(ggrepel)
+#font_import(pattern="[A/a]rial")
+#loadfonts(device="win")
+
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
 library(knitr)
 library(kableExtra)
-opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP'} else {paste(homeDir,"~/SVN/01Projects/SSP/", sep = "")})
+#opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP'} else {paste(homeDir,"~/SVN/01Projects/SSP/", sep = "")})
+opts_knit$set(root.dir = 'Z:/BNC/PBL development project/data/analysis_data/SSP/')
 
 knitr::opts_chunk$set(fig.height=3.5) 
 
@@ -105,6 +120,7 @@ pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
         panel.grid.minor = element_blank(),
         legend.position="none")
 
+#pScore
 ```
 
 
@@ -164,6 +180,49 @@ ggplot(studyHours, aes(x=rowID,y=hours)) +
 
 \pagebreak
 
+
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height= 12, fig.width=15}
+
+# selecting current student and median
+dfStudentMedian<- dfSPPscoreAddon[c(rowID,nrow(dfSPPscoreAddon)), 3:9]
+#add rownames to identify median and individual in the plot
+rownames(dfStudentMedian) <- c("You", "Median")
+#convert rownames to column -needed for melt function
+dfStudentMedian$ID <- rownames(dfStudentMedian)
+
+#melt data
+dfmelt<- reshape2::melt(dfStudentMedian)
+dfmelt$axis1 <- 20
+dfmelt$axis2 <- 40
+dfmelt$axis3 <- 60
+dfmelt$axis4 <- 80
+dfmelt$axis5 <- 100
+
+# radar charts
+p<- ggplot(dfmelt, aes(x=variable, y= value))+
+  geom_text(aes(y = axis1,label = axis1, size=2)) +
+  geom_text(aes(y = axis2,label = axis2, size=2)) +
+  geom_text(aes(y = axis3,label = axis3, size=2)) +
+  geom_text(aes(y = axis4,label = axis4, size=2)) +
+  geom_text(aes(y = axis5,label = "100")) +
+  annotate("text", x= 0.0, y= 0, label = "0")+
+  geom_polygon(aes(group=ID, color= ID, fill= ID), alpha = 0.4, size = 1, show.legend = T)+
+  RadarTheme+
+  xlab("")+ ylab("")+
+  scale_y_continuous(limits = c(0, 120), breaks = seq(0, 100, 10))+
+  #annotate("text", x= 0.0, y= seq(0.0, 1.0, 0.20), label = seq(0.0, 1.0, 0.20))+
+  #geom_label_repel(aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
+  #geom_label(data=subset(dfmelt, dfmelt$ID=="Median"), aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
+  geom_label(data=subset(dfmelt, dfmelt$ID=="You"), aes(color=factor(ID), y = value,label = round(value, digits = 0)), size=7) +
+  guides(size=FALSE) +
+  coord_radar()
+
+#check
+p
+
+```
+
+\pagebreak
 
 ## Specific Recommondations - what can you do
 In this section you will receive a more detailed explanation of your results. The purpose of this information is to help you develop your skills and get the most from your university experience. Take a balanced approach to reviewing and utilizing this information. Do not assume that each statement is perfectly accurate just because it is printed in a formal manner; some statements may not fit you well. However, do not dismiss a statement just because it points to a challenge.
@@ -271,6 +330,8 @@ selectRecommondations[7,1] <- ifelse(studentTable1[7,1]<0.5,
 # selectRecommondations <- gsub("\\,\\s+”", ",", selectRecommondations)
 
 ```
+
+
 
 
 ```{r include=FALSE}

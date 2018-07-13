@@ -16,17 +16,7 @@ library(Hmisc)
 library(psych)
 library(ggplot2)
 library(reshape2)
-
-library(ecdfHT)
-library(RMysSQL)
-
-libloc= Sys.getenv("R_LIBS_USER")
-### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
-source(paste(libloc,"//config.R",sep='')) # MAC and Windows
-
-mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
- 
-
+detach("package:RMySQL", unload=TRUE)
 
 
 ### Import SSP data
@@ -55,114 +45,57 @@ dfSSPanswers <- rbind(dfSSPanswersCPH,dfSSPanswersAAL)
 
 dfSSPgradesCPH["Campus"]<-"CPH"
 dfSSPgradesAAL["Campus"]<-"AAL"
-dfSSPgradesAAL <- dfSSPgradesAAL[-nrow(dfSSPgradesAAL),]
-dfSSPgradesCPH <- dfSSPgradesCPH[-nrow(dfSSPgradesCPH),]
 
 dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
-dfSSPgrades <- dfSSPgrades[!grepl("In progress", dfSSPgrades$State),]
+dfSSPgrades <- dfSSPgrades[grepl("Finished", dfSSPgrades$State),]
 dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
 
-# get hours not score
-dfSSPgrades$`Q. 93 /0.09`<- dfSSPanswers$`Response 93`
-dfSSPgrades$`Q. 95 /0.09`<- dfSSPanswers$`Response 95`
-dfSSPgrades$`Q. 96 /0.09`<- dfSSPanswers$`Response 96`
-
-###############################################
 # computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
 # Problem Q93, Q95 and Q96 contained strings, so I had to change them manually:
 # Q93 (study hours): 0 > x < 29 (0%) ; 30 > x < 34 (30%) ; 35 > x < 40 (60%) ; 41 > x (100%)
-#dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(0,30)) == 1L] <- 0
-#dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.3
-#dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.6
-#dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.9
+dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(0,30)) == 1L] <- 0
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.3
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.6
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.9
 
 # Q95 (related work): 0 = x (0%) ; 1 > x < 4 (30%) ; 5 > x < 9 (60%) ; 10 > x (100%)
-#dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0
-#dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.3
-#dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.6
-#dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0.9
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.3
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.6
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0.9
 
 # Q96 (unrelated work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
-#dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.9
-#dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.6
-#dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.3
-#dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) == 1L] <- 0
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.9
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.6
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.3
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) == 1L] <- 0
 
-# counts study hours for the campi
-studyHoursTable <- data.frame(
-    c(
-    "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "AAL", ]),
-    "30-34" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.3 & dfSSPgrades$Campus == "AAL", ]),
-    "35-40" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.6 & dfSSPgrades$Campus == "AAL", ]),
-    "41+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "AAL", ]),
-    "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "AAL", ])),
-    c(
-    "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "CPH", ]),
-    "30-34" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.3 & dfSSPgrades$Campus == "CPH", ]),
-    "35-40" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.6 & dfSSPgrades$Campus == "CPH", ]),
-    "41+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "CPH", ]),
-    "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "CPH", ])))
-names(studyHoursTable)[1]<-"AAL"
-names(studyHoursTable)[2]<-"CPH"
-names(dfSSPgrades)[1]<-"Surname"
-
-
-
-
-#########################
-### melting the data ####
-########################
-
-dfSSPgradesMelt <- dfSSPgrades[,-c(1:4,6:9,122:123)]
-dfSSPgradesMelt1 <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
-dfSSPgradesMelt1 <- data.frame(dfSSPgradesMelt1[1], lapply(dfSSPgradesMelt1[2:113], function(x) as.numeric(as.character(x))) )
-colnames(dfSSPgradesMelt) <- gsub(" ","",colnames(dfSSPgradesMelt))
-names(dfSSPgradesMelt1) <- names(dfSSPgradesMelt)
-names(dfSSPgradesMelt1)[1] <- "email"
-dfSSPgradesMelt1 <-melt(dfSSPgradesMelt1, by = c("email"))
-
-## write to database:
-dbWriteTable(mydb, value = dfSSPgradesMelt1, name = "tbl_SSPQmelt1", append = TRUE, row.names=FALSE)
-
-#setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
-#write.csv(dfSSPgradesMelt1,file = "dfSSPgradesMelt1DB.csv")
-
-## different question naming
-#dfSSPgradesMelt2 <- data.frame(lapply(dfSSPgradesMelt, function(x) { gsub("-", 0, x) }))
-#dfSSPgradesMelt2 <- data.frame(dfSSPgradesMelt2[1], lapply(dfSSPgradesMelt2[2:113], function(x) as.numeric(as.character(x))) )
-#dfSSPgradesMelt2 <-melt(dfSSPgradesMelt2, by = c("Email.address"))
-#write.csv(dfSSPgradesMelt2,file = "dfSSPgradesMelt2DB.csv")
-
-setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
-dfOptag<-read.csv("Optag_2017_bac_medialogi_adggru2.csv", header = TRUE, sep = ",", encoding="utf8")
-#dbWriteTable(mydb, value = dfOptag, name = "tbl_dfOptag1", temporary = TRUE, row.names=FALSE)
-
-dfAAUgradesDB<-read.csv("AAUgrades.csv", header = TRUE, sep = ",", encoding="utf8", check.names=FALSE, stringsAsFactors=FALSE)
-row.names(dfAAUgradesDB) <- NULL
-dbWriteTable(mydb, value = dfAAUgradesDB, name = "tbl_AAUgrades", temporary = TRUE, row.names=FALSE)
-
-
-dffrafaldAAUmedDB<-read.csv("frafaldAAUmed.csv", header = TRUE, sep = ",", encoding="utf8")
-dbWriteTable(mydb, value = dffrafaldAAUmedDB, name = "tbl_frafaldAAUmed2", temporary = TRUE, row.names=FALSE)
-
-dffrafaldAAUallDB<-read.csv("frafaldAAUalls.csv", header = TRUE, sep = ",", encoding="utf8")
-dbWriteTable(mydb, value = dffrafaldAAUallDB, name = "tbl_frafaldAAUall1", temporary = TRUE, row.names=FALSE)
-
-
-
-#dbClearResult(dbListResults(mydb)[[1]]) # after each fetch
-#dbDisconnect(mydb) # after working with the database
-
-#######################
-
+###############################################
+# counts study hours for the campi (only used for p1 semester start)
+# studyHoursTable <- data.frame(
+#     c(
+#     "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "AAL", ]),
+#     "30-34" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.3 & dfSSPgrades$Campus == "AAL", ]),
+#     "35-40" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.6 & dfSSPgrades$Campus == "AAL", ]),
+#     "41+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "AAL", ]),
+#     "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "AAL", ])),
+#     c(
+#     "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "CPH", ]),
+#     "30-34" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.3 & dfSSPgrades$Campus == "CPH", ]),
+#     "35-40" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.6 & dfSSPgrades$Campus == "CPH", ]),
+#     "41+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "CPH", ]),
+#     "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "CPH", ])))
+# names(studyHoursTable)[1]<-"AAL"
+# names(studyHoursTable)[2]<-"CPH"
+# names(dfSSPgrades)[1]<-"Surname"
+###############################################
 
 dfSSPgrades$`First name` <- gsub("-", " ", dfSSPgrades$`First name`)
-dfSSPgrades$Surname <- gsub("-", " ", dfSSPgrades$Surname)
+#dfSSPgrades$Surname <- gsub("-", " ", dfSSPgrades$Surname)
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
 
-
-
+# manually selected SSP items into new categories
 avgGrades <- NULL
 avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:106)])) # removed 5
 avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[93:97]))
@@ -197,7 +130,9 @@ scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
 scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 
 ####################################
+## Graphs
 
+# density distribution of total SSP score
 ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
   scale_x_discrete(breaks=seq(7,11,1), name ="Total score")
 
@@ -206,10 +141,14 @@ ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
 #dfSSPgradesSum <- data.frame(rowID = norm.avgGrades$rowID, campus = norm.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
 #ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_histogram()
 
+# histogram of total scores
 selectedTopics <- dfSSPgradesStat[,c(2:4,7:8,34:45,55:56,65:68,57:61,62:64,93:97,98:106)]
 dfSSPgradesSum <- data.frame(rowID = norm.avgGrades$rowID, Campus = norm.avgGrades$Campus, email = norm.avgGrades$Email, gradeSums = rowSums(selectedTopics))
 ggplot(dfSSPgradesStat, aes(rowSums(selectedTopics))) + geom_histogram()
 
+
+#######################################################################
+# high risk students
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
 highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
 norm.avgGradesMelt <- NULL
@@ -230,7 +169,7 @@ names(studyHours)[3]<-"hours"
 
 # Preparing the dataset to the mailmerge in rmarkdown
 
-studentData <- sqldf('Select rowID,Campus from dfSSPgrades')
+studentData <- sqldf('Select rowID, Campus from dfSSPgrades')
 studentData['name'] <- paste(dfSSPgrades[,2],dfSSPgrades[,1])
 studentData['email'] <- dfSSPgrades[,5]
 studentData['initials'] <-  gsub("@student.aau.dk", "",dfSSPgrades[,5])
@@ -239,22 +178,152 @@ studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
 studentData$rowID <- as.numeric(levels(studentData$rowID))[studentData$rowID]
 studentData <- studentData[with(studentData, order(studentData$rowID)),]
 
-setwd('C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP')
 write.csv(studentData,file = "studentData.csv")
 write.csv(highRiskStudents,file = "highRiskStudents.csv")
 personalized_info <- read.csv(file = "studentData.csv")
 highRiskStudents <- read.csv(file = "highRiskStudents.csv")
 
-# The for loop renders the student report pdf files
-# for (i in 1:nrow(personalized_info)){
-#   rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/stats-on-grades/docs/SSP-MailMerge.Rmd",
-#                     output_format = "pdf_document",
-#                     output_file = gsub(" ", "", paste("SSP_", ifelse(personalized_info$Campus[i] == 'AAL', 
-#                                                      "AAL_Individual-student-feedback_", 
-#                                                      "CPH_Individual-student-feedback_"),
-#                                                       personalized_info$initials[i], ".pdf", sep='')),
-#                     output_dir = "handouts/")
-# }
+#######################################################################
+
+# Boxplots are the best data representation for understanding the dataset, 
+# but the students might gain more from a simpler (and gamified) graph, 
+# such as the radar/spider web chart with their scores in comparison to the average/median student
+# and the percentile rank for each topic.
+
+#create a vector with axis names
+labs <- c("Campus","name","Understanding of\n Medialogy", "Time com-\n mitment", "Growth\n mindset", "Grit", "Study habits\n at AAU", "High school\n habits", "Social support\n for studying")
+#use the new vector to change the column names
+#colnames(dfStudentMedian)<- labs
+
+# import percentiles
+dfSPPscore <- read.csv("studentData.csv", header = T)
+# calculate the median of the scores times 100 to be on the same scale as percentiles, not the percentiles
+SSPmedian <- data.frame(Campus="AAL/CPH",name="Median",t(colMedians(dfSPPscore[,7:13])*100))
+colnames(SSPmedian)<- labs
+dfSPPscore <- dfSPPscore[,c(3:4,21:15)]
+colnames(dfSPPscore)<- labs
+# median as the last row in the dataset
+dfSPPscoreAddon <- rbind(dfSPPscore, SSPmedian)
+
+# function to create the coordinates for the radarplot and remove outer line
+coord_radar <- function (theta = "x", start = 0, direction = 1) 
+{
+  theta <- match.arg(theta, c("x", "y"))
+  r <- if (theta == "x")
+    "y"
+  else "x"
+  
+  #dirty
+  rename_data <- function(coord, data) {
+    if (coord$theta == "y") {
+      plyr::rename(data, c("y" = "theta", "x" = "r"), warn_missing = FALSE)
+    } else {
+      plyr::rename(data, c("y" = "r", "x" = "theta"), warn_missing = FALSE)
+    }
+  }
+  theta_rescale <- function(coord, x, scale_details) {
+    rotate <- function(x) (x + coord$start) %% (2 * pi) * coord$direction
+    rotate(scales::rescale(x, c(0, 2 * pi), scale_details$theta.range))
+  }
+  
+  r_rescale <- function(coord, x, scale_details) {
+    scales::rescale(x, c(0, 0.4), scale_details$r.range)
+  }
+  
+  ggproto("CordRadar", CoordPolar, theta = theta, r = r, start = start,
+          direction = sign(direction),
+          is_linear = function(coord) TRUE,
+          render_bg = function(self, scale_details, theme) {
+            scale_details <- rename_data(self, scale_details)
+            
+            theta <- if (length(scale_details$theta.major) > 0)
+              theta_rescale(self, scale_details$theta.major, scale_details)
+            thetamin <- if (length(scale_details$theta.minor) > 0)
+              theta_rescale(self, scale_details$theta.minor, scale_details)
+            thetafine <- seq(0, 2 * pi, length.out = 100)
+            
+            rfine <- c(r_rescale(self, scale_details$r.major, scale_details))
+            
+            # This gets the proper theme element for theta and r grid lines:
+            #   panel.grid.major.x or .y
+            majortheta <- paste("panel.grid.major.", self$theta, sep = "")
+            minortheta <- paste("panel.grid.minor.", self$theta, sep = "")
+            majorr     <- paste("panel.grid.major.", self$r,     sep = "")
+            
+            ggplot2:::ggname("grill", grid::grobTree(
+              ggplot2:::element_render(theme, "panel.background"),
+              if (length(theta) > 0) ggplot2:::element_render(
+                theme, majortheta, name = "angle",
+                x = c(rbind(0, 0.45 * sin(theta))) + 0.5,
+                y = c(rbind(0, 0.45 * cos(theta))) + 0.5,
+                id.lengths = rep(2, length(theta)),
+                default.units = "native"
+              ),
+              if (length(thetamin) > 0) ggplot2:::element_render(
+                theme, minortheta, name = "angle",
+                x = c(rbind(0, 0.45 * sin(thetamin))) + 0.5,
+                y = c(rbind(0, 0.45 * cos(thetamin))) + 0.5,
+                id.lengths = rep(2, length(thetamin)),
+                default.units = "native"
+              ),
+              
+              ggplot2:::element_render(
+                theme, majorr, name = "radius",
+                x = rep(rfine, each = length(thetafine)) * sin(thetafine) + 0.5,
+                y = rep(rfine, each = length(thetafine)) * cos(thetafine) + 0.5,
+                id.lengths = rep(length(thetafine), length(rfine)),
+                default.units = "native"
+              )
+            ))
+          })
+}
+#define plot theme
+RadarTheme<-theme(panel.background=element_blank(),
+                  plot.title= element_text(size = 25,face=c("bold", "italic")),
+                  plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+                  text=element_text(family="serif"), aspect.ratio = 1,
+                  legend.position="bottom",legend.title=element_blank(),
+                  legend.direction="horizontal", legend.text = element_text(size = 20),
+                  strip.text.x = element_text(size = rel(0.8)),
+                  axis.text.x = element_text(size = 20),
+                  axis.ticks.y = element_blank(),
+                  axis.text.y = element_blank(),
+                  axis.line.x=element_line(size=0.5),
+                  panel.grid.major=element_line(size=0.3,linetype = 2,colour="grey"),
+                  legend.key=element_rect(fill=NA),
+                  line = element_blank(),
+                  title = element_blank()) 
+                  #text=element_text(size=15, family="Arial")) # changed font
+ 
+#define plot theme
+# RadarTheme<-theme(panel.background=element_blank(),
+#                   plot.title= element_text(size = 25,face=c("bold", "italic")),
+#                   plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+#                   text=element_text(size=15, family="Arial"), 
+#                   aspect.ratio = 1,
+#                   legend.position="bottom",legend.title=element_blank(),
+#                   legend.direction="horizontal", legend.text = element_text(size = 15),
+#                   strip.text.x = element_text(size = rel(0.8)),
+#                   #strip.text.x = element_text(size=15, face = "bold"),
+#                   axis.text.x = element_text(size = 15, face = "bold"),
+#                   axis.ticks.y = element_blank(),
+#                   axis.text.y = element_blank(),
+#                   axis.line.x=element_line(size=0.5),
+#                   panel.grid.major=element_line(size=0.3,linetype = 2,colour="grey"))
+                  
+
+#######################################################################
+
+#The for loop renders the student report pdf files
+for (i in 1:nrow(personalized_info)){
+  rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/PBLstats-on-grades/docs/SSP/SSP-MailMerge.Rmd",
+                    output_format = "pdf_document",
+                    output_file = gsub(" ", "", paste("SSP_", ifelse(personalized_info$Campus[i] == 'AAL',
+                                                     "AAL_Individual-student-feedback_",
+                                                     "CPH_Individual-student-feedback_"),
+                                                      personalized_info$initials[i], ".pdf", sep='')),
+                    output_dir = "handouts")
+}
 
 ############################################################################
 

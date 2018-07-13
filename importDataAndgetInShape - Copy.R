@@ -16,8 +16,6 @@ library(splines)
 library(car)
 library(sandwich)
 library(RcmdrMisc)
-library(RMySQL)
-library(DBI)
 
 s.odd <- function(x) x %% 2 != 0 
 trim <- function (x) gsub("^\\s+|\\s+$", "", x)
@@ -26,26 +24,6 @@ trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 #   lapply( dbListConnections(MySQL()), function(x) dbDisconnect(x) )
 #   cat(sprintf("%s connection(s) closed.\n", ile))
 # }
-
-libloc= Sys.getenv("R_LIBS_USER")
-### === data import from mysql - make sure the config.R file exists and has all information user/pass/dbname/serverIP =======================
-source(paste(libloc,"//config.R",sep='')) # MAC and Windows
-
-mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=LAserver)
-
-##################
-## get from data
-#rs<-dbSendQuery(mydb, "select * from map_SPVCmapping") # remember to change name of tables when changed in database
-#dfECTSstruct<- fetch(rs, n=-1)
-#rs<-dbSendQuery(mydb, "SELECT * FROM LA.tbl_SSPQmelt")
-dfECTSstruct<- fetch(rs, n=-1)
-dbClearResult(dbListResults(mydb)[[1]])
-dbDisconnect(mydb)
-
-#setwd('Z:/BNC/PBL development project/Data/analysis_data/dropOut/data_2017cohortCPHAAL')
-#dfTidlOptag<-read.csv("Tidligere_indskrivninger_optag_2017_bac_medialogi.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-#dbWriteTable(mydb, value = dfTidlOptag, name = "tbl_dfTidlOptag", append = TRUE)
-
 
 ################ import ######################################
 #steps to take - get data from qlikview (grades, enrolStatus) and from Cristina Draghici the kvote and GymData
@@ -63,50 +41,34 @@ dbDisconnect(mydb)
 # import all files --------------------------------------------------------
 
 SVNData<-if(grepl("BiancaClavio", getwd())){'Z:/BNC/PBL development project/Data/analysis_data/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
-#SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/dropOut/data'} else {"~/SVN/01Projects/dropOut/data/"}
-setwd(SVNData)
+#setwd(SVNData)
+setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut')
 
-dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = "",fileEncoding = "UTF-8", check.names=FALSE)
-dfMed1Q999<-dfMed1Q999[,1:7]
+#dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+#gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
+#dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = "",fileEncoding = "UTF-8", check.names=FALSE)
+#gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
+#dfMed1Q999<-dfMed1Q999[,1:7]
 #dfMed1Q999$Name <-NULL
-
-highSchoolData<-read.csv("RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-
-
-
-#myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/SVN/01Projects/dropOut/data/"}
-#setwd(myWD1)
-
-dfMed1Q999<-read.csv("Med1Q999.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-  #gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=0')
-dfMed1Interviews<-read.csv("Drop-out interviews - questionnaire.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8",check.names=FALSE)
-    
-  #gsheet2tbl('https://docs.google.com/spreadsheets/d/19_UD0a2lh-u3ES1ZU6KJ0BASQK7lQmM_CePdWSyts5s/edit#gid=1292286222')
-#dfMed1Q999$Name <-NULL
-dfMed1Q999<-dfMed1Q999[,1:7]
-
-courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-
-
+#courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 #dfECTSstruct<-gsheet2tbl('https://docs.google.com/spreadsheets/d/10xp3CLhDkgCG2p3M2f8GrGQ4j5kNaqrdJg1cFBAb7DQ/edit?usp=sharing')
-#used to be  <-read.csv("course_SPV.csv", header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
-#courseStudyPlanStructure<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8") 
-#dfECTSstruct<-read.csv("course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
-+#NOW THIS GETS READ DIRECTLY FROM THE DATABASE SERVER LA
-
 #dfpppStudents<-read.csv("P0P1P2StudentsFromCharlotte.txt",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 
-dfEnrolStatusMsc<-read.csv("MedEnrolMScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
+highSchoolData<-read.csv("data/RawDataOnlyUD1Engl.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
+dfECTSstruct<-read.csv("data/course_SPV.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
+
+dfEnrolStatusMsc<-read.csv("data/MedEnrolMScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
 dfEnrolStatusMsc$fradatosn<-as.Date(as.character(dfEnrolStatusMsc$fradatosn) , "%d.%m.%Y")
 dfEnrolStatusMsc$stype<-as.factor("kandidat")
-dfEnrolStatusBsc<-read.csv("MedEnrolBScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
+dfEnrolStatusBsc<-read.csv("data/MedEnrolBScThroughJul2017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8", check.names=FALSE)
 dfEnrolStatusBsc$fradatosn<-as.Date(as.character(dfEnrolStatusBsc$fradatosn), "%d.%m.%Y")
 dfEnrolStatusBsc$stype<-as.factor("bachelor")
 dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
-dfEnrolStatus<-rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
+#dfEnrolStatus<-rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
+dfEnrolStatus<-dfEnrolStatusBsc
 dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeldsn=='Afvist på grund af manglende kvalifikationer'),]
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
+dfEnrolStatus$type<-dfEnrolStatus$stype
 #dfEnrolStatus$navn<-NULL
 
 #remove all students who did not start in september 
@@ -128,10 +90,16 @@ dfEnrolStatus$EndSemester<-ifelse(is.na(dfEnrolStatus$slutdatosn) , NA,
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
 #                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7))  
 
-dfSchoolGrades<-read.csv("kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+dfSchoolGrades<-read.csv("data/kot_medialogi_2011_2016_gymfag.csv",header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
 
-dfKvote<-read.csv("kot_medialogi_2011_2016_kvote.csv",header = TRUE, fill=TRUE, sep = ",")
-dfAAUGrades<-read.csv("MEDgradesTilAug32017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
+dfKvote<-read.csv("data/kot_medialogi_2011_2016_kvote.csv",header = TRUE, fill=TRUE, sep = ",")
+
+
+
+
+
+# new: data_2017cohortCPHAAL/AAUgrades.csv
+dfAAUGrades<-read.csv("data/MEDgradesTilAug32017.csv",header = TRUE, fill=TRUE, sep = ",",fileEncoding = "UTF-8")
 dfAAUGrades$isLastTry<- ifelse(dfAAUGrades$`Sidste.Fors.`=="Ja",1,0)
 dfAAUGrades$isProj<- ifelse(dfAAUGrades$ECTS>5,1,0)
 
@@ -163,11 +131,13 @@ dfAAUGrades$examMonth<-as.numeric(format(dfAAUGrades$bedom_dato,'%m'))
 dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
 
 #HKtodo: need to work on people who did not start in september
+#dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
+#                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
+#                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
+                               #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
 dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
-                                                                 (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
-                               #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
-
+                                                                 (as.numeric(format(dfAAUGrades$bedom_dato-14,'%Y'))-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
 
 #hard coded data corrections for three students 
 dfAAUGrades[dfAAUGrades$studienr==20133942 & dfAAUGrades$aktivitetText=="Bachelorprojekt (Design af int"]$aktivitetText<-"Bachelorprojekt"
@@ -208,26 +178,26 @@ pensumVector<-c('Need to catch up a little'=-1,'Far behind'=-3,'Following just f
 EduPrioVector<-c('1st priority'=1,'2nd priority'=2)
 EducationLevelVector<-c('Upper secondary school'=13,'Lower secondary school'=10,'Vocational education'=14,'Academic degree'=17)
 
-dfMed1Interviews$jobHoursPerWeek<-jobHoursVector[as.character(dfMed1Interviews$'Are you currently/planning on having a student job?')]
-dfMed1Interviews$AVSCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [AVS]')]
-dfMed1Interviews$PVCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [PV]')]
-dfMed1Interviews$GPROCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [GPRO]')]
-dfMed1Interviews$MedStudyPrio<-EduPrioVector[as.character(dfMed1Interviews$'How did you prioritize the Medialogy education when you applied?')]
-dfMed1Interviews$FatherEduYrs<-EducationLevelVector[as.character(dfMed1Interviews$'What is the background of your parents? [Father]')]
-dfMed1Interviews$MotherEduYrs<-EducationLevelVector[as.character(dfMed1Interviews$'What is the background of your parents? [Mother]')]
-dfMed1Interviews$ParentsEduMax<-ifelse(dfMed1Interviews$FatherEduYrs>dfMed1Interviews$MotherEduYrs,dfMed1Interviews$FatherEduYrs,dfMed1Interviews$MotherEduYrs)
-dfMed1Interviews$ParentsEduAvg<-(dfMed1Interviews$FatherEduYrs+dfMed1Interviews$MotherEduYrs)/2
-dfMed1Interviews$MedHappyWith<-dfMed1Interviews$'How happy are you with studying Medialogy?'
-dfMed1Interviews$MedBelongHere<-dfMed1Interviews$'What is your sense of belonging to Medialogy?'
-dfMed1Interviews$WantMScDeg<-ifelse(dfMed1Interviews$'Do you plan on taking a master degree?'!="",grepl("Yes", dfMed1Interviews$'Do you plan on taking a master degree?', fixed=TRUE),NA) 
-dfMed1Interviews$WantMedMScDeg<-ifelse(dfMed1Interviews$'Do you plan on taking a master degree?'!="",grepl("Medialogy", dfMed1Interviews$'Do you plan on taking a master degree?', fixed=TRUE),NA) 
-colsdfmInt <- sapply(dfMed1Interviews, is.logical)
-dfMed1Interviews[,colsdfmInt] <- lapply(dfMed1Interviews[,colsdfmInt], as.numeric)
+# dfMed1Interviews$jobHoursPerWeek<-jobHoursVector[as.character(dfMed1Interviews$'Are you currently/planning on having a student job?')]
+# dfMed1Interviews$AVSCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [AVS]')]
+# dfMed1Interviews$PVCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [PV]')]
+# dfMed1Interviews$GPROCatchUp<-pensumVector[as.character(dfMed1Interviews$'How are you keeping up with the courses? [GPRO]')]
+# dfMed1Interviews$MedStudyPrio<-EduPrioVector[as.character(dfMed1Interviews$'How did you prioritize the Medialogy education when you applied?')]
+# dfMed1Interviews$FatherEduYrs<-EducationLevelVector[as.character(dfMed1Interviews$'What is the background of your parents? [Father]')]
+# dfMed1Interviews$MotherEduYrs<-EducationLevelVector[as.character(dfMed1Interviews$'What is the background of your parents? [Mother]')]
+# dfMed1Interviews$ParentsEduMax<-ifelse(dfMed1Interviews$FatherEduYrs>dfMed1Interviews$MotherEduYrs,dfMed1Interviews$FatherEduYrs,dfMed1Interviews$MotherEduYrs)
+# dfMed1Interviews$ParentsEduAvg<-(dfMed1Interviews$FatherEduYrs+dfMed1Interviews$MotherEduYrs)/2
+# dfMed1Interviews$MedHappyWith<-dfMed1Interviews$'How happy are you with studying Medialogy?'
+# dfMed1Interviews$MedBelongHere<-dfMed1Interviews$'What is your sense of belonging to Medialogy?'
+# dfMed1Interviews$WantMScDeg<-ifelse(dfMed1Interviews$'Do you plan on taking a master degree?'!="",grepl("Yes", dfMed1Interviews$'Do you plan on taking a master degree?', fixed=TRUE),NA) 
+# dfMed1Interviews$WantMedMScDeg<-ifelse(dfMed1Interviews$'Do you plan on taking a master degree?'!="",grepl("Medialogy", dfMed1Interviews$'Do you plan on taking a master degree?', fixed=TRUE),NA) 
+# colsdfmInt <- sapply(dfMed1Interviews, is.logical)
+# dfMed1Interviews[,colsdfmInt] <- lapply(dfMed1Interviews[,colsdfmInt], as.numeric)
 
 #library(Rcmdr)
 
-factorListFromInterviews<-c("studienr", "picOnMoodle","hoursWorkedPerWeek", "jobHoursPerWeek","AVSCatchUp","GPROCatchUp","MedStudyPrio","ParentsEduMax","ParentsEduAvg","MedHappyWith","MedBelongHere", "WantMScDeg","WantMedMScDeg")
-dfInterviews<-dfMed1Interviews[,factorListFromInterviews]
+# factorListFromInterviews<-c("studienr", "picOnMoodle","hoursWorkedPerWeek", "jobHoursPerWeek","AVSCatchUp","GPROCatchUp","MedStudyPrio","ParentsEduMax","ParentsEduAvg","MedHappyWith","MedBelongHere", "WantMScDeg","WantMedMScDeg")
+# dfInterviews<-dfMed1Interviews[,factorListFromInterviews]
 
 CourseAcronymsLUVec<-c('Grundlæggende programmering'='GPRO',
                        'Problembaseret læring i videns'='PV',
@@ -357,36 +327,36 @@ dfM$NAVN<-NULL
 dfM$Campus<-NULL
 dfPFI<-dfM[dfM$startaar==2015 & !is.na(dfM$startaar),]
 
-dfAll<-merge(dfMed1Q999,dfEnrolStatus,all.x = TRUE)
-dfAll<-merge(dfAll,dfInterviews,by="studienr")
+# dfAll<-merge(dfMed1Q999,dfEnrolStatus,all.x = TRUE)
+# dfAll<-merge(dfAll,dfInterviews,by="studienr")
 
 lookupDropOutsVector=c('Afsluttet'= 0, 'Afbrudt'=1, 'Indskrevet'=0, 'Afbrudt (School skift)'=1,'Afbrudt(Fak skift)'=1,'Afbrudt (SN skift)'=1,'Afbrudt af den studerende'=1,'Afbrudt af institutionen'=1)
 lookupDropOutsiUniVector=c('Afsluttet'= 0, 'Afbrudt'=1, 'Indskrevet'=0, 'Afbrudt (School skift)'=0,'Afbrudt(Fak skift)'=0,'Afbrudt (SN skift)'=0,'Afbrudt af den studerende'=1,'Afbrudt af institutionen'=1)
-dfAll$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfAll$udmeldsn)]
-dfAll$isDropOut<-lookupDropOutsVector[as.character(dfAll$udmeldsn)]
+# dfAll$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfAll$udmeldsn)]
+# dfAll$isDropOut<-lookupDropOutsVector[as.character(dfAll$udmeldsn)]
 
-dfAll$DropOutQ999Combo<-ifelse(dfAll$isDropOut==1|dfAll$P0Q999==1|dfAll$P1Q999==1|dfAll$P2Q999==1,1,0)
+# dfAll$DropOutQ999Combo<-ifelse(dfAll$isDropOut==1|dfAll$P0Q999==1|dfAll$P1Q999==1|dfAll$P2Q999==1,1,0)
 
 #remove side entries without data - need from Christina draghizi = missing 10 data points including
-dfAll<-dfAll[!is.na(dfAll$isDropOutButInUni),]
-dfAll<-merge(dfM,dfAll,all.y = TRUE)
+# dfAll<-dfAll[!is.na(dfAll$isDropOutButInUni),]
+# dfAll<-merge(dfM,dfAll,all.y = TRUE)
 
 
-dfMed2Aal<-merge(dfMed1Q999,dfEnrolStatus,all.x = TRUE)
-dfMed2Aal<-merge(dfMed2Aal,dfInterviews,by="studienr",all.x = TRUE)
-dfMed2Aal<-merge(dfMed2Aal,dfEntryGradesAll,by="studienr",all.x = TRUE)
-dfMed2Aal<-merge(dfMed2Aal,dfGradesByTry,by="studienr",all.x = TRUE)
-dfMed2Aal<-merge(dfMed2Aal,allHardByStudent,by="studienr",all.x = TRUE)
-dfMed2Aal$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfMed2Aal$udmeldsn)]
-dfMed2Aal$isDropOut<-lookupDropOutsVector[as.character(dfMed2Aal$udmeldsn)]
-dfMed2Aal$DropOutQ999Combo<-ifelse(dfMed2Aal$isDropOut==1|dfMed2Aal$P0Q999==1|dfMed2Aal$P1Q999==1|dfMed2Aal$P2Q999==1,1,0)
-dfMed2Aal$interviewTaken<-ifelse(is.na(dfMed2Aal$MedHappyWith),0,1)
-dfPredList<-c("interviewTaken","picOnMoodle","MATGrade","MAT_Niveau")
-dfPredListAndInterview<-c(dfPredList, factorListFromInterviews)
-
-FirstSemFactorList<-c('isDropOut', "interviewTaken", "DANGradeX","MATGrade","ENGGrade", "picOnMoodle","hoursWorkedPerWeek", "jobHoursPerWeek","AVSCatchUp","GPROCatchUp","MedStudyPrio","ParentsEduMax","ParentsEduAvg","MedHappyWith","MedBelongHere", "WantMScDeg","WantMedMScDeg")
-
-dfMed2AalX<-dfMed2Aal[dfMed2Aal$interviewTaken==1 & !is.na(dfMed2Aal$isDropOut) &!is.na(dfMed2Aal$ENGGrade) &!is.na(dfMed2Aal$MATGrade) & !is.na(dfMed2Aal$DANGradeX) & !is.na(dfMed2Aal$GPROCatchUp) & !is.na(dfMed2Aal$hoursWorkedPerWeek),FirstSemFactorList]
+# dfMed2Aal<-merge(dfMed1Q999,dfEnrolStatus,all.x = TRUE)
+# dfMed2Aal<-merge(dfMed2Aal,dfInterviews,by="studienr",all.x = TRUE)
+# dfMed2Aal<-merge(dfMed2Aal,dfEntryGradesAll,by="studienr",all.x = TRUE)
+# dfMed2Aal<-merge(dfMed2Aal,dfGradesByTry,by="studienr",all.x = TRUE)
+# dfMed2Aal<-merge(dfMed2Aal,allHardByStudent,by="studienr",all.x = TRUE)
+# dfMed2Aal$isDropOutButInUni<-lookupDropOutsiUniVector[as.character(dfMed2Aal$udmeldsn)]
+# dfMed2Aal$isDropOut<-lookupDropOutsVector[as.character(dfMed2Aal$udmeldsn)]
+# dfMed2Aal$DropOutQ999Combo<-ifelse(dfMed2Aal$isDropOut==1|dfMed2Aal$P0Q999==1|dfMed2Aal$P1Q999==1|dfMed2Aal$P2Q999==1,1,0)
+# dfMed2Aal$interviewTaken<-ifelse(is.na(dfMed2Aal$MedHappyWith),0,1)
+# dfPredList<-c("interviewTaken","picOnMoodle","MATGrade","MAT_Niveau")
+# dfPredListAndInterview<-c(dfPredList, factorListFromInterviews)
+# 
+# FirstSemFactorList<-c('isDropOut', "interviewTaken", "DANGradeX","MATGrade","ENGGrade", "picOnMoodle","hoursWorkedPerWeek", "jobHoursPerWeek","AVSCatchUp","GPROCatchUp","MedStudyPrio","ParentsEduMax","ParentsEduAvg","MedHappyWith","MedBelongHere", "WantMScDeg","WantMedMScDeg")
+# 
+# dfMed2AalX<-dfMed2Aal[dfMed2Aal$interviewTaken==1 & !is.na(dfMed2Aal$isDropOut) &!is.na(dfMed2Aal$ENGGrade) &!is.na(dfMed2Aal$MATGrade) & !is.na(dfMed2Aal$DANGradeX) & !is.na(dfMed2Aal$GPROCatchUp) & !is.na(dfMed2Aal$hoursWorkedPerWeek),FirstSemFactorList]
 
 #myWD1<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Dropbox/drop out initiative/dataAnalysis'} else {"~/git/AAU/DropOutProject/analysis/"}
 #setwd(myWD1)

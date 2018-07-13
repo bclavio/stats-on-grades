@@ -193,6 +193,8 @@ dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$exa
                                #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
 
 
+
+
 #hard coded data corrections for three students 
 #need to check whether this is important or not... hard coded corrections / BC: I don't think so for 2017, but maybe for other years
 #OLD:dfAAUGrades[dfAAUGrades$aktivitetText=="Sansning af medier (Computerg",]$aktivitetText<-"Sansning af medier (Computergr"
