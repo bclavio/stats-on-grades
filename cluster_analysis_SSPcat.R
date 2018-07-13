@@ -200,9 +200,9 @@ table(SSPclust$hclustcomp3)/nrow(SSPclust)
 table(SSPclust$hclustward2)/nrow(SSPclust)
 
 ############Comparing to dropout###################
-MedDataBSc2017 <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/MedDataBSc2017.csv", encoding="ANSI", stringsAsFactors=FALSE)
-MedDataBSc2017 <- MedDataBSc2017[!duplicated(MedDataBSc2017),]
-dropout <- MedDataBSc2017[,c(2,31)]
+MedDataBSc2017 <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/MedDataBSc2017_1107.csv", encoding="ANSI", stringsAsFactors=FALSE)
+MedDataBSc2017$dropout <- ifelse(MedDataBSc2017$udmeld_aarsag!=''|MedDataBSc2017$Q999==1,'dropout','active')
+dropout <- MedDataBSc2017[,c('studienr','dropout')]
 
 SSPAAL<-read.csv("Y:/analysis_data/SSP/SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
 SSPCPH <- read.csv("Y:/analysis_data/SSP/SSPgradesTestCPH 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
@@ -222,14 +222,19 @@ SSPclust$email <- SSPWide$email
 test <- merge(SSPclust,studienrEmail)
 test2 <- merge(test,dropout)
 
-tab <- table(test2$clustkmeans2,test2$statussn)
+tab <- table(test2$clustkmeans2,test2$dropout)
 tab/rowSums(tab)
+chisq.test(tab)
 
-tab <- table(test2$clustermedoids,test2$statussn)
+tab <- table(test2$clustermedoids,test2$dropout)
 tab/rowSums(tab)
+chisq.test(tab)
 
-tab <- table(test2$hclustcomp3,test2$statussn)
-tab/rowSums(tab)
 
-tab <- table(test2$hclustward2,test2$statussn)
+tab <- table(test2$hclustcomp3,test2$dropout)
 tab/rowSums(tab)
+chisq.test(tab)
+
+tab <- table(test2$hclustward2,test2$dropout)
+tab/rowSums(tab)
+chisq.test(tab)

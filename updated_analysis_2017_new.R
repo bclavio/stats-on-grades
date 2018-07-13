@@ -39,7 +39,7 @@ MedData0[MedData0=='.'] <- NA
 
 MedData0$merit_staa[is.na(MedData0$merit_staa)] <- 0
 
-#Removing one students without many missing predictors
+#Removing one students with many missing predictors
 MedData0 <- MedData0[-13,]
 
 #Setting unrealistic working hours to NA
@@ -58,27 +58,122 @@ for (i in c(1:6,13:ncol(MedData0))) {
     }
   }
 }
+MedData0$dropout <- factor(MedData0$dropout)
+MedData0$CourseLocation <- factor(MedData0$CourseLocation)
 
 ##########Analysis##############
+#There are many NA's in ENG and DAN but because people have not necesarrily taken the subjects
+#(international not taking danish)
+#it does not make much sense to impute these values.
+#Therefore it is investigated wether they are significant.
+fit.null <- glm(dropout~1,family = binomial(link='logit'), data = MedData0)
+add1(fit.null,~DANGrade+ENGGrade+ENG_Niveau,test='LRT')
+#None of them seems to be significant so they are excluded from further analysis
+MedData0 <- MedData0[,-c(9:12)]
+
+#There are only four students missing mathgrade. Checking whether math is significant
+add1(fit.null,~MATGrade+MAT_Niveau,test='LRT')
+#Grades seems to be significant, so keeping MAT. Assuming that all students must have
+#had math on some level these values are imputed as before.
+MedData0$MATGrade[is.na(MedData0$MATGrade)] <- mean(MedData0$MATGrade,na.rm = T)
+MedData0$MAT_Niveau[is.na(MedData0$MAT_Niveau)] <- 'B'
+
+#Investigating what is significant, now using all the data because no NA's
 full <- glm(factor(dropout)~., family = binomial(link='logit'), data = MedData0)
-null <- glm(factor(dropout)~1,family = binomial(link='logit'), data = MedData0)
 formula <- formula(full)
 
-add1(null,formula,test='LRT')
-
-fit <- step(full,k=4)
+add1(fit.null,formula,test='LRT')
+#The only ones that stands out as significant are MATGrade and pAcadAbil
+fit <- glm(dropout~MATGrade+pAcadAbil, family = binomial(link='logit'), data = MedData0)
 summary(fit)
+drop1(fit,test = 'LRT')
 
-fit2 <- glm(factor(dropout)~kvotient,family = binomial(link='logit'), data = MedData0)
-summary(fit2)
-fit2$deviance-null$deviance
+fitBIC <- step(fit.null,formula,k=log(nrow(MedData0)))
+summary(fitBIC)
 
-hist(MedData0$merit_staa)
-table(MedData0$merit_staa,MedData0$dropout)
+fitAIC <- step(fit.null,formula,k=2)
+summary(fitAIC)
 
-library(rpart)
-library(rpart.plot)
-cart <- rpart(dropout~adgangsgrundlag,MedData0,minsplit=2)
-rpart.plot(cart)
-summary(cart)
-table(MedData0$kommune_nu)
+ggplot(data=MedData0)+geom_boxplot(aes(x=dropout,y=pAcadAbil))
+ggplot(data=MedData0)+geom_boxplot(aes(x=dropout,y=MATGrade))
+
+#Check whether the relationship is linear
+plot(MedData0$pAcadAbil)
+c <- cut(MedData0$pAcadAbil,4)
+fitc <- glm(dropout~c, family = binomial(link='logit'), data = MedData0)
+summary(fitc)
+plot(c(0.045,0.063,0.081),c(0.3567,-0.1613,-0.8283))
+#linear connection seems to be fine
+
+#Doing cross-validation
+logCV <- function(fit,k=10, data,thres=0.5){
+  CV <- rep(0,k)
+  FP <- rep(0,k)
+  FN <- rep(0,k)
+  idx <- sample(1:k,nrow(data),replace = TRUE)
+  for (i in 1:k){
+    train <- data[idx!=i,]
+    test <- data[idx==i,]
+    fittrain <- glm(fit$formula, data = train, family = binomial)
+    pred <- predict(fittrain,test,type='response')
+    pred <-ifelse(pred>thres, 'dropout','active')
+    CV[i] <- mean(pred==test$dropout)
+    tab <- table(factor(pred, levels = c('active','dropout')),test$dropout)
+    FP[i] <- tab[2,1]/sum(tab[,1])
+    if(sum(tab[,2])==0){FN[i] <- 0}
+    else{FN[i] <- tab[1,2]/sum(tab[,2])}
+  }
+  accuracy <- CV
+  FP <- FP
+  FN <- FN
+  return(list('accuracy'=accuracy,'FP'=FP,'FN'=FN))
+}
+
+CVBIC <- logCV(fitBIC,k=10,data=MedData0)
+mean(CVBIC$accuracy)
+mean(CVBIC$FN)
+mean(CVBIC$FP)
+
+CVAIC <- logCV(fitAIC,k=10,data=MedData0,thres = 0.3)
+mean(CVAIC$accuracy)
+mean(CVAIC$FN)
+mean(CVAIC$FP)
+
+thresholds <- seq(0,0.5,0.01)
+res <- lapply(thresholds, logCV,fit=fitBIC,data=MedData0,k=10)
+
+f <- function(list){c(mean(list$accuracy),sd(list$accuracy),mean(list$FN),sd(list$FN),mean(list$FP),sd(list$FP))}
+res2 <- sapply(res, f)
+
+ggplot()+geom_point(aes(x=thresholds,y=res2[1,],col='accuracy'))+
+  geom_point(aes(x=thresholds,y=res2[3,],col='FN'))+
+  geom_point(aes(x=thresholds,y=res2[5,],col='FP'))+
+  geom_line(aes(x=thresholds,y=res2[1,],col='accuracy'))+
+  geom_line(aes(x=thresholds,y=res2[3,],col='FN'))+
+  geom_line(aes(x=thresholds,y=res2[5,],col='FP'))+
+  xlab('Threshold')+
+  ylab('Value')+
+  scale_color_discrete(name='Meassure')+
+  ggtitle('Accuracy, false postive and false negative rates from 10-fold crossvalidation')
+
+resAIC <- lapply(thresholds, logCV,fit=fitAIC,data=MedData0,k=10)
+
+res2AIC <- sapply(resAIC, f)
+
+ggplot()+geom_point(aes(x=thresholds,y=res2AIC[1,],col='accuracy'))+
+  geom_point(aes(x=thresholds,y=res2AIC[3,],col='FN'))+
+  geom_point(aes(x=thresholds,y=res2AIC[5,],col='FP'))+
+  geom_line(aes(x=thresholds,y=res2AIC[1,],col='accuracy'))+
+  geom_line(aes(x=thresholds,y=res2AIC[3,],col='FN'))+
+  geom_line(aes(x=thresholds,y=res2AIC[5,],col='FP'))+
+  xlab('Threshold')+
+  ylab('Value')+
+  scale_color_discrete(name='Meassure')+
+  ggtitle('Accuracy, false postive and false negative rates from 10-fold crossvalidation')
+
+summary(fitAIC)
+summary(fitBIC)
+
+normpAcadAbil <- (MedData0$pAcadAbil-min(MedData0$pAcadAbil))/(max(MedData0$pAcadAbil)-min(MedData0$pAcadAbil))
+fitBICnorm <- glm(dropout~normpAcadAbil,family = binomial(link='logit'), data = MedData0)
+summary(fitBICnorm)
