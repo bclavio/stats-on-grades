@@ -198,9 +198,9 @@ labs <- c("Campus","name","Understanding of\n Medialogy", "Time com-\n mitment",
 # import percentiles
 dfSPPscore <- read.csv("studentData.csv", header = T)
 # calculate the median of the scores times 100 to be on the same scale as percentiles, not the percentiles
-SSPmedian <- data.frame(Campus="AAL/CPH",name="Median",t(colMedians(dfSPPscore[,7:13])*100))
+SSPmedian <- data.frame(Campus="AAL/CPH",name="Median",t(colMedians(dfSPPscore[,7:13])))
 colnames(SSPmedian)<- labs
-dfSPPscore <- dfSPPscore[,c(3:4,21:15)]
+dfSPPscore <- dfSPPscore[,c(3:4,7:13)]
 colnames(dfSPPscore)<- labs
 # median as the last row in the dataset
 dfSPPscoreAddon <- rbind(dfSPPscore, SSPmedian)
@@ -282,17 +282,18 @@ RadarTheme<-theme(panel.background=element_blank(),
                   plot.title= element_text(size = 25,face=c("bold", "italic")),
                   plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
                   text=element_text(family="serif"), aspect.ratio = 1,
-                  legend.position="bottom",legend.title=element_blank(),
-                  legend.direction="horizontal", legend.text = element_text(size = 20),
+                  #legend.position="bottom",legend.title=element_blank(),
+                  #legend.direction="horizontal", legend.text = element_text(size = 20),
                   strip.text.x = element_text(size = rel(0.8)),
                   axis.text.x = element_text(size = 20),
                   axis.ticks.y = element_blank(),
                   axis.text.y = element_blank(),
-                  axis.line.x=element_line(size=0.5),
+                  #axis.line.x=element_line(size=0.5),
                   panel.grid.major=element_line(size=0.3,linetype = 2,colour="grey"),
-                  legend.key=element_rect(fill=NA),
+                  #legend.key=element_rect(fill=NA),
                   line = element_blank(),
-                  title = element_blank()) 
+                  title = element_blank(),
+                  legend.position="none") 
                   #text=element_text(size=15, family="Arial")) # changed font
  
 #define plot theme
@@ -314,7 +315,8 @@ RadarTheme<-theme(panel.background=element_blank(),
 
 #######################################################################
 
-#The for loop renders the student report pdf files
+# The for loop renders the student report pdf files
+# note: sometimes the loop can't run all students > check output folder or run from last completed student file 
 for (i in 1:nrow(personalized_info)){
   rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/PBLstats-on-grades/docs/SSP/SSP-MailMerge.Rmd",
                     output_format = "pdf_document",

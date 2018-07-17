@@ -183,8 +183,11 @@ dfAAUMarriedGradesWide <- dfAAUMarriedGradesWide[-nrow(dfAAUMarriedGradesWide),]
 names(dfAAUMarriedGradesWide) <- c("studienr","navn", "statussn", "udmeldsn", "p1", "p0", "AVS", "GPRO", "PV", "P2", "ID", "MMA", "PFI")
 
 setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
-write.csv(ForSvante,file = "MedDataBSc2017_grades.csv",row.names=FALSE) 
+write.csv(dfAAUMarriedGradesWide,file = "MedDataBSc2017_grades.csv",row.names=FALSE) 
 
+personSTADSid<-read.csv("2008-18_ram_op_MED.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+personSTADSid <- personSTADSid[,c(3,40)]
+personSTADSid <- personSTADSid[!duplicated(personSTADSid), ]
 
 ##################################################################
 #### Write dataset to database
@@ -201,17 +204,18 @@ mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=
 #dbWriteTable(mydb, value = MedDataBSc2017, name = "tbl_ForSvante2", temporary = TRUE, row.names=FALSE)
 
 # tbl_personIDs
-personIDs <- dfEnrolStatusBsc[,c(2,3)]
-personIDs <- subset(personIDs,  personIDs$studienr %in% uniqueDropMedsFrAll$studienr)
+personIDs <- dfEnrolStatusBsc[,c(2,3)] #203
+#personIDs <- subset(personIDs,  personIDs$studienr %in% uniqueDropMedsFrAll$studienr) 
 personIDs <- merge(personIDs, uniqueDropMedsFrAll,by="studienr")
+personIDs <- merge(personIDs, personSTADSid,by="studienr")
 personIDs$idNumber <- NA
 personIDs$map_personIDsID <- seq(1:nrow(personIDs))
 write.csv(personIDs,file = "personIDs.csv",row.names=FALSE) 
-#dbWriteTable(mydb, value = personIDs, name = "tbl_personIDs", temporary = TRUE, row.names=FALSE, append=TRUE)
+dbWriteTable(mydb, value = personIDs, name = "tbl_personIDs", temporary = TRUE, row.names=FALSE, append=TRUE)
 
 
 dbDisconnect(mydb)
-
+detach("package:RMySQL", unload=TRUE)
 
 
 

@@ -76,10 +76,9 @@ urlcolor: blue
 
 This is an interpretive report of your responses to the study verification test. We hope this report will help you identify your current student profile, but also aid you in reflection.
 
-The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported value for each topic is indicated with red dots. A value less than 0.5 means that you rated yourself lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Low percentiles are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth. 
+The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported value for each topic is indicated with red dots. A value less than 0.5 means that you rated yourself lower than the average student. The percentiles indicate the percentage of students whose scores are equal to or less than yours. Low percentiles are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth. **For an alternative data intepretation, the radar shart compares your score with the median score in the seven topics (see Figure 3).**
 
-As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Your advisor or student counselor will help you understand your scores and find the services you desire. Based on your self-reported answers we have created specific recommendations with concrete examples and links for you to get more comfortable in the Medialogy study environment (see the following pages).
-
+As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Based on your self-reported answers we have created specific recommendations with concrete examples and links for you to get more comfortable in the Medialogy study environment (see the following pages). **You might find some information more applicaple to you than others or some challenges more immediate to handle, and we therefore encourage you to focus on selected areas and set concrete goals (see the last page). As follow-up to this report, we will conduct a workshop to help you understand your scores, redefine your goals and talk about the services you may desire.**
 
 [^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation called the interquartile range (IQR) and a typical value (median). The rectangular box denotes the IQR, corresponding to the middle scores of the dataset - ranging from the 25th to the 75th percentile. The line dividing the box into two parts marks the median. The horizontal lines to the left and right of the IQR (whiskers) are 1.5 times as long as the width of the IQR. Outliers are defined as data points outside the whisker ranges and plotted as black dots.
 
@@ -139,6 +138,7 @@ studentTable1 <- studentTable1[,-c(1)]
 is.num <- sapply(studentTable1, is.numeric)
 studentTable1[is.num] <- sapply(studentTable1[is.num], round, 2)
 studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
+studentTable1$`Your score` <- round(as.numeric(studentTable1$`Your score`), digits = 2)
 studentTable1 <- rbind(studentTable1, c(" "))
 
 
@@ -158,7 +158,7 @@ studentHours <- subset(studyHours, studyHours$rowID==i) #studyHours$rowID %in% h
 studentHours['DotPos'] <- 95
 ggplot(studyHours, aes(x=rowID,y=hours)) + 
   geom_boxplot() + 
-  labs(y="Figure 2: Boxplot of the self-reported hours spent studying per week of all students") +
+  labs(y="Figure 2: Boxplot of the self-reported hours spent studying per week of all students.") +
   scale_y_continuous(breaks=seq(0,100,5), limits = c(10,90)) +
   coord_flip() +
   geom_dotplot(data = studentHours,
@@ -192,11 +192,11 @@ dfStudentMedian$ID <- rownames(dfStudentMedian)
 
 #melt data
 dfmelt<- reshape2::melt(dfStudentMedian)
-dfmelt$axis1 <- 20
-dfmelt$axis2 <- 40
-dfmelt$axis3 <- 60
-dfmelt$axis4 <- 80
-dfmelt$axis5 <- 100
+dfmelt$axis1 <- 0.2
+dfmelt$axis2 <- 0.4
+dfmelt$axis3 <- 0.6
+dfmelt$axis4 <- 0.8
+dfmelt$axis5 <- 1.0
 
 # radar charts
 p<- ggplot(dfmelt, aes(x=variable, y= value))+
@@ -204,21 +204,22 @@ p<- ggplot(dfmelt, aes(x=variable, y= value))+
   geom_text(aes(y = axis2,label = axis2, size=2)) +
   geom_text(aes(y = axis3,label = axis3, size=2)) +
   geom_text(aes(y = axis4,label = axis4, size=2)) +
-  geom_text(aes(y = axis5,label = "100")) +
+  geom_text(aes(y = axis5,label = "1.0")) +
   annotate("text", x= 0.0, y= 0, label = "0")+
   geom_polygon(aes(group=ID, color= ID, fill= ID), alpha = 0.4, size = 1, show.legend = T)+
   RadarTheme+
   xlab("")+ ylab("")+
-  scale_y_continuous(limits = c(0, 120), breaks = seq(0, 100, 10))+
+  scale_y_continuous(limits = c(0, 1.20), breaks = seq(0, 1.0, 0.1))+
   #annotate("text", x= 0.0, y= seq(0.0, 1.0, 0.20), label = seq(0.0, 1.0, 0.20))+
   #geom_label_repel(aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
   #geom_label(data=subset(dfmelt, dfmelt$ID=="Median"), aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
-  geom_label(data=subset(dfmelt, dfmelt$ID=="You"), aes(color=factor(ID), y = value,label = round(value, digits = 0)), size=7) +
+  geom_label(data=subset(dfmelt, dfmelt$ID=="You"), aes(color=factor(ID), y = value,label = round(value, digits = 2)), size=7) +
   guides(size=FALSE) +
   coord_radar()
 
-#check
-p
+p2 <- add_sub(p, "Figure 3: Radar chart of the median self-ratings of all students in seven topics (red) \nin comparison to your score (blue).", x = 0, hjust = 0, size=25)
+ggdraw(p2)
+
 
 ```
 
@@ -279,11 +280,10 @@ selectRecommondations[6,1] <- ifelse(studyingHours>=47, "sufficient",
   ifelse(studyingHours>=38 && studyHours<=41, "less than the recommended", "much less than the recommended")))
 
 selectRecommondations[2,2] <- ifelse(relatedWork>=10 || nonRelatedWork>=10 || (relatedWork+nonRelatedWork)>=10,
-  paste("You reported using ", relatedWork, "hours on study related work, and", nonRelatedWork, "hours on non-study related work.",
-  "Should you not able to dedicate around 45 hours to study each week, you should not despair when you fail exams. You simply did not have the time resources to succeed and studying might take longer than expected. However, if you mainly rely on SU this provides a clear time frame within which you need to finish your education. You should therefore carefully review your commitments and other activities that you need or want to dedicate time to vis-&agrave;-vis the study demands."),  "")
+  paste("You reported using ", relatedWork, "hours on study related work, and", nonRelatedWork, "hours on non-study related work."
+  ),  "")
            
 
-                           
 # Understanding Medialogy
 contentCreate <- ifelse(grepl("Not",personalized_info[i,23]), NA, "manual content creation,")
 PBL <- ifelse(grepl("Disgree",personalized_info[i,25]), NA, "Although you have group responsibilities related to you project, the group is not responsible for the individual learning goals, defined in the study plan.") 
@@ -375,13 +375,90 @@ Seeing your intelligence as something that you can actively influence and grow i
 #### Time Commitments (study and other)
 Studying requires a lot of time and dedication in order to succeed. Being intelligent and having talent can help but does not replace the need for dedicating time and effort to studying. The ECTS system assumes that you spend 45 hours a week on your education. You reported using `r studyingHours` hours weekly for studying, which indicates that you are using
 `r selectRecommondations[6,1]` 
-amount of time for studying. Meeting these demands is difficult over long-term with too many other obligations.
+amount of time for studying.  Meeting these demands is difficult over long-term with too many other obligations.
 `r selectRecommondations[2,2]`
+**During your eduation, you should carefully review your commitments and other activities that you need or want to dedicate time to vis-&agrave;-vis the study demands. Should you not able to dedicate around 45 hours to study each week, you should carefully plan these hours and perhaps even minutes, so you don’t overwork in wrong places. It is quite natural for students to underestimate the workload requirement when learning about university life, as any other experience that involves facing new challenges or accomodating into new environments. We simply need experience to handle new situations.**
 
 #### Understanding of Medialogy
 Choosing a suitable education can be difficult, and students should reflect on their choice of education, especially, in the first semester(s). Your understanding about what you will learn in the Medialogy programme is in the `r studentTable1[7,2]` percentile, meaning that
 `r selectRecommondations[7,1]` 
 Previous students with different expectations either learned to appreciate the content, skills, and opportunities of a Medialogy degree or changed to other programmes or educations. Attending the Med Awards event (usually in November) and seeing other student projects can give you an idea of what you will be able to do if you apply yourself to what Medialogy can offer. Contacting older students in the Medialogy facebook group, study counselors, and going to the study cafe can also provide you information about the education and what it means to be a Medialogy student. You can find information about Medialogy and student testimonials [here](tinyurl.com/AAUaboutMedialogy) (tinyurl.com/AAUaboutMedialogy). 
+
+
+******
+
+### Student counseler services - help you with student challenges
+If you have specific problems, we recommend you to contact the student counsler. Unlike counslers in high schools, student counslers at AAU are students studying themselves, and they have probably helped other students with a similar problem to your. Supervisors, secretairies, and semester coordinates are also interested in helping you, but the student counsler is the direct resource for handling problems/challenges such as:
+
+- Exam/presentation anxiety
+
+- Failing courses (e.g. Math or programming) 
+
+- Time management
+
+- Etc.
+
+Find your student counseler[here](https://www.en.aau.dk/education/bachelor/medialogy/student-guidance/) (https://www.en.aau.dk/education/bachelor/medialogy/student-guidance/).
+
+\pagebreak
+
+
+*IDEA: give room for annotations/ notes*
+
+This should be a tool for you to grow as a student.
+You can use this analysis to set concrete goals (e.g. using the SMART method). 
+Look at the area(s) where you agree with the analysis and set goals for next semester.
+
+Goal 1
+\newline
+
+
+Goal 2
+\newline
+
+
+Goal 3
+\newline
+
+
+
+This prepares you for the seminar in PV that we have on the test results. You can also use this information when you work in your study group, e.g. you can share weaknesses/strengths and what motivates you. 
+
+My weaknesses
+\newline
+
+
+My strengths
+\newline
+
+
+My motivation for studying Medialogy
+\newline
+
+
+
+
+
+
+
+
+
+```{r include=FALSE}
+# Explain what is self-reported, percentile ranks is not a grade but only based on how you rated yourself in the questionnaire?
+# 
+#  the test results were formulated, if negative. 
+# acknowledging the choice
+# If you want to be 'here', do 'this' more"
+# 
+# refer to the published work and research?
+# 
+# Could be perceived as a constructive motivational tool, if the response would look more ahead, towards where they might want to change routines, or place energy differently, than what some interpreted as a blaming/scaring campain
+# 
+# Could acknowledge people's individual differences of how to work, but highlight the potential benefits from working in teams, and inspire the student to turn his/her attention towards trying to see/find those positive elements to group work - perhaps placed into perspective of how AAU students need to perform group-based project work, and can gain large benefits from the different skills and competences that each individual group member is able to contribute to the project and thus, overall learning outcome for the individual student.
+```
+
+
+
 
 
 
