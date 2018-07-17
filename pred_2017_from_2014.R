@@ -1,3 +1,5 @@
+library(plyr)
+
 #MedDataBSc <- read.csv("Y:/analysis_data/dropOut/data/MedDataBSc.csv", stringsAsFactors=FALSE, encoding = 'ANSI')
 
 MedDataBSc <- read.csv("Y:/analysis_data/dropOut/data/MedDataBSc2012-2016.csv", stringsAsFactors=FALSE, encoding = 'ANSI')
@@ -114,6 +116,10 @@ classAIC <- ifelse(MedDataBSc2017$predAIC>0.5,'dropout','active')
 table(classBIC,MedDataBSc2017$dropout)
 table(classAIC,MedDataBSc2017$dropout)
 
+MedData2017risk.0 <- MedDataBSc2017[,c(2,30,35,181,37)]
+names(MedData2017risk.0)[4] <- 'risk'
+MedData2017risk.0$modelSemester <- 0
+MedData2017risk.0$modelTrainCohort <- 2014
 # including information from first semester
 MedDataBSc2014.1 <- MedDataBSc2014[MedDataBSc2014$EndSemester>1,]
 table(MedDataBSc2014.1$dropout)
@@ -165,6 +171,11 @@ pred <- predict(fitBIC.1,MedDataBSc2017[-idx,],type='response')
 classBIC.1 <- ifelse(pred>0.5,'dropout','active')
 table(classBIC.1,MedDataBSc2017$dropout[-idx])
 
+MedData2017risk.1 <- MedDataBSc2017[-idx,c(2,30,35,183,44,141,142)]
+names(MedData2017risk.1)[4] <- 'risk'
+MedData2017risk.1$modelSemester <- 1
+MedData2017risk.1$modelTrainCohort <- 2014
+
 #Including information from 2. semester
 MedDataBSc2014.2 <- MedDataBSc2014[MedDataBSc2014$EndSemester>2,]
 table(MedDataBSc2014.2$dropout)
@@ -198,6 +209,19 @@ mean(CV.2$accuracy)
 mean(CV.2$FN)
 mean(CV.2$FP)
 
+#prediction for 2017
+idx <- which(!is.na(MedDataBSc2017$udmeld_dato))
+pred <- predict(fitBIC.2,MedDataBSc2017[-idx,],type='response')
+MedDataBSc2017$predBIC.2 <- NA
+MedDataBSc2017$predBIC.2[-idx] <- pred
+
+MedData2017risk.2 <- MedDataBSc2017[-idx,c(2,30,35,184,52,146)]
+names(MedData2017risk.2)[4] <- 'risk'
+MedData2017risk.2$modelSemester <- 2
+MedData2017risk.2$modelTrainCohort <- 2014
+
+MedDatarisk <- rbind.fill(MedData2017risk.0,MedData2017risk.1,MedData2017risk.2)
+MedDatarisk <- MedDatarisk[,c(1:3,6:7,4,5,8:12)]
 #including information from 3. semester
 
 MedDataBSc2014.3 <- MedDataBSc2014[MedDataBSc2014$EndSemester>3,]
