@@ -51,6 +51,9 @@ dfEnrolStatusBsc<-fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 dbGetQuery(mydb, "show variables like 'character_set%'") # In my case: latin1 and latin1
 # TODO: perhaps we can solve this by changing character_set_server to UTF8, e.g. in a config file?
 
+rs<-dbSendQuery(mydb, "SELECT * FROM map_personIDs")
+personIDs<- fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
+
 rs<-dbSendQuery(mydb, "SELECT * FROM map_SPVCmapping")
 dfECTSstruct<- fetch(rs, n=-1);dbClearResult(dbListResults(mydb)[[1]])
 
@@ -81,6 +84,33 @@ detach("package:RMySQL", unload=TRUE)
 
 
 ###########################
+# temp. data import and override
+#setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data')
+#dfECTSstruct<-read.csv("course_SPV2017.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+
+###########################
+
+
+# BC: temp merit import
+# gives lowest passing grades in merit courses
+setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
+merit2017<-read.csv("2008-18_merit_MED.csv", header = TRUE, fill=TRUE, sep = ",", check.names=TRUE, encoding="UTF-8", stringsAsFactors=FALSE)
+merit2017<-merge(merit2017,personIDs, by.x = "X.U.FEFF.person_id", by.y = "PERSON_ID")
+merit2017$KARAKTER <- 'B'
+merit2017$ECTS <- merit2017$staa * 60 
+merit2017$`Seneste Fors.` <- "Ja"
+merit2017$`Forsoeg nr.` <- 1
+merit2017$type <- "bachelor"
+names(merit2017)[5] <- "aktivitet"
+names(merit2017)[6] <- "bedom_dato"
+names(merit2017)[7] <- "reg_dato"
+names(merit2017)[14] <- "navn"
+merit2017 <- merit2017[,c(4:7,12,14,17:20)]
+
+#dfAAUGrades1 <- dfAAUGrades
+dfAAUGrades <- bind_rows(dfAAUGrades,merit2017)
+
+
 
 # subsetting based on startsn and slutsn
 dfDropMedsFromAll<-dfDropAAUall[dfDropAAUall$startsn=='Medieteknologi'|dfDropAAUall$slutsn=='Medieteknologi',] # 2624
@@ -159,9 +189,12 @@ dfEnrolStatus$udmeldsn <- ifelse(dfEnrolStatus$statussn == "åben", "Indskrevet"
 dfAAUGrades<-merge(dfAAUGrades,dfEnrolStatus[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn","stype")],by.x = c("studienr","type"),by.y = c("studienr","stype"))
 count(dfAAUGrades) #1622
 
-#NEEDS CHECKING this removes a few rows / BC: changed so we are loosing one student only with old grades
-dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn,] # & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn+1|is.na(dfAAUGrades$slutdatosn)),]
-count(dfAAUGrades) #1607
+#################### !!!!!
+#NEEDS CHECKING this removes a few rows / BC: don't understand why we have this? Commented out, so it doesn't delete the merit grades that I added:
+#dfAAUGrades1 <- dfAAUGrades
+#dfAAUGrades1<-dfAAUGrades1[dfAAUGrades1$bedom_dato>=dfAAUGrades1$fradatosn & (dfAAUGrades1$bedom_dato<=dfAAUGrades1$slutdatosn+1|is.na(dfAAUGrades1$slutdatosn)),]
+#dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>=dfAAUGrades$fradatosn,] # & (dfAAUGrades$bedom_dato<=dfAAUGrades$slutdatosn+1|is.na(dfAAUGrades$slutdatosn)),]
+#count(dfAAUGrades) #1607
 # OK: first condition removes 15 old grades from one student (20126013)
 # Perhaps OK: second condition removes 4 grades entries, don't understand this
 
@@ -214,11 +247,10 @@ dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$exa
 #ifelse(as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$fradatosn,'%m')<6),(dfAAUGrades[dfAAUGrades$studienr==20136609,]$takenInYear-dfAAUGrades[dfAAUGrades$studienr==20136609,]$startaar)*2+ ceiling((as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$bedom_dato,'%m')))/6),
  #      (dfAAUGrades[dfAAUGrades$studienr==20136609,]$takenInYear-dfAAUGrades[dfAAUGrades$studienr==20136609,]$startaar)*2+ floor((as.numeric(format(dfAAUGrades[dfAAUGrades$studienr==20136609,]$bedom_dato,'%m'))-2)/6))#-ifelse(as.numeric(format(dfAAUGrades$bedom_dato,'%m'))=1,1,0)
 
-
 dfAAUGrades$monthSemMod<-floor((as.numeric(format(dfAAUGrades$bedom_dato,'%m'))+1)/6)
 #EB-couldn't take exam ('hand in blank'), U - not allowed to go to the exam, I - fail, B - pass
-gradesPassedLUVec<-c('02'=1,'4'=1,'7'=1,'10'=1,'12'=1,'00'=0,'-3'=0,'B'=2,'EB'=0,'U'=0,'I'=0)
-gradesToNumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-5,'U'=-8,'B'=2,'I'=0)
+gradesPassedLUVec<-c('02'=1,'2'=1,'4'=1,'7'=1,'10'=1,'12'=1,'00'=0,'0'=0,'-3'=0,'B'=2,'EB'=0,'U'=0,'I'=0)
+gradesToNumsVec<-c('02'=2,'2'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'0'=0,'-3'=-3,'EB'=-5,'U'=-8,'B'=2,'I'=0)
 
 
 #CHECK if these are all accounted for in AAU grades with entries in map_SPVCmapping

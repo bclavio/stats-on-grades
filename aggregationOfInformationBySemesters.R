@@ -41,17 +41,24 @@ ectsSumSPbySemAndCT$CTdf<-paste(ectsSumSPbySemAndCT$CTdf, "nom", sep = "_")
 dfAAUGradesWODistEnrol<-dfAAUGrades;
 dfAAUGradesWODistEnrol$DistFromEnrol<- NULL
 # alias: dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c
+# dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.gradeType as gradeType, b.courseSPVID,b.fromDate, c.fradatosn as fradatoSNsemCalc, b.toDate, c.enrolID as enrolID, a.* 
+#                           from dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c 
+#                           where a.type=c.type and c.studienr=a.studienr and 
+#                           a.aktivitetText=b.aktivitetText and 
+#                           c.fradatosn>= b.fromDate and 
+#                           c.fradatosn<=b.toDate and 
+#                           a.bedom_dato>=c.fradatosn and 
+#                           (a.bedom_dato<= c.slutdatosn or c.slutdatosn is Null)')
 dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.gradeType as gradeType, b.courseSPVID,b.fromDate, c.fradatosn as fradatoSNsemCalc, b.toDate, c.enrolID as enrolID, a.* 
                           from dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c 
                           where a.type=c.type and c.studienr=a.studienr and 
                           a.aktivitetText=b.aktivitetText and 
                           c.fradatosn>= b.fromDate and 
                           c.fradatosn<=b.toDate and 
-                          a.bedom_dato>=c.fradatosn and 
                           (a.bedom_dato<= c.slutdatosn or c.slutdatosn is Null)')
 
 # the two variables are also in the import script but with different values for the grades
-gradesToGPANumsVec<-c('02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'00'=0,'-3'=-3,'EB'=-4,'U'=-5)
+gradesToGPANumsVec<-c('2'=2,'02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'0'=0,'00'=0,'-3'=-3,'EB'=-4,'U'=-5)
 gradesToGPAPFVec<-c('EB'=-4,'U'=-5,'B'=2,'I'=0)
 # TODO: I don't understand the meaning of this variable?? The name sounds like it calculates the semester date, but it doesn't
 # the date when enrolled into the education (POSIXct represents calendar dates and times)
@@ -163,10 +170,11 @@ ForSvante<-merge(ForSvante, ectsAggsAll) # 2012-2014: 1690 of 151 var
 ForSvante<-ForSvante[ForSvante$startaar>2011,] # 2012-2014: 1415 of 151 var ()
 ForSvante<-merge(ForSvante,GPAavgagg) # 2012-2014: 1411 of 191 var
 #sqldf("select studienr, spv, count(studienr) from ForSvante group by studienr,SPV having count(studienr)>1 order by studienr")
-
+# BC: remove merit duplicates (check why they are here)
+ForSvante <- ForSvante[!is.na(ForSvante$CourseLocation),]
 
 setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
-write.csv(ForSvante,file = "MedDataBSc2017_1107NEW.csv",row.names=FALSE) 
+write.csv(ForSvante,file = "MedDataBSc2017_1107NEW2.csv",row.names=FALSE) 
 
 # 2012-2014
 #setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data')
@@ -176,18 +184,17 @@ write.csv(ForSvante,file = "MedDataBSc2017_1107NEW.csv",row.names=FALSE)
 ## AAU grades cohort 2017
 
 dfAAUMarriedGradesWide <- sqldf("SELECT studienr, navn, statussn, udmeldsn, aktivitet, gradeNum FROM dfAAUMarriedGrades")
-dfAAUMarriedGradesWide <- dfAAUMarriedGradesWide[dfAAUMarriedGradesWide!=20157596, ] 
+dfAAUMarriedGradesWide <- dfAAUMarriedGradesWide[dfAAUMarriedGradesWide$studienr !=20157596, ] 
 dfAAUMarriedGradesWide <- reshape(dfAAUMarriedGradesWide, idvar = c("studienr","navn", "statussn", "udmeldsn"), timevar = c("aktivitet"), direction = "wide")
-dfAAUMarriedGradesWide <- dfAAUMarriedGradesWide[, -ncol(dfAAUMarriedGradesWide)]
-dfAAUMarriedGradesWide <- dfAAUMarriedGradesWide[-nrow(dfAAUMarriedGradesWide),]
+dfAAUMarriedGradesWide <- dfAAUMarriedGradesWide[, -c(14:15)]
+#dfAAUMarriedGradesWide <- dfAAUMarriedGradesWide[-nrow(dfAAUMarriedGradesWide),]
 names(dfAAUMarriedGradesWide) <- c("studienr","navn", "statussn", "udmeldsn", "p1", "p0", "AVS", "GPRO", "PV", "P2", "ID", "MMA", "PFI")
 
 setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
 write.csv(dfAAUMarriedGradesWide,file = "MedDataBSc2017_grades.csv",row.names=FALSE) 
 
-personSTADSid<-read.csv("2008-18_ram_op_MED.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-personSTADSid <- personSTADSid[,c(3,40)]
-personSTADSid <- personSTADSid[!duplicated(personSTADSid), ]
+personSTADSid<-read.csv("2008-18_ram_op_all.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+
 
 ##################################################################
 #### Write dataset to database
@@ -204,14 +211,15 @@ mydb = dbConnect(MySQL(), user=LAuserID, password=LAuserpass, dbname=LAdb, host=
 #dbWriteTable(mydb, value = MedDataBSc2017, name = "tbl_ForSvante2", temporary = TRUE, row.names=FALSE)
 
 # tbl_personIDs
-personIDs <- dfEnrolStatusBsc[,c(2,3)] #203
-#personIDs <- subset(personIDs,  personIDs$studienr %in% uniqueDropMedsFrAll$studienr) 
+
+
+personIDs <- dfEnrolStatusBsc[,c(2,3)]
+personIDs <- subset(personIDs,  personIDs$studienr %in% uniqueDropMedsFrAll$studienr)
 personIDs <- merge(personIDs, uniqueDropMedsFrAll,by="studienr")
-personIDs <- merge(personIDs, personSTADSid,by="studienr")
 personIDs$idNumber <- NA
 personIDs$map_personIDsID <- seq(1:nrow(personIDs))
 write.csv(personIDs,file = "personIDs.csv",row.names=FALSE) 
-dbWriteTable(mydb, value = personIDs, name = "tbl_personIDs", temporary = TRUE, row.names=FALSE, append=TRUE)
+#dbWriteTable(mydb, value = personIDs, name = "tbl_personIDs", temporary = TRUE, row.names=FALSE, append=TRUE)
 
 
 dbDisconnect(mydb)
