@@ -68,7 +68,6 @@ MedDataGradesMath$MAT_Niveau[is.na(MedDataGradesMath$MAT_Niveau)] <- 'A'
 #Not using English because of many missing values
 MedDataGradesMath <- MedDataGradesMath[,-c(16,17)]
 
-################## Both campus #############
 ####Plots
 ggplot(data=MedDataGradesMath,aes(x=kvotient,y=MMA))+geom_count()+geom_smooth(method = 'lm')
 ggplot(data=MedDataGradesMath,aes(x=MATGrade,y=MMA))+geom_count()+geom_smooth(method = 'lm')
@@ -78,6 +77,9 @@ ggplot(data=MedDataGradesMath,aes(x=GPRO,y=MMA))+geom_count()+geom_smooth(method
 ggplot(data=MedDataGradesMath,aes(x=AVS,y=MMA))+geom_count()+geom_smooth(method = 'lm')
 ggplot(data=MedDataGradesMath,aes(x=PV,y=MMA))+geom_count()+geom_smooth(method = 'lm')
 ggplot(data=MedDataGradesMath,aes(x=p1,y=MMA))+geom_count()+geom_smooth(method = 'lm')
+ggplot(data=MedDataGradesMath,aes(x=campus,y=MMA))+geom_boxplot()+geom_count()
+ggplot(data=MedDataGradesMath,aes(x=campus,y=MATGrade))+geom_boxplot()+geom_count()
+
 
 #in adgangsgrundlag there are so few students from HHX and HF that these collapsed into one
 #previous analyses of dropout have suggested that they are similar and so does plots of MMA grade against adgangsgrundlag
@@ -89,17 +91,22 @@ MedDataGradesMath$adgangsgrundlag[MedDataGradesMath$adgangsgrundlag=='Udenlandsk
 MedDataGradesMath$isInt <- ifelse(MedDataGradesMath$adgangsgrundlag=='Udland','International','Not international')
 
 #############Regression for grade
+fit.campus <- lm(MMA~campus,data = MedDataGradesMath)
+summary(fit.campus)
+
 #####Choose variables with stepwise search
 fit.null <- lm(MMA~1,data = MedDataGradesMath)
 names(MedDataGradesMath)[29] <- 'selfC'
 
 #without AAUgrades
-predictorsNotAAUgrades <- names(MedDataGradesMath)[c(12:32,36)]
+predictorsNotAAUgrades <- names(MedDataGradesMath)[c(12:33,36)]
 formNotAAUgrades <- as.formula(paste('~',paste(predictorsNotAAUgrades,collapse = '+')))
 add1(fit.null,formNotAAUgrades,test = 'F')
 
 fitBICnoAAU <- step(fit.null,formNotAAUgrades,k=log(nrow(MedDataGradesMath)))
 summary(fitBICnoAAU)
+
+ggplot(data=MedDataGradesMath,aes(x=campus,y=MATGrade))+geom_boxplot()+geom_count()
 
 fit.inter <- update(fitBICnoAAU,.~.+MATGrade*MAT_Niveau)
 summary(fit.inter)
@@ -141,29 +148,53 @@ mean(CVlm(fitBICnoAAU,MedDataGradesMath))
 mean(CVlm(fit.null.subset,data = MedDataGradesMath))
 mean(CVlm(fitBICAAU,MedDataGradesMath))
 
-##############only Aalborg#########
-MedDataGradesMathAAL <- MedDataGradesMath[MedDataGradesMath$campus=='AAL',]
-MedDataGradesMathAAL$MMAmidterm <- as.numeric(MedDataGradesMathAAL$MMAmidterm)
+###################################
+############GPRO###################
+###################################
+
+MedDataGradesGPRO <- MedDataGrades[!is.na(MedDataGrades$GPRO),]
+MedDataGradesGPRO$GPROpassfail <- ifelse(MedDataGradesGPRO$GPRO>=2,'passed','failed')
+#Only using students who showed up for the exam
+MedDataGradesGPRO <- MedDataGradesGPRO[MedDataGradesGPRO$GPRO>=-3,]
+#two students are missing kvotient and MAT. Imputing these
+MedDataGradesGPRO$kvotient[is.na(MedDataGradesGPRO$kvotient)] <- mean(MedDataGradesGPRO$kvotient,na.rm = T)
+MedDataGradesGPRO$MATGrade[is.na(MedDataGradesGPRO$MATGrade)] <- mean(MedDataGradesGPRO$MATGrade,na.rm = T)
+MedDataGradesGPRO$MAT_Niveau[is.na(MedDataGradesGPRO$MAT_Niveau)] <- 'B'
+#Not using English because of many missing values
+MedDataGradesGPRO <- MedDataGradesGPRO[,-c(16,17)]
+
+####Plots
+ggplot(data=MedDataGradesGPRO,aes(x=kvotient,y=GPRO))+geom_count()+geom_smooth(method = 'lm')
+ggplot(data=MedDataGradesGPRO,aes(x=MATGrade,y=GPRO))+geom_count()+geom_smooth(method = 'lm')
+ggplot(data=MedDataGradesGPRO,aes(x=MAT_Niveau,y=GPRO))+geom_boxplot()+geom_count()
+ggplot(data=MedDataGradesGPRO,aes(x=adgangsgrundlag,y=GPRO))+geom_boxplot()+geom_count()
+ggplot(data=MedDataGradesGPRO,aes(x=campus,y=GPRO))+geom_boxplot()+geom_count()
+
+
+#in adgangsgrundlag there are so few students from HHX and HF that these collapsed into one
+#previous analyses of dropout have suggested that they are similar and so does plots of GPRO grade against adgangsgrundlag
+MedDataGradesGPRO$adgangsgrundlag[MedDataGradesGPRO$adgangsgrundlag%in%c('HF','HHX')] <- 'HF/HHX'
+MedDataGradesGPRO$adgangsgrundlag[MedDataGradesGPRO$adgangsgrundlag=='Ny student (påb. 2005 -)'] <- 'STX'
+MedDataGradesGPRO$adgangsgrundlag[MedDataGradesGPRO$adgangsgrundlag=='Udenlandsk adg.grundlag'] <- 'Udland'
+
+#Using adgangsgrundlag to identify international students
+MedDataGradesGPRO$isInt <- ifelse(MedDataGradesGPRO$adgangsgrundlag=='Udland','International','Not international')
+
+#############Regression for grade
+fit.campus <- lm(GPRO~campus,data = MedDataGradesGPRO)
+summary(fit.campus)
+
 #####Choose variables with stepwise search
-fit.null <- lm(MMA~1,data = MedDataGradesMathAAL)
+fit.null <- lm(GPRO~1,data = MedDataGradesGPRO)
+names(MedDataGradesGPRO)[29] <- 'selfC'
 
-#without AAUgrades
-predictorsNotAAUgrades <- names(MedDataGradesMathAAL)[c(12:32,34,36)]
-formNotAAUgrades <- as.formula(paste('~',paste(predictorsNotAAUgrades,collapse = '+')))
-add1(fit.null,formNotAAUgrades,test = 'F')
+predictors <- names(MedDataGradesGPRO)[c(12:33,35)]
+form <- as.formula(paste('~',paste(predictors,collapse = '+')))
+add1(fit.null,form,test = 'F')
 
-fitBICnoAAU <- step(fit.null,formNotAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
-summary(fitBICnoAAU)
+fitBIC <- step(fit.null,form,k=log(nrow(MedDataGradesGPRO)))
+summary(fitBIC)
 
-#with AAUgrades
-predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,34,36)]
-formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
-add1(fit.null,formAAUgrades,test = 'F')
-formAAUnotGPRO <- as.formula(paste('~',paste(names(MedDataGradesMathAAL)[c(3,5,7)],collapse = '+')))
-add1(fit.null,formAAUnotGPRO,test = 'F')
+ggplot(data=MedDataGradesGPRO,aes(x=belongUnc,y=GPRO))+geom_count()+geom_smooth(method = 'lm')
 
-MedDataGradesMathAALGPRO <- MedDataGradesMathAAL[!is.na(MedDataGradesMathAAL$GPRO),]
-formGPRO <- as.formula(paste('~',paste(names(MedDataGradesMathAAL)[c(6,12:32,34,36)],collapse = '+')))
-fit.null.subset <- lm(MMA~1,data = MedDataGradesMathAALGPRO)
-fitBICAAU <- step(fit.null.subset,formGPRO,k=log(nrow(MedDataGradesMathAALGPRO)))
-summary(fitBICAAU)
+
