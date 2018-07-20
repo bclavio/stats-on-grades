@@ -102,7 +102,7 @@ mean(CVAIC$FN)
 mean(CVAIC$FP)
 
 #Predicting for 2017
-MedDataBSc2017 <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/MedDataBSc2017_1107.csv", encoding="ANSI", stringsAsFactors=FALSE)
+MedDataBSc2017 <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/MedDataBSc2017_1107NEW2.csv", encoding="ANSI", stringsAsFactors=FALSE)
 MedDataBSc2017$dropout <- ifelse(MedDataBSc2017$udmeld_aarsag!=''|MedDataBSc2017$Q999==1,'dropout','active')
 MedDataBSc2017[MedDataBSc2017==''] <- NA
 MedDataBSc2017[MedDataBSc2017=='.'] <- NA
@@ -116,10 +116,11 @@ classAIC <- ifelse(MedDataBSc2017$predAIC>0.5,'dropout','active')
 table(classBIC,MedDataBSc2017$dropout)
 table(classAIC,MedDataBSc2017$dropout)
 
-MedData2017risk.0 <- MedDataBSc2017[,c(2,30,35,181,37)]
-names(MedData2017risk.0)[4] <- 'risk'
+MedData2017risk.0 <- MedDataBSc2017[,c(2,29,33,34,181,37)]
+names(MedData2017risk.0)[5] <- 'risk'
 MedData2017risk.0$modelSemester <- 0
 MedData2017risk.0$modelTrainCohort <- 2014
+MedData2017risk.0$modelID <- 2
 # including information from first semester
 MedDataBSc2014.1 <- MedDataBSc2014[MedDataBSc2014$EndSemester>1,]
 table(MedDataBSc2014.1$dropout)
@@ -171,10 +172,11 @@ pred <- predict(fitBIC.1,MedDataBSc2017[-idx,],type='response')
 classBIC.1 <- ifelse(pred>0.5,'dropout','active')
 table(classBIC.1,MedDataBSc2017$dropout[-idx])
 
-MedData2017risk.1 <- MedDataBSc2017[-idx,c(2,30,35,183,44,141,142)]
-names(MedData2017risk.1)[4] <- 'risk'
+MedData2017risk.1 <- MedDataBSc2017[-idx,c(2,29,33,34,183,44,141,142)]
+names(MedData2017risk.1)[5] <- 'risk'
 MedData2017risk.1$modelSemester <- 1
 MedData2017risk.1$modelTrainCohort <- 2014
+MedData2017risk.1$modelID <- 3
 
 #Including information from 2. semester
 MedDataBSc2014.2 <- MedDataBSc2014[MedDataBSc2014$EndSemester>2,]
@@ -215,13 +217,15 @@ pred <- predict(fitBIC.2,MedDataBSc2017[-idx,],type='response')
 MedDataBSc2017$predBIC.2 <- NA
 MedDataBSc2017$predBIC.2[-idx] <- pred
 
-MedData2017risk.2 <- MedDataBSc2017[-idx,c(2,30,35,184,52,146)]
-names(MedData2017risk.2)[4] <- 'risk'
+MedData2017risk.2 <- MedDataBSc2017[-idx,c(2,29,33,34,184,52,146)]
+names(MedData2017risk.2)[5] <- 'risk'
 MedData2017risk.2$modelSemester <- 2
 MedData2017risk.2$modelTrainCohort <- 2014
+MedData2017risk.2$modelID <- 4
 
 MedDatarisk <- rbind.fill(MedData2017risk.0,MedData2017risk.1,MedData2017risk.2)
-MedDatarisk <- MedDatarisk[,c(1:3,6:7,4,5,8:12)]
+MedDatarisk <- MedDatarisk[,c(1:4,7:9,5,6,10:14)]
+
 #including information from 3. semester
 
 MedDataBSc2014.3 <- MedDataBSc2014[MedDataBSc2014$EndSemester>3,]
