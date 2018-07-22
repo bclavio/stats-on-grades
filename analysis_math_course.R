@@ -10,7 +10,7 @@ MedDataBSc2017_grades <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAA
 MedDataBSc2017_grades <- MedDataBSc2017_grades[,-c(2,4)]
 
 #Highschool data
-MedDataBSc2017 <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/MedDataBSc2017_1107.csv", encoding="ANSI", stringsAsFactors=FALSE)
+MedDataBSc2017 <- read.csv("Y:/analysis_data/dropOut/data_2017cohortCPHAAL/MedDataBSc2017_1107NEW2.csv", encoding="ANSI", stringsAsFactors=FALSE)
 MedDataBSc2017 <- MedDataBSc2017[,c(2,3,22,36:39)]
 
 #SSP data
@@ -61,10 +61,10 @@ MedDataGradesMath <- MedDataGradesMath[!is.na(MedDataGradesMath$MMA),]
 MedDataGradesMath$MMApassfail <- ifelse(MedDataGradesMath$MMA>=2,'passed','failed')
 #Only using students who showed up for the exam
 MedDataGradesMath <- MedDataGradesMath[MedDataGradesMath$MMA>=-3,]
-#one student is missing kvotient and MAT. Imputing these
+#3 students are missing kvotient and MAT. Imputing these
 MedDataGradesMath$kvotient[is.na(MedDataGradesMath$kvotient)] <- mean(MedDataGradesMath$kvotient,na.rm = T)
 MedDataGradesMath$MATGrade[is.na(MedDataGradesMath$MATGrade)] <- mean(MedDataGradesMath$MATGrade,na.rm = T)
-MedDataGradesMath$MAT_Niveau[is.na(MedDataGradesMath$MAT_Niveau)] <- 'A'
+MedDataGradesMath$MAT_Niveau[is.na(MedDataGradesMath$MAT_Niveau)] <- 'B'
 #Not using English because of many missing values
 MedDataGradesMath <- MedDataGradesMath[,-c(16,17)]
 
@@ -94,9 +94,12 @@ MedDataGradesMath$isInt <- ifelse(MedDataGradesMath$adgangsgrundlag=='Udland','I
 fit.campus <- lm(MMA~campus,data = MedDataGradesMath)
 summary(fit.campus)
 
+fit.ADGGRU <- lm(MMA~adgangsgrundlag,data = MedDataGradesMath)
+summary(fit.ADGGRU)
+
 #####Choose variables with stepwise search
 fit.null <- lm(MMA~1,data = MedDataGradesMath)
-names(MedDataGradesMath)[29] <- 'selfC'
+names(MedDataGradesMath)[30] <- 'selfC'
 
 #without AAUgrades
 predictorsNotAAUgrades <- names(MedDataGradesMath)[c(12:33,36)]
@@ -106,24 +109,19 @@ add1(fit.null,formNotAAUgrades,test = 'F')
 fitBICnoAAU <- step(fit.null,formNotAAUgrades,k=log(nrow(MedDataGradesMath)))
 summary(fitBICnoAAU)
 
-ggplot(data=MedDataGradesMath,aes(x=campus,y=MATGrade))+geom_boxplot()+geom_count()
-
 fit.inter <- update(fitBICnoAAU,.~.+MATGrade*MAT_Niveau)
 summary(fit.inter)
 anova(fit.inter,fitBICnoAAU)
 
 #with AAUgrades
-predictorsAAUgrades <- names(MedDataGradesMath)[c(3,5:7,12:32,36)]
+predictorsAAUgrades <- names(MedDataGradesMath)[c(3,5:7,12:33,36)]
 formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
 add1(fit.null,formAAUgrades,test = 'F')
-formAAUnotGPRO <- as.formula(paste('~',paste(names(MedDataGradesMath)[c(3,5,7)],collapse = '+')))
-add1(fit.null,formAAUnotGPRO,test = 'F')
 
-MedDataGradesMathGPRO <- MedDataGradesMath[!is.na(MedDataGradesMath$GPRO),]
-formGPRO <- as.formula(paste('~',paste(names(MedDataGradesMath)[c(6,12:32,36)],collapse = '+')))
-fit.null.subset <- lm(MMA~1,data = MedDataGradesMathGPRO)
-fitBICAAU <- step(fit.null.subset,formGPRO,k=log(nrow(MedDataGradesMathGPRO)))
+fitBICAAU <- step(fit.null,formAAUgrades,k=log(nrow(MedDataGradesMath)))
 summary(fitBICAAU)
+fitBICAAUNew <- update(fitBICAAU,.~.-adgangsgrundlag+isInt)
+summary(fitBICAAUNew)
 
 #####compare with crossvalidation
 CVlm <- function(lmfit,data,k=10){
@@ -144,57 +142,250 @@ CVlm <- function(lmfit,data,k=10){
 
 mean(CVlm(fit.null,data = MedDataGradesMath))
 mean(CVlm(fitBICnoAAU,MedDataGradesMath))
-
-mean(CVlm(fit.null.subset,data = MedDataGradesMath))
 mean(CVlm(fitBICAAU,MedDataGradesMath))
 
-###################################
-############GPRO###################
-###################################
+#############Only Aalborg################
 
-MedDataGradesGPRO <- MedDataGrades[!is.na(MedDataGrades$GPRO),]
-MedDataGradesGPRO$GPROpassfail <- ifelse(MedDataGradesGPRO$GPRO>=2,'passed','failed')
-#Only using students who showed up for the exam
-MedDataGradesGPRO <- MedDataGradesGPRO[MedDataGradesGPRO$GPRO>=-3,]
-#two students are missing kvotient and MAT. Imputing these
-MedDataGradesGPRO$kvotient[is.na(MedDataGradesGPRO$kvotient)] <- mean(MedDataGradesGPRO$kvotient,na.rm = T)
-MedDataGradesGPRO$MATGrade[is.na(MedDataGradesGPRO$MATGrade)] <- mean(MedDataGradesGPRO$MATGrade,na.rm = T)
-MedDataGradesGPRO$MAT_Niveau[is.na(MedDataGradesGPRO$MAT_Niveau)] <- 'B'
-#Not using English because of many missing values
-MedDataGradesGPRO <- MedDataGradesGPRO[,-c(16,17)]
+#including midterm
 
-####Plots
-ggplot(data=MedDataGradesGPRO,aes(x=kvotient,y=GPRO))+geom_count()+geom_smooth(method = 'lm')
-ggplot(data=MedDataGradesGPRO,aes(x=MATGrade,y=GPRO))+geom_count()+geom_smooth(method = 'lm')
-ggplot(data=MedDataGradesGPRO,aes(x=MAT_Niveau,y=GPRO))+geom_boxplot()+geom_count()
-ggplot(data=MedDataGradesGPRO,aes(x=adgangsgrundlag,y=GPRO))+geom_boxplot()+geom_count()
-ggplot(data=MedDataGradesGPRO,aes(x=campus,y=GPRO))+geom_boxplot()+geom_count()
+MedDataGradesMathAAL <- MedDataGradesMath[MedDataGradesMath$campus=='AAL',]
+MedDataGradesMathAAL <- MedDataGradesMathAAL[MedDataGradesMathAAL$MMAmidterm!='UB',]
+MedDataGradesMathAAL$MMAmidterm <- as.numeric(MedDataGradesMathAAL$MMAmidterm)
+
+fitAAL.null <- lm(MMA~1,data = MedDataGradesMathAAL)
+
+#without AAUgrades
+predictorsNotAAUgrades <- names(MedDataGradesMathAAL)[c(12:32,34,36)]
+formNotAAUgrades <- as.formula(paste('~',paste(predictorsNotAAUgrades,collapse = '+')))
+add1(fitAAL.null,formNotAAUgrades,test = 'F')
+
+fitAALBICnoAAU <- step(fitAAL.null,formNotAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
+summary(fitAALBICnoAAU)
+
+#with AAUgrades
+predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,34,36)]
+formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
+add1(fitAAL.null,formAAUgrades,test = 'F')
+
+fitAALBICAAU <- step(fitAAL.null,formAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
+summary(fitAALBICAAU)
+fitAALBICAAUNew <- update(fitAALBICAAU,.~.+MMAmidterm*GPRO)
+summary(fitAALBICAAUNew)
+
+#excluding midterm
+
+#without AAUgrades
+predictorsNotAAUgrades <- names(MedDataGradesMathAAL)[c(12:32,36)]
+formNotAAUgrades <- as.formula(paste('~',paste(predictorsNotAAUgrades,collapse = '+')))
+add1(fitAAL.null,formNotAAUgrades,test = 'F')
+
+fitAALBICnoAAUnoMid <- step(fitAAL.null,formNotAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
+summary(fitAALBICnoAAUnoMid)
+
+#with AAUgrades
+predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,36)]
+formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
+add1(fitAAL.null,formAAUgrades,test = 'F')
+
+fitAALBICAAUnoMid <- step(fitAAL.null,formAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
+summary(fitAALBICAAUnoMid)
+
+mean(CVlm(fitAAL.null,data = MedDataGradesMathAAL))
+mean(CVlm(fitAALBICnoAAU,MedDataGradesMathAAL))
+mean(CVlm(fitAALBICAAU,MedDataGradesMathAAL))
+mean(CVlm(fitAALBICnoAAUnoMid,MedDataGradesMathAAL))
+mean(CVlm(fitAALBICAAUnoMid,MedDataGradesMathAAL))
+
+#Predicting passed failed with linear models
+MedDataGradesMath$MMApassfail <- factor(MedDataGradesMath$MMApassfail,levels = c('passed','failed'))
+MedDataGradesMathAAL$MMApassfail <- factor(MedDataGradesMathAAL$MMApassfail,levels = c('passed','failed'))
 
 
-#in adgangsgrundlag there are so few students from HHX and HF that these collapsed into one
-#previous analyses of dropout have suggested that they are similar and so does plots of GPRO grade against adgangsgrundlag
-MedDataGradesGPRO$adgangsgrundlag[MedDataGradesGPRO$adgangsgrundlag%in%c('HF','HHX')] <- 'HF/HHX'
-MedDataGradesGPRO$adgangsgrundlag[MedDataGradesGPRO$adgangsgrundlag=='Ny student (påb. 2005 -)'] <- 'STX'
-MedDataGradesGPRO$adgangsgrundlag[MedDataGradesGPRO$adgangsgrundlag=='Udenlandsk adg.grundlag'] <- 'Udland'
+predLinear <- function(fit,Newdata){
+  pred <- predict(fit,Newdata)
+  ifelse(pred>=2,'passed','failed')
+  }
 
-#Using adgangsgrundlag to identify international students
-MedDataGradesGPRO$isInt <- ifelse(MedDataGradesGPRO$adgangsgrundlag=='Udland','International','Not international')
+CVlmpred <- function(fit,data){
+CV <- rep(NA,10)
+FP <- rep(NA,10)
+FN <- rep(NA,10)
+idx <- sample(1:10,nrow(data),replace = TRUE)
+for (i in 1:10){
+  train <- data[idx!=i,]
+  test <- data[idx==i,]
+  obstest <- test$MMApassfail
+  lm <- lm(formula(fit),data=train)
+  pred <- predLinear(lm,test)
+  CV[i] <- mean(pred==obstest,na.rm=TRUE)
+  tab <- table(factor(pred, levels = c('passed','failed')),obstest)
+  if(sum(tab[,1])==0){FP[i] <- 0}
+  else{FP[i] <- tab[2,1]/sum(tab[,1])}
+  if(sum(tab[,2])==0){FN[i] <- 0}
+  else{FN[i] <- tab[1,2]/sum(tab[,2])}
+}
+return(list('accuracy'=CV,'FP'=FP,'FN'=FN))
+}
 
-#############Regression for grade
-fit.campus <- lm(GPRO~campus,data = MedDataGradesGPRO)
-summary(fit.campus)
+CVfitnoAAU <-  CVlmpred(fitBICnoAAU,MedDataGradesMath)
+CVfitAAU <- CVlmpred(fitBICAAU,MedDataGradesMath)
 
-#####Choose variables with stepwise search
-fit.null <- lm(GPRO~1,data = MedDataGradesGPRO)
-names(MedDataGradesGPRO)[29] <- 'selfC'
+CVfitAALnoAAU <- CVlmpred(fitAALBICnoAAU, MedDataGradesMathAAL)
+CVfitAALAAU <- CVlmpred(fitAALBICAAU, MedDataGradesMathAAL)
 
-predictors <- names(MedDataGradesGPRO)[c(12:33,35)]
-form <- as.formula(paste('~',paste(predictors,collapse = '+')))
-add1(fit.null,form,test = 'F')
+CVfitAALnoAAUnoMid <- CVlmpred(fitAALBICnoAAUnoMid, MedDataGradesMathAAL)
+CVfitAALAAUnoMid <- CVlmpred(fitAALBICAAUnoMid, MedDataGradesMathAAL)
 
-fitBIC <- step(fit.null,form,k=log(nrow(MedDataGradesGPRO)))
-summary(fitBIC)
+mean(CVfitnoAAU$accuracy)
+mean(CVfitAAU$accuracy)
 
-ggplot(data=MedDataGradesGPRO,aes(x=belongUnc,y=GPRO))+geom_count()+geom_smooth(method = 'lm')
+mean(CVfitAALnoAAU$accuracy)
+mean(CVfitAALAAU$accuracy)
 
+mean(CVfitAALnoAAUnoMid$accuracy)
+mean(CVfitAALAAUnoMid$accuracy)
 
+#Predicting passed failed with logistic regression
+#both campi
+log.null <- glm(MMApassfail~1,family = binomial,data=MedDataGradesMath)
+
+#without AAUgrades
+predictorsNotAAUgrades <- names(MedDataGradesMath)[c(12:33,36)]
+formNotAAUgrades <- as.formula(paste('~',paste(predictorsNotAAUgrades,collapse = '+')))
+
+logBICnoAAU <- step(log.null,formNotAAUgrades,k=log(nrow(MedDataGradesMath)))
+summary(logBICnoAAU)
+
+#with AAUgrades
+predictorsAAUgrades <- names(MedDataGradesMath)[c(3,5:7,12:33,36)]
+formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
+
+logBICAAU <- step(log.null,formAAUgrades,k=log(nrow(MedDataGradesMath)))
+summary(logBICAAU)
+
+logCV <- function(fit,k=10, data,thres=0.5){
+  CV <- rep(0,k)
+  FP <- rep(0,k)
+  FN <- rep(0,k)
+  idx <- sample(1:k,nrow(data),replace = TRUE)
+  for (i in 1:k){
+    train <- data[idx!=i,]
+    test <- data[idx==i,]
+    fittrain <- glm(fit$formula, data = train, family = binomial)
+    pred <- predict(fittrain,test,type='response')
+    pred <-ifelse(pred>thres, 'failed','passed')
+    CV[i] <- mean(pred==test$MMApassfail)
+    tab <- table(factor(pred, levels = c('passed','failed')),test$MMApassfail)
+    if(sum(tab[,1])==0){FP[i] <- 0}
+    else{FP[i] <- tab[2,1]/sum(tab[,1])}
+    if(sum(tab[,2])==0){FN[i] <- 0}
+    else{FN[i] <- tab[1,2]/sum(tab[,2])}
+  }
+  accuracy <- CV
+  FP <- FP
+  FN <- FN
+  return(list('accuracy'=accuracy,'FP'=FP,'FN'=FN))
+}
+
+CVlognoAAU <- logCV(logBICnoAAU,data = MedDataGradesMath)
+CVlogAAU <- logCV(logBICAAU,data=MedDataGradesMath)
+
+#Aalborg
+logAAL.null <- glm(MMApassfail~1,family=binomial,data = MedDataGradesMathAAL)
+
+#including midterm
+
+#without AAUgrades
+predictorsNotAAUgrades <- names(MedDataGradesMathAAL)[c(12:32,34,36)]
+formNotAAUgrades <- as.formula(paste('~',paste(predictorsNotAAUgrades,collapse = '+')))
+
+logAALBICnoAAU <- step(logAAL.null,formNotAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
+summary(logAALBICnoAAU)
+
+#with AAUgrades
+predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,34,36)]
+formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
+
+logAALBICAAU <- step(logAAL.null,formAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
+summary(logAALBICAAU)
+
+#excluding midterm
+
+#without AAUgrades
+predictorsNotAAUgrades <- names(MedDataGradesMathAAL)[c(12:32,36)]
+formNotAAUgrades <- as.formula(paste('~',paste(predictorsNotAAUgrades,collapse = '+')))
+
+logAALBICnoAAUnoMid <- step(logAAL.null,formNotAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
+summary(logAALBICnoAAUnoMid)
+
+#with AAUgrades
+predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,36)]
+formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
+
+logAALBICAAUnoMid <- step(logAAL.null,formAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
+summary(logAALBICAAUnoMid)
+
+CVlogAALnoAAU <- logCV(logAALBICnoAAU, data = MedDataGradesMathAAL)
+#the same
+CVlogAALAAU <- logCV(logAALBICAAU, data = MedDataGradesMathAAL)
+CVlogAALnoAAUnoMid <- logCV(logAALBICnoAAUnoMid, data = MedDataGradesMathAAL)
+#the same
+CVlogAALAAUnoMid <- logCV(logAALBICAAUnoMid, data = MedDataGradesMathAAL)
+
+###Predicting with CART
+#both campi
+#without AAUgrades
+predictorsNotAAUgrades <- names(MedDataGradesMath)[c(12:33,36)]
+formNotAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsNotAAUgrades,collapse = '+')))
+
+CARTnoAAU <- rpart(formNotAAUgrades,MedDataGradesMath)
+rpart.plot(CARTnoAAU)
+plotcp(CARTnoAAU)
+
+#with AAUgrades
+predictorsAAUgrades <- names(MedDataGradesMath)[c(3,5:7,12:33,36)]
+formAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsAAUgrades,collapse = '+')))
+
+CARTAAU <- rpart(formAAUgrades,MedDataGradesMath)
+rpart.plot(CARTAAU)
+plotcp(CARTAAU)
+
+#Aalborg
+#including midterm
+
+#without AAUgrades
+predictorsNotAAUgrades <- names(MedDataGradesMathAAL)[c(12:32,34,36)]
+formNotAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsNotAAUgrades,collapse = '+')))
+
+CARTAALnoAAU <- rpart(formNotAAUgrades,MedDataGradesMathAAL)
+rpart.plot(CARTAALnoAAU)
+plotcp(CARTAALnoAAU)
+
+#with AAUgrades
+predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,34,36)]
+formAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsAAUgrades,collapse = '+')))
+
+CARTAALAAU <- rpart(formAAUgrades,MedDataGradesMathAAL)
+rpart.plot(CARTAALAAU)
+
+#excluding midterm
+
+#without AAUgrades
+predictorsNotAAUgrades <- names(MedDataGradesMathAAL)[c(12:32,36)]
+formNotAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsNotAAUgrades,collapse = '+')))
+
+CARTnoAAUnoMid <- rpart(formNotAAUgrades,MedDataGradesMathAAL)
+rpart.plot(CARTnoAAUnoMid)
+plotcp(CARTnoAAUnoMid)
+CARTnoAAUnoMid <- rpart(formNotAAUgrades,MedDataGradesMathAAL,cp=0.17)
+
+#with AAUgrades
+predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,36)]
+formAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsAAUgrades,collapse = '+')))
+
+CARTAALAAUnoMid <- rpart(formAAUgrades,MedDataGradesMathAAL)
+rpart.plot(CARTAALAAUnoMid)
+plotcp(CARTAALAAUnoMid)
+CARTAALAAUnoMid <- rpart(formAAUgrades,MedDataGradesMathAAL,cp=0.2)
+
+#########CV heere
