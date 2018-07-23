@@ -113,6 +113,13 @@ fit.inter <- update(fitBICnoAAU,.~.+MATGrade*MAT_Niveau)
 summary(fit.inter)
 anova(fit.inter,fitBICnoAAU)
 
+res <- rstandard(fitBICnoAAU)
+hist(res)
+qqnorm(res)
+qqline(res)
+plot(res~fitBICnoAAU$fitted.values)
+plot(res~MedDataGradesMath$MATGrade)
+
 #with AAUgrades
 predictorsAAUgrades <- names(MedDataGradesMath)[c(3,5:7,12:33,36)]
 formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
@@ -122,6 +129,13 @@ fitBICAAU <- step(fit.null,formAAUgrades,k=log(nrow(MedDataGradesMath)))
 summary(fitBICAAU)
 fitBICAAUNew <- update(fitBICAAU,.~.-adgangsgrundlag+isInt)
 summary(fitBICAAUNew)
+
+res <- rstandard(fitBICAAUNew)
+hist(res)
+qqnorm(res)
+qqline(res)
+plot(res~fitBICAAUNew$fitted.values)
+plot(res~MedDataGradesMath$GPRO)
 
 #####compare with crossvalidation
 CVlm <- function(lmfit,data,k=10){
@@ -140,9 +154,17 @@ CVlm <- function(lmfit,data,k=10){
   return(CV)
 }
 
-mean(CVlm(fit.null,data = MedDataGradesMath))
-mean(CVlm(fitBICnoAAU,MedDataGradesMath))
-mean(CVlm(fitBICAAU,MedDataGradesMath))
+CV.null <- CVlm(fit.null,data = MedDataGradesMath)
+CV.noAAU <- CVlm(fitBICnoAAU,MedDataGradesMath)
+CV.AAU <- CVlm(fitBICAAUNew,MedDataGradesMath)
+
+Model <- c('lm.null','lm.NoAAU','lm.AAU')
+CVmean <- c(mean(CV.null),mean(CV.noAAU),mean(CV.AAU))
+se <- 1/sqrt(10)*c(sd(CV.null),sd(CV.noAAU),sd(CV.AAU))
+ggplot()+geom_point(aes(Model,CVmean)) + 
+  geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
+
+
 
 #############Only Aalborg################
 
@@ -162,6 +184,13 @@ add1(fitAAL.null,formNotAAUgrades,test = 'F')
 fitAALBICnoAAU <- step(fitAAL.null,formNotAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
 summary(fitAALBICnoAAU)
 
+res <- rstandard(fitAALBICnoAAU)
+hist(res)
+qqnorm(res)
+qqline(res)
+plot(res~fitAALBICnoAAU$fitted.values)
+plot(res~MedDataGradesMathAAL$MMAmidterm)
+
 #with AAUgrades
 predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,34,36)]
 formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
@@ -171,6 +200,14 @@ fitAALBICAAU <- step(fitAAL.null,formAAUgrades,k=log(nrow(MedDataGradesMathAAL))
 summary(fitAALBICAAU)
 fitAALBICAAUNew <- update(fitAALBICAAU,.~.+MMAmidterm*GPRO)
 summary(fitAALBICAAUNew)
+
+res <- rstandard(fitAALBICAAU)
+hist(res)
+qqnorm(res)
+qqline(res)
+plot(res~fitAALBICAAU$fitted.values)
+plot(res~MedDataGradesMathAAL$MMAmidterm)
+plot(res~MedDataGradesMathAAL$GPRO)
 
 #excluding midterm
 
@@ -182,6 +219,13 @@ add1(fitAAL.null,formNotAAUgrades,test = 'F')
 fitAALBICnoAAUnoMid <- step(fitAAL.null,formNotAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
 summary(fitAALBICnoAAUnoMid)
 
+res <- rstandard(fitAALBICnoAAUnoMid)
+hist(res)
+qqnorm(res)
+qqline(res)
+plot(res~fitAALBICnoAAUnoMid$fitted.values)
+plot(res~MedDataGradesMathAAL$kvotient)
+
 #with AAUgrades
 predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,36)]
 formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+')))
@@ -190,11 +234,24 @@ add1(fitAAL.null,formAAUgrades,test = 'F')
 fitAALBICAAUnoMid <- step(fitAAL.null,formAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
 summary(fitAALBICAAUnoMid)
 
-mean(CVlm(fitAAL.null,data = MedDataGradesMathAAL))
-mean(CVlm(fitAALBICnoAAU,MedDataGradesMathAAL))
-mean(CVlm(fitAALBICAAU,MedDataGradesMathAAL))
-mean(CVlm(fitAALBICnoAAUnoMid,MedDataGradesMathAAL))
-mean(CVlm(fitAALBICAAUnoMid,MedDataGradesMathAAL))
+res <- rstandard(fitAALBICAAUnoMid)
+hist(res)
+qqnorm(res)
+qqline(res)
+plot(res~fitAALBICAAUnoMid$fitted.values)
+plot(res~MedDataGradesMathAAL$GPRO)
+
+CV.AAL.null <- CVlm(fitAAL.null,data = MedDataGradesMathAAL)
+CV.AAL.noAAU <- CVlm(fitAALBICnoAAU,MedDataGradesMathAAL)
+CV.AAL.AAU <- CVlm(fitAALBICAAU,MedDataGradesMathAAL)
+CV.AAL.noAAUnoMid <- CVlm(fitAALBICnoAAUnoMid,MedDataGradesMathAAL)
+CV.AAL.AAUnoMid <- CVlm(fitAALBICAAUnoMid,MedDataGradesMathAAL)
+
+Model <- c('lm.AAL.null','lm.AAL.NoAAU','lm.AAL.AAU','lm.AAL.noAAUnoMid','lm.AAL.AAUnoMid')
+CVmean <- c(mean(CV.AAL.null),mean(CV.AAL.noAAU),mean(CV.AAL.AAU),mean(CV.AAL.noAAUnoMid),mean(CV.AAL.AAUnoMid))
+se <- 1/sqrt(10)*c(sd(CV.AAL.null),sd(CV.AAL.noAAU),sd(CV.AAL.AAU),sd(CV.AAL.noAAUnoMid),sd(CV.AAL.AAUnoMid))
+ggplot()+geom_point(aes(Model,CVmean)) + 
+  geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25)
 
 #Predicting passed failed with linear models
 MedDataGradesMath$MMApassfail <- factor(MedDataGradesMath$MMApassfail,levels = c('passed','failed'))
@@ -227,23 +284,17 @@ for (i in 1:10){
 return(list('accuracy'=CV,'FP'=FP,'FN'=FN))
 }
 
+CVfitnull <- CVlmpred(fit.null,MedDataGradesMath)
 CVfitnoAAU <-  CVlmpred(fitBICnoAAU,MedDataGradesMath)
 CVfitAAU <- CVlmpred(fitBICAAU,MedDataGradesMath)
 
+CVfitAALnull <- CVlmpred(fitAAL.null,MedDataGradesMathAAL)
 CVfitAALnoAAU <- CVlmpred(fitAALBICnoAAU, MedDataGradesMathAAL)
 CVfitAALAAU <- CVlmpred(fitAALBICAAU, MedDataGradesMathAAL)
 
 CVfitAALnoAAUnoMid <- CVlmpred(fitAALBICnoAAUnoMid, MedDataGradesMathAAL)
 CVfitAALAAUnoMid <- CVlmpred(fitAALBICAAUnoMid, MedDataGradesMathAAL)
 
-mean(CVfitnoAAU$accuracy)
-mean(CVfitAAU$accuracy)
-
-mean(CVfitAALnoAAU$accuracy)
-mean(CVfitAALAAU$accuracy)
-
-mean(CVfitAALnoAAUnoMid$accuracy)
-mean(CVfitAALAAUnoMid$accuracy)
 
 #Predicting passed failed with logistic regression
 #both campi
@@ -287,6 +338,7 @@ logCV <- function(fit,k=10, data,thres=0.5){
   return(list('accuracy'=accuracy,'FP'=FP,'FN'=FN))
 }
 
+CVlognull <- logCV(log.null,data=MedDataGradesMath)
 CVlognoAAU <- logCV(logBICnoAAU,data = MedDataGradesMath)
 CVlogAAU <- logCV(logBICAAU,data=MedDataGradesMath)
 
@@ -308,6 +360,7 @@ formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+'))
 
 logAALBICAAU <- step(logAAL.null,formAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
 summary(logAALBICAAU)
+#same as before
 
 #excluding midterm
 
@@ -324,13 +377,11 @@ formAAUgrades <- as.formula(paste('~',paste(predictorsAAUgrades,collapse = '+'))
 
 logAALBICAAUnoMid <- step(logAAL.null,formAAUgrades,k=log(nrow(MedDataGradesMathAAL)))
 summary(logAALBICAAUnoMid)
+#Same as before
 
-CVlogAALnoAAU <- logCV(logAALBICnoAAU, data = MedDataGradesMathAAL)
-#the same
-CVlogAALAAU <- logCV(logAALBICAAU, data = MedDataGradesMathAAL)
-CVlogAALnoAAUnoMid <- logCV(logAALBICnoAAUnoMid, data = MedDataGradesMathAAL)
-#the same
-CVlogAALAAUnoMid <- logCV(logAALBICAAUnoMid, data = MedDataGradesMathAAL)
+CVlogAALnull <- logCV(logAAL.null,data=MedDataGradesMathAAL)
+CVlogAAL <- logCV(logAALBICAAU, data = MedDataGradesMathAAL)
+CVlogAALnoMid <- logCV(logAALBICAAUnoMid, data = MedDataGradesMathAAL)
 
 ###Predicting with CART
 #both campi
@@ -349,6 +400,31 @@ formAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsAAUgrades,coll
 CARTAAU <- rpart(formAAUgrades,MedDataGradesMath)
 rpart.plot(CARTAAU)
 plotcp(CARTAAU)
+CARTAAU <- rpart(formAAUgrades,MedDataGradesMath,cp=0.13)
+
+CVcart <- function(tree,data, k=10){
+  accuracy <- rep(0,k)
+  FP <- rep(0,k)
+  FN <- rep(0,k)
+  idx <- sample(1:k,nrow(data),replace = TRUE)
+  for (i in 1:k){
+    train <- data[idx!=i,]
+    test <- data[idx==i,]
+    formula <- formula(tree)
+    cp <- tree$cptable[nrow(tree$cptable),1]
+    fittrain <- rpart(formula, data = train, cp=cp)
+    pred <- predict(fittrain,test,type='class')
+    accuracy[i] <- mean(pred==test$MMApassfail)
+    tab <- table(factor(pred, levels = c('passed','failed')),test$MMApassfail)
+    if(sum(tab[,1])==0){FP[i] <- 0}
+    else{FP[i] <- tab[2,1]/sum(tab[,1])}
+    if(sum(tab[,2])==0){FN[i] <- 0}
+    else{FN[i] <- tab[1,2]/sum(tab[,2])}
+  }
+  return(list('accuracy'=accuracy,'FP'=FP,'FN'=FN))
+}
+
+CV.CART.AAU <- CVcart(CARTAAU,MedDataGradesMath)
 
 #Aalborg
 #including midterm
@@ -360,6 +436,9 @@ formNotAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsNotAAUgrade
 CARTAALnoAAU <- rpart(formNotAAUgrades,MedDataGradesMathAAL)
 rpart.plot(CARTAALnoAAU)
 plotcp(CARTAALnoAAU)
+CARTAALnoAAU <- rpart(formNotAAUgrades,MedDataGradesMathAAL,cp=0.076)
+
+CV.CART.AAL.noAAU <- CVcart(CARTAALnoAAU,MedDataGradesMathAAL)
 
 #with AAUgrades
 predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,34,36)]
@@ -367,6 +446,8 @@ formAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsAAUgrades,coll
 
 CARTAALAAU <- rpart(formAAUgrades,MedDataGradesMathAAL)
 rpart.plot(CARTAALAAU)
+#same as before
+
 
 #excluding midterm
 
@@ -379,6 +460,8 @@ rpart.plot(CARTnoAAUnoMid)
 plotcp(CARTnoAAUnoMid)
 CARTnoAAUnoMid <- rpart(formNotAAUgrades,MedDataGradesMathAAL,cp=0.17)
 
+CV.CART.AAL.noAAUnoMid <- CVcart(CARTnoAAUnoMid,MedDataGradesMathAAL)
+
 #with AAUgrades
 predictorsAAUgrades <- names(MedDataGradesMathAAL)[c(3,5:7,12:32,36)]
 formAAUgrades <- as.formula(paste('MMApassfail ~',paste(predictorsAAUgrades,collapse = '+')))
@@ -388,4 +471,44 @@ rpart.plot(CARTAALAAUnoMid)
 plotcp(CARTAALAAUnoMid)
 CARTAALAAUnoMid <- rpart(formAAUgrades,MedDataGradesMathAAL,cp=0.2)
 
-#########CV heere
+CV.CART.AAL.AAUnoMid <- CVcart(CARTAALAAUnoMid,MedDataGradesMathAAL)
+
+###Comparing with cross validation
+#Both campi
+Model <- c('lm.null','lm.0','lm.1','log.null','log.0','log.1','CART.1')
+accuracy <- c(mean(CVfitnull$accuracy),mean(CVfitnoAAU$accuracy),mean(CVfitAAU$accuracy),mean(CVlognull$accuracy),mean(CVlognoAAU$accuracy),mean(CVlogAAU$accuracy),mean(CV.CART.AAU$accuracy))
+se <- (1/sqrt(10))*c(sd(CVfitnull$accuracy),sd(CVfitnoAAU$accuracy),sd(CVfitAAU$accuracy),sd(CVlognull$accuracy),sd(CVlognoAAU$accuracy),sd(CVlogAAU$accuracy),sd(CV.CART.AAU$accuracy))
+ggplot()+geom_point(aes(Model,accuracy)) + 
+  geom_errorbar(aes(x=Model, ymin=accuracy-se, ymax=accuracy+se),width=0.25)
+
+Model <- c('lm.null','lm.0','lm.1','log.null','log.0','log.1','CART.1')
+FP <- c(mean(CVfitnull$FP),mean(CVfitnoAAU$FP),mean(CVfitAAU$FP),mean(CVlognull$FP),mean(CVlognoAAU$FP),mean(CVlogAAU$FP),mean(CV.CART.AAU$FP))
+se <- (1/sqrt(10))*c(sd(CVfitnull$FP),sd(CVfitnoAAU$FP),sd(CVfitAAU$FP),sd(CVlognull$FP),sd(CVlognoAAU$FP),sd(CVlogAAU$FP),sd(CV.CART.AAU$FP))
+ggplot()+geom_point(aes(Model,FP)) + 
+  geom_errorbar(aes(x=Model, ymin=FP-se, ymax=FP+se),width=0.25)
+
+Model <- c('lm.null','lm.0','lm.1','log.null','log.0','log.1','CART.1')
+FN <- c(mean(CVfitnull$FN),mean(CVfitnoAAU$FN),mean(CVfitAAU$FN),mean(CVlognull$FN),mean(CVlognoAAU$FN),mean(CVlogAAU$FN),mean(CV.CART.AAU$FN))
+se <- (1/sqrt(10))*c(sd(CVfitnull$FN),sd(CVfitnoAAU$FN),sd(CVfitAAU$FN),sd(CVlognull$FN),sd(CVlognoAAU$FN),sd(CVlogAAU$FN),sd(CV.CART.AAU$FN))
+ggplot()+geom_point(aes(Model,FN)) + 
+  geom_errorbar(aes(x=Model, ymin=FN-se, ymax=FN+se),width=0.25)
+
+#AAlborg
+Model <- c('lm.AAL.null','lm.AAL.1.5','lm.AAL.0','lm.AAL.1','log.AAL.null','log.AAL.1.5','log.AAL.0-1','CART.AAL.1.5','CART.AAL.0','CART.AAL.1')
+accuracy <- c(mean(CVfitAALnull$accuracy),mean(CVfitAALAAU$accuracy),mean(CVfitAALnoAAUnoMid$accuracy),mean(CVfitAALAAUnoMid$accuracy),mean(CVlogAALnull$accuracy),mean(CVlogAAL$accuracy),mean(CVlogAALnoMid$accuracy),mean(CV.CART.AAL.noAAU$accuracy),mean(CV.CART.AAL.noAAUnoMid$accuracy),mean(CV.CART.AAL.AAUnoMid$accuracy))
+se <- (1/sqrt(10))*c(sd(CVfitAALnull$accuracy),sd(CVfitAALAAU$accuracy),sd(CVfitAALnoAAUnoMid$accuracy),sd(CVfitAALAAUnoMid$accuracy),sd(CVlogAALnull$accuracy),sd(CVlogAAL$accuracy),sd(CVlogAALnoMid$accuracy),sd(CV.CART.AAL.noAAU$accuracy),sd(CV.CART.AAL.noAAUnoMid$accuracy),sd(CV.CART.AAL.AAUnoMid$accuracy))
+ggplot()+geom_point(aes(Model,accuracy)) + 
+  geom_errorbar(aes(x=Model, ymin=accuracy-se, ymax=accuracy+se),width=0.25)
+
+Model <- c('lm.AAL.null','lm.AAL.1.5','lm.AAL.0','lm.AAL.1','log.AAL.null','log.AAL.1.5','log.AAL.0-1','CART.AAL.1.5','CART.AAL.0','CART.AAL.1')
+FP <- c(mean(CVfitAALnull$FP),mean(CVfitAALAAU$FP),mean(CVfitAALnoAAUnoMid$FP),mean(CVfitAALAAUnoMid$FP),mean(CVlogAALnull$FP),mean(CVlogAAL$FP),mean(CVlogAALnoMid$FP),mean(CV.CART.AAL.noAAU$FP),mean(CV.CART.AAL.noAAUnoMid$FP),mean(CV.CART.AAL.AAUnoMid$FP))
+se <- (1/sqrt(10))*c(sd(CVfitAALnull$FP),sd(CVfitAALAAU$FP),sd(CVfitAALnoAAUnoMid$FP),sd(CVfitAALAAUnoMid$FP),sd(CVlogAALnull$FP),sd(CVlogAAL$FP),sd(CVlogAALnoMid$FP),sd(CV.CART.AAL.noAAU$FP),sd(CV.CART.AAL.noAAUnoMid$FP),sd(CV.CART.AAL.AAUnoMid$FP))
+ggplot()+geom_point(aes(Model,FP)) + 
+  geom_errorbar(aes(x=Model, ymin=FP-se, ymax=FP+se),width=0.25)
+
+Model <- c('lm.AAL.null','lm.AAL.1.5','lm.AAL.0','lm.AAL.1','log.AAL.null','log.AAL.1.5','log.AAL.0-1','CART.AAL.1.5','CART.AAL.0','CART.AAL.1')
+FN <- c(mean(CVfitAALnull$FN),mean(CVfitAALAAU$FN),mean(CVfitAALnoAAUnoMid$FN),mean(CVfitAALAAUnoMid$FN),mean(CVlogAALnull$FN),mean(CVlogAAL$FN),mean(CVlogAALnoMid$FN),mean(CV.CART.AAL.noAAU$FN),mean(CV.CART.AAL.noAAUnoMid$FN),mean(CV.CART.AAL.AAUnoMid$FN))
+se <- (1/sqrt(10))*c(sd(CVfitAALnull$FN),sd(CVfitAALAAU$FN),sd(CVfitAALnoAAUnoMid$FN),sd(CVfitAALAAUnoMid$FN),sd(CVlogAALnull$FN),sd(CVlogAAL$FN),sd(CVlogAALnoMid$FN),sd(CV.CART.AAL.noAAU$FN),sd(CV.CART.AAL.noAAUnoMid$FN),sd(CV.CART.AAL.AAUnoMid$FN))
+ggplot()+geom_point(aes(Model,FN)) + 
+  geom_errorbar(aes(x=Model, ymin=FN-se, ymax=FN+se),width=0.25)
+
