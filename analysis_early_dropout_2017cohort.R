@@ -481,16 +481,21 @@ sdFNlasso <- sd(FN)
 
 Model <- c('lognull', 'logQpostlasso','lassoQ','logQp05','logQp01','logCatp05','treeQ','treeCat')
 ac <- c(CVlognull$accuracy,CVlogpostlass$accuracy,accuracylasso,CVlogQp05$accuracy,CVlogQp01$accuracy,CVlogcat$accuracy,accuracytreeQ,accuracytreeCat)
-sdac <- c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogQp05$sda,CVlogQp01$sda,CVlogcat$sda,sdatreeQ,sdatreeCat)
+sdac <- (1/sqrt(10))*c(CVlognull$sda,CVlogpostlass$sda,sdalasso,CVlogQp05$sda,CVlogQp01$sda,CVlogcat$sda,sdatreeQ,sdatreeCat)
 FP <- c(CVlognull$FP,CVlogpostlass$FP,FPlasso,CVlogQp05$FP,CVlogQp01$FP,CVlogcat$FP,FPtreeQ,FPtreeCat)
-sdFP <- c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogQp05$sdFP,CVlogQp01$sdFP,CVlogcat$sdFP,sdFPtreeQ,sdFPtreeCat)
+sdFP <- (1/sqrt(10))*c(CVlognull$sdFP,CVlogpostlass$sdFP,sdFPlasso,CVlogQp05$sdFP,CVlogQp01$sdFP,CVlogcat$sdFP,sdFPtreeQ,sdFPtreeCat)
 FN <- c(CVlognull$FN,CVlogpostlass$FN,FNlasso,CVlogQp05$FN,CVlogQp01$FN,CVlogcat$FN,FNtreeQ,FNtreeCat)
-sdFN <- c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogQp05$sdFN,CVlogQp01$sdFN,CVlogcat$sdFN,sdFNtreeQ,sdFNtreeCat)
+sdFN <- (1/sqrt(10))*c(CVlognull$sdFN,CVlogpostlass$sdFN,sdFNlasso,CVlogQp05$sdFN,CVlogQp01$sdFN,CVlogcat$sdFN,sdFNtreeQ,sdFNtreeCat)
 Parametre <- c(1,6,6,8,2,2,5,3)
-(ggplot()+geom_point(aes(Model,ac, size=Parametre,col='accuracy')) + geom_errorbar(aes(x=Model, ymin=ac-sdac, ymax=ac+sdac,col='accuracy'),width=0.25) 
- +geom_point(aes(Model,FP, size=Parametre,col='FP')) + geom_errorbar(aes(x=Model, ymin=FP-sdFP, ymax=FP+sdFP,col='FP'),width=0.25)
-+geom_point(aes(Model,FN, size=Parametre,col='FN')) + geom_errorbar(aes(x=Model, ymin=FN-sdFN, ymax=FN+sdFN,col='FN'),width=0.25)
-  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
+ggplot()+geom_point(aes(Model,ac, size=Parametre,col='accuracy')) + 
+  geom_errorbar(aes(x=Model, ymin=ac-sdac, ymax=ac+sdac,col='accuracy'),width=0.25) +
+  geom_point(aes(Model,FP, size=Parametre,col='FP')) + 
+  geom_errorbar(aes(x=Model, ymin=FP-sdFP, ymax=FP+sdFP,col='FP'),width=0.25)+
+  geom_point(aes(Model,FN, size=Parametre,col='FN')) + 
+  geom_errorbar(aes(x=Model, ymin=FN-sdFN, ymax=FN+sdFN,col='FN'),width=0.25)+
+  scale_colour_discrete(name="Measure")+
+  scale_size_continuous(name="Parameters",breaks = seq(1,8,1))+
+  ylab('Crossvalidation score')
 
 
 

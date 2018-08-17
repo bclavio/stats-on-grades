@@ -139,8 +139,10 @@ names(dropoutFeb18)[5] <- 'ID number'
 names(dropoutFeb18)[2] <- 'Email address'
 dropoutFeb18 <- dropoutFeb18[,c(2,3,5)]
 dropoutFeb18[dropoutFeb18==''] <- NA
-test <- merge(dfComplete,dropoutFeb18,by=c('ID number'));test <- test[,-c(1:3,145)]
-test2 <- merge(dfComplete,dropoutFeb18,by='Email address');test2 <- test2[,-c(1:3,146)]
+test <- merge(dfComplete,dropoutFeb18,by=c('ID number'))
+test <- test[,-c(1:3,18,144)]
+test2 <- merge(dfComplete,dropoutFeb18,by='Email address')
+test2 <- test2[,-c(1:3,18,145)]
 dfdropoutgrade <-  rbind(test2,test)
 ####################################################
 # Remove all incomplete entries leaves only 77 students
@@ -492,7 +494,7 @@ CVcat5 <- CVlm(lmcatfittotal5,dfComplete)
 
 Model <- c('lasso.total','nullmodel','lmQ1total','lmQ2total','lmQ3total','lmQ4total','lmQ5total','lmcat1total','lmcat2total','lmcat3total','lmcat4total','lmcat5total')
 CVmean <- c(mean(CVlassoTotal1se),mean(CVnull),mean(CVQ1),mean(CVQ2),mean(CVQ3),mean(CVQ4),mean(CVQ5),mean(CVcat1),mean(CVcat2),mean(CVcat3),mean(CVcat4),mean(CVcat5))
-se <- c(sd(CVlassoTotal1se),sd(CVnull),sd(CVQ1),sd(CVQ2),sd(CVQ3),sd(CVQ4),sd(CVQ5),sd(CVcat1),sd(CVcat2),sd(CVcat3),sd(CVcat4),sd(CVcat5))
+se <-(1/sqrt(10))*c(sd(CVlassoTotal1se),sd(CVnull),sd(CVQ1),sd(CVQ2),sd(CVQ3),sd(CVQ4),sd(CVQ5),sd(CVcat1),sd(CVcat2),sd(CVcat3),sd(CVcat4),sd(CVcat5))
 Parametre <- c(3,1,2,3,4,5,6,2,3,4,5,6)
 (ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
   +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
