@@ -13,7 +13,7 @@ library(stringr)
 #library(CTT)
 #library(gsubfn)
 library(Hmisc)
-library(psych)
+#library(psych)
 library(ggplot2)
 library(reshape2)
 #detach("package:RMySQL", unload=TRUE)
@@ -23,31 +23,18 @@ library(reshape2)
 
 #SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP/'} else {"~/SVN/01Projects/SSP/"}
 #setwd(SVNData)
-setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/')
+setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/2018/')
 
-dfQAGrades<-read.csv("QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
-dfSSPgradesCPH<-read.csv("SSPgradesTestCPH 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPgradesAAL<-read.csv("SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPgrades<-read.csv("SSPgradesTestCPHEdited.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
 
 ####################################
 ###### the answers are not in use
-dfSSPanswersCPH<-read.csv("SSPanswersTestCPH 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersAAL<-read.csv("SSPanswersTestAAL 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("No influence","Not at all true",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Limited influence","Slightly true",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Some influence","Some influence",dfSSPanswersAAL))
-dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Decisive influence","Completely true",dfSSPanswersAAL))
-dfSSPanswersCPH["Campus"]<-"CPH"
-dfSSPanswersAAL["Campus"]<-"AAL"
-dfSSPanswers <- rbind(dfSSPanswersCPH,dfSSPanswersAAL) 
+dfSSPanswers<-read.csv("SSPanswersTestCPHEdited.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPanswers["Campus"]<-"CPH"
 #dfSSPanswers[c('Response 93','Response 95','Response 96')] <- data.frame(lapply(dfSSPanswers[c('Response 93','Response 95','Response 96')], function(x) { gsub("-", 0, x) }))
 ###################################
 
-dfSSPgradesCPH["Campus"]<-"CPH"
-dfSSPgradesAAL["Campus"]<-"AAL"
-
-dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
-dfSSPgrades <- dfSSPgrades[grepl("Finished", dfSSPgrades$State),]
+dfSSPgrades["Campus"]<-"CPH"
 dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
 
 # computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
@@ -93,7 +80,8 @@ dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) =
 dfSSPgrades$`First name` <- gsub("-", " ", dfSSPgrades$`First name`)
 #dfSSPgrades$Surname <- gsub("-", " ", dfSSPgrades$Surname)
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
-dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:121], function(x) as.numeric(as.character(x))) )
+dfSSPgrades[60] <- 0
+dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:119], function(x) as.numeric(as.character(x))) )
 
 # manually selected SSP items into new categories
 avgGrades <- NULL
@@ -108,9 +96,15 @@ avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x
 
 
 # normalizes avg grades
+# normalize <- function(x) {
+#   return ((x - min(x)) / (max(x) - min(x)))
+# }
+
+# normalizes avg scores based on minimum and maximum possible score 
 normalize <- function(x) {
-  return ((x - min(x)) / (max(x) - min(x)))
+  return ((x) / (0.75))
 }
+
 norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
 norm.avgGrades["Campus"] <- dfSSPgrades$Campus
 norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
@@ -169,17 +163,20 @@ names(studyHours)[3]<-"hours"
 
 # Preparing the dataset to the mailmerge in rmarkdown
 
-studentData <- sqldf('Select rowID, Campus from dfSSPgrades')
-studentData['name'] <- paste(dfSSPgrades[,2],dfSSPgrades[,1])
-studentData['email'] <- dfSSPgrades[,5]
-studentData['initials'] <-  gsub("@student.aau.dk", "",dfSSPgrades[,5])
+studentDataCPH <- sqldf('Select rowID, Campus from dfSSPgrades')
+studentDataCPH['name'] <- paste(dfSSPgrades[,2],dfSSPgrades[,1])
+studentDataCPH['email'] <- dfSSPgrades[,5]
+studentDataCPH['initials'] <-  gsub("@student.aau.dk", "",dfSSPgrades[,5])
 avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, dfSSPanswers[, c(67,104,106:107,109:116)])
-studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
-studentData$rowID <- as.numeric(levels(studentData$rowID))[studentData$rowID]
-studentData <- studentData[with(studentData, order(studentData$rowID)),]
+studentDataCPH <- merge(studentDataCPH, avgPer, by= c("rowID","Campus"))
+studentDataCPH$rowID <- as.numeric(levels(studentDataCPH$rowID))[studentDataCPH$rowID]
+studentDataCPH <- studentDataCPH[with(studentDataCPH, order(studentDataCPH$rowID)),]
 
-write.csv(studentData,file = "studentData.csv")
+write.csv(studentDataCPH,file = "studentDataCPH.csv")
 write.csv(highRiskStudents,file = "highRiskStudents.csv")
+personalized_infoCPH <- read.csv(file = "studentDataCPH.csv")
+personalized_infoAAL <- read.csv(file = "studentDataAAL.csv")
+personalized_info <- rbind(personalized_infoCPH, personalized_infoAAL) 
 personalized_info <- read.csv(file = "studentData.csv")
 highRiskStudents <- read.csv(file = "highRiskStudents.csv")
 

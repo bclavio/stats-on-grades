@@ -19,6 +19,10 @@ library(RcmdrMisc)
 #library(DBI)
 
 
+# From Bianca: why different grade values in import/aggregation files?
+# From Bianca: Should we remove dropout data from SVN, now that we have it all in Filesharer?
+
+
 is.odd <- function(x) x %% 2 != 0 
 trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 

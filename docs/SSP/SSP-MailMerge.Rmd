@@ -35,7 +35,7 @@ library(ggrepel)
 library(knitr)
 library(kableExtra)
 #opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP'} else {paste(homeDir,"~/SVN/01Projects/SSP/", sep = "")})
-opts_knit$set(root.dir = 'Z:/BNC/PBL development project/data/analysis_data/SSP/')
+opts_knit$set(root.dir = 'Z:/BNC/PBL development project/data/analysis_data/SSP/2018/')
 
 knitr::opts_chunk$set(fig.height=3.5) 
 
@@ -60,7 +60,7 @@ rowID <- personalized_info$rowID[i]
 header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
-- \fancyhead[RE,RO]{`r name`}
+- \fancyhead[RE,RO]{STUDENT DRAFT}
 - \fancyhead[LE,LO]{Medialogy, `r campus`, 2017}
 - \fancyfoot[CE,CO]{STUDY VERIFICATION TEST}
 - \fancyfoot[LE,RO]{\thepage}
@@ -74,13 +74,13 @@ urlcolor: blue
 
 # Personalized Feedback for the Study Verification Test
 
-This is an interpretive report of your responses to the study verification test. We hope this report will help you identify your current student profile, but also aid you in reflection and give resources to help you in your study life.
+This is an interpretive report of your responses to the study verification test. We hope this report will help you identify your current student profile, but also aid you in reflection and give resources to help you in your study life. 
 
-The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported value for each topic is indicated with red dots. A value less than 0.5 means that you rated yourself lower than the average student. The percentile ranks indicate the percentage of students whose scores are equal to or less than yours. Low percentile ranks are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth. **A percentile rank between 25 and 75 means that most of your peers are in a similar situation as you. For an alternative data intepretation, the radar chart compares your score with the median score in the same seven topics (see Figure 3).**
+The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported value for each topic is indicated with red dots. A value less than 0.5 means that you rated yourself lower than the average student. The percentile ranks indicate the percentage of students whose scores are equal to or less than yours. A percentile rank between 25 and 75 means that most of your peers are in a similar situation as you. Low percentile ranks are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth.
 
-As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Based on your self-reported answers we have created specific recommendations with concrete examples and links for you to get more comfortable in the Medialogy study environment (see the following pages). **You might find some information more applicaple to you than others or some challenges more immediate to handle, and therefore, we encourage you to create annotations about what you find important to you while reading the recommendations. As follow-up to this report, we will conduct a workshop to help you understand your scores, redefine your goals and talk about the services you may desire.**
+As the report is based on the SSP questionnaire information alone, it may give only a rough indication of your true attitudes. Based on your self-reported answers we have created specific recommendations with concrete examples and links for you to get more comfortable in the Medialogy study environment (see the following pages). As follow-up to this report, we will conduct a workshop to help you understand your SSP scores, (re)define your study goals, and talk about the students services you may desire.
 
-[^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation called the interquartile range (IQR) and a typical value (median). The rectangular box denotes the IQR, corresponding to the middle scores of the dataset - ranging from the 25th to the 75th percentile. The line dividing the box into two parts marks the median. The horizontal lines to the left and right of the IQR (whiskers) are 1.5 times as long as the width of the IQR. Outliers are defined as data points outside the whisker ranges and plotted as black dots.
+[^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation called the interquartile range (IQR) and a typical value (median). The three lines inside the curved box denotes the IQR, corresponding to the middle scores of the dataset - ranging from the 25th to the 75th percentile, in which the middle line marks the median.
 
 
 ```{r include=FALSE}
@@ -96,11 +96,12 @@ norm.avgGradesMelt1$variable <- factor(norm.avgGradesMelt1$variable,
   'Study habits at AAU','High school habits',
   'Social support for studying'),ordered = TRUE)
 
-
 student <- subset(norm.avgGradesMelt1, norm.avgGradesMelt1$rowID ==i)
 
 pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
-  geom_boxplot() + 
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_jitter(height = 0, width = 0.1) +
+  #geom_boxplot(width=0.1) + theme_minimal() +
   coord_flip() +
   labs(y="Figure 1: Boxplots of the self-ratings of all students in seven topics.") +
   geom_dotplot(data = student,
@@ -122,9 +123,7 @@ pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
 #pScore
 ```
 
-
 ```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
-#studentTable<- NULL
 studentTable <- melt(subset(personalized_info[,-c(1:5, 21:32)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
 studentTable1<- NULL
 studentTable1 <- data.frame(c(studentTable[-c(1:7),-c(1)]), apply(studentTable[-c(8:14), ], 2, rev))
@@ -133,17 +132,33 @@ names(studentTable1)[2]<-"Your score"
 names(studentTable1)[3]<-"Percentile rank"
 row.names(studentTable1) <- NULL
 studentTable1$`Your score` <- as.numeric(levels(studentTable1$`Your score`))[studentTable1$`Your score`]
-studentTable1 <- studentTable1[,-c(1)]
 
 is.num <- sapply(studentTable1, is.numeric)
 studentTable1[is.num] <- sapply(studentTable1[is.num], round, 2)
 studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
 studentTable1$`Your score` <- round(as.numeric(studentTable1$`Your score`), digits = 2)
 studentTable1 <- rbind(studentTable1, c(" "))
+studentTable1 <- studentTable1[,-c(1)]
+studentTable2 <- studentTable1
+studentTable2[1] <- NULL
+
+tabData <- ggtexttable(studentTable2, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
+showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(4.5,1.5)) # , common.legend = TRUE
+```
 
 
-tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
-showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(2.5,1.5)) # , common.legend = TRUE
+```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
+# studentTable <- melt(subset(personalized_info[,-c(1:12, 21:31)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
+# studentTable1<- studentTable
+# names(studentTable1)[3]<-"Percentile rank"
+# row.names(studentTable1) <- NULL
+# studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
+# studentTable1 <- rbind(studentTable1, c(" "))
+# studentTable1 <- studentTable1[,-c(1)]
+# studentTable1[1] <- NULL
+# 
+# tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
+# showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(4.5,1.5)) # , common.legend = TRUE
 ```
 
 ```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
@@ -151,21 +166,26 @@ showAnalysis
 
 ```
      
-```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height=1}
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+#, fig.height=1
 
 studentHours <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID == i) #norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
 studentHours <- subset(studyHours, studyHours$rowID==i) #studyHours$rowID %in% highRiskStudents$rowID[i])
-studentHours['DotPos'] <- 95
-ggplot(studyHours, aes(x=rowID,y=hours)) + 
-  geom_boxplot() + 
-  labs(y="Figure 2: Boxplot of the self-reported hours spent studying per week of all students.") +
-  scale_y_continuous(breaks=seq(0,100,5), limits = c(10,90)) +
+studyHours$hours <-  as.numeric(studyHours$hours)
+studentHours['DotPos'] <- 35 # where the position the dot: sample size / 2
+
+ggplot(studyHours, aes(x=rowID,y=hours)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
+  #geom_jitter(height = 0, width = 0.1) +
+  #geom_boxplot(width=0.1) + theme_minimal() +
+  scale_y_continuous(breaks=seq(0,100,5), limits = c(0,75)) +
   coord_flip() +
+  labs(y="Figure 2: Boxplot of the self-reported hours spent studying per week of all students.") +
   geom_dotplot(data = studentHours,
                aes(x=DotPos, y=hours, fill = "green"),
                binaxis='y',
                stackdir='center',
-               binwidth = 1.5) +
+               binwidth = 1.5) + #1.5
   theme_bw() +
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
@@ -173,6 +193,8 @@ ggplot(studyHours, aes(x=rowID,y=hours)) +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         legend.position="none")
+
+
 ```
 
 
@@ -184,46 +206,45 @@ ggplot(studyHours, aes(x=rowID,y=hours)) +
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height= 12, fig.width=15}
 
 # selecting current student and median
-dfStudentMedian<- dfSPPscoreAddon[c(rowID,nrow(dfSPPscoreAddon)), 3:9]
-#add rownames to identify median and individual in the plot
-rownames(dfStudentMedian) <- c("You", "Median")
-#convert rownames to column -needed for melt function
-dfStudentMedian$ID <- rownames(dfStudentMedian)
-
-#melt data
-dfmelt<- reshape2::melt(dfStudentMedian)
-dfmelt$axis1 <- 0.2
-dfmelt$axis2 <- 0.4
-dfmelt$axis3 <- 0.6
-dfmelt$axis4 <- 0.8
-dfmelt$axis5 <- 1.0
-
-# radar charts
-p<- ggplot(dfmelt, aes(x=variable, y= value))+
-  geom_text(aes(y = axis1,label = axis1, size=2)) +
-  geom_text(aes(y = axis2,label = axis2, size=2)) +
-  geom_text(aes(y = axis3,label = axis3, size=2)) +
-  geom_text(aes(y = axis4,label = axis4, size=2)) +
-  geom_text(aes(y = axis5,label = "1.0")) +
-  annotate("text", x= 0.0, y= 0, label = "0")+
-  geom_polygon(aes(group=ID, color= ID, fill= ID), alpha = 0.4, size = 1, show.legend = T)+
-  RadarTheme+
-  xlab("")+ ylab("")+
-  scale_y_continuous(limits = c(0, 1.20), breaks = seq(0, 1.0, 0.1))+
-  #annotate("text", x= 0.0, y= seq(0.0, 1.0, 0.20), label = seq(0.0, 1.0, 0.20))+
-  #geom_label_repel(aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
-  #geom_label(data=subset(dfmelt, dfmelt$ID=="Median"), aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
-  geom_label(data=subset(dfmelt, dfmelt$ID=="You"), aes(color=factor(ID), y = value,label = round(value, digits = 2)), size=7) +
-  guides(size=FALSE) +
-  coord_radar()
-
-p2 <- add_sub(p, "Figure 3: Radar chart of the median self-rating scores of all students in seven topics (red) \nin comparison to your score (blue).", x = 0, hjust = 0, size=25)
-ggdraw(p2)
+# dfStudentMedian<- dfSPPscoreAddon[c(rowID,nrow(dfSPPscoreAddon)), 3:9]
+# #add rownames to identify median and individual in the plot
+# rownames(dfStudentMedian) <- c("You", "Median")
+# #convert rownames to column -needed for melt function
+# dfStudentMedian$ID <- rownames(dfStudentMedian)
+# 
+# #melt data
+# dfmelt<- reshape2::melt(dfStudentMedian)
+# dfmelt$axis1 <- 0.2
+# dfmelt$axis2 <- 0.4
+# dfmelt$axis3 <- 0.6
+# dfmelt$axis4 <- 0.8
+# dfmelt$axis5 <- 1.0
+# 
+# # radar charts
+# p<- ggplot(dfmelt, aes(x=variable, y= value))+
+#   geom_text(aes(y = axis1,label = axis1, size=2)) +
+#   geom_text(aes(y = axis2,label = axis2, size=2)) +
+#   geom_text(aes(y = axis3,label = axis3, size=2)) +
+#   geom_text(aes(y = axis4,label = axis4, size=2)) +
+#   geom_text(aes(y = axis5,label = "1.0")) +
+#   annotate("text", x= 0.0, y= 0, label = "0")+
+#   geom_polygon(aes(group=ID, color= ID, fill= ID), alpha = 0.4, size = 1, show.legend = T)+
+#   RadarTheme+
+#   xlab("")+ ylab("")+
+#   scale_y_continuous(limits = c(0, 1.20), breaks = seq(0, 1.0, 0.1))+
+#   #annotate("text", x= 0.0, y= seq(0.0, 1.0, 0.20), label = seq(0.0, 1.0, 0.20))+
+#   #geom_label_repel(aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
+#   #geom_label(data=subset(dfmelt, dfmelt$ID=="Median"), aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
+#   geom_label(data=subset(dfmelt, dfmelt$ID=="You"), aes(color=factor(ID), y = value,label = round(value, digits = 2)), size=7) +
+#   guides(size=FALSE) +
+#   coord_radar()
+# 
+# p2 <- add_sub(p, "Figure 3: Radar chart of the median self-rating scores of all students in seven topics (red) \nin comparison to your score (blue).", x = 0, hjust = 0, size=25)
+# ggdraw(p2)
 
 
 ```
 
-\pagebreak
 
 ## Specific Recommondations - what can you do
 In this section you will receive a more detailed explanation of your results. The purpose of this information is to help you develop your skills and get the most from your university experience. Take a balanced approach to reviewing and utilizing this information. Do not assume that each statement is perfectly accurate just because it is printed in a formal manner; some statements may not fit you well. However, do not dismiss a statement just because it points to a challenge either.
@@ -233,28 +254,32 @@ Keep an open mind as you consider each statement. When it seems accurate, give s
 
 ```{r include=FALSE}
 
+# responses in personalized_info
 personalized_info <- personalized_info[,-c(1)]
-socialIntegration <- personalized_info[i,19]
-studyingHours <- personalized_info[i,20]
-relatedWork <- personalized_info[i,21] 
+socialIntegration <- personalized_info[i,20]
+studyingHours <- personalized_info[i,21]
+#relatedWork <- personalized_info[i,21] 
 nonRelatedWork <- personalized_info[i,22]
+
+# scores and percentile ranks from table  
 HShabits <- studentTable1[2,2]
 studyHabits <- studentTable1[3,2]
-
 selectRecommondations <- studentTable1[1]
 
 # Social integration
 selectRecommondations[1,1] <- ifelse(studentTable1[1,1]<0.5, 
-  paste("enrolled for a university degree in general and Medialogy at AAU specifically without having received a large amount of encouragement from friends, family, or other sources. Your social network can support you in times of hardship, doubt, and low morale.", 
-  ifelse( grepl(c("Not at all true", "Somewhat true"), socialIntegration),"Make sure to dedicate some time making and strengthening bonds with fellow students who also want to achieve a university degree.", "It is good to hear that you have already made some friends at AAU."), 
+  paste("enrolled for a university degree in general and Medialogy at AAU specifically without having received a large amount of encouragement from friends, family, or other sources. Your social network can support you in times of hardship, doubt, and low morale.",
+  ifelse( grepl(c("Not at all true", "Slightly true", "Somewhat true"), socialIntegration),"Make sure to dedicate some time making and strengthening bonds with fellow students who also want to achieve a university degree.", "It is good to hear that you find it easy to meet and make friends and that you expect to do so at AAU."), 
   "Making friends with fellow students at university can be a valuable source of support to rely on throughout the education. Taking active part in student unions, being a volunteer at events, boardgame nights, game jams, sports, or other types of student environment activities can help you connect with fellow students or contribute to healthy group work activities. It will broaden your social reference beyond your own semester or education. Breaking the barrier to seek social network outside your own semester can seem daunting, but can become a significantly positive part of your years as university student. If in doubt about how to initiate or engage, consider having a chat with your student counselor or students from higher semesters."),
+  
   paste("received an above average amount of encouragement from friends, family, or other sources when you enrolled for a university degree in general and Medialogy at AAU in particular. During your education it can help to have a social network that understands that times of frustration can be part of pursuing a higher education degree. Your social network can help support you in times of hardship, doubt, and low morale.",
         ifelse( grepl(c("Not at all true", "Somewhat true"), socialIntegration),
-  "Make sure to dedicate some time making and strengthening bonds with fellow students who also want to achieve a university degree.", "It is good to hear that you have already made some friends at AAU."),
+  "Make sure to dedicate some time making and strengthening bonds with fellow students who also want to achieve a university degree.", "It is good to hear that you find it easy to meet and make friends and that you expect to do so at AAU."),
         "Making friends with fellow students at university can be a valuable source to rely on throughout the education."))
 
 # High school habits
 selectRecommondations[2,1] <- ifelse(studentTable1[2,1]<0.5, paste(ifelse(HShabits<25,"can majorly benefit", "can benefit "),"from reflecting on your study habits. Going from high school to univesity involves many changes that you need to adjust to."),
+                                     
   "have above average study habits. However, remember that going from high school to univesity involves many changes that you need to adjust to.")
 
 # Study habits
@@ -273,14 +298,14 @@ selectRecommondations[5,1] <- ifelse(studentTable1[5,1]<0.5,
   "meaning that you see intelligence as something rather static and outside of your control to affect. Instead of seeing setbacks as a manifestation of inadequacy, lack of intelligence, or lack of talent, consider them an opportunity to learn and grow your mindset, to overcome academic challenges in your study life. Develop a positive learning attitude, in which challenge is not unwanted, but a logical part of the growth journey. Such challenges include lower than expected outcomes e.g. failed assignments, exams, or low grades. We all have talents and weaknesses. We naturally need to work harder on our personal weaknesses, but we are still capable.",
   "meaning that you are open to actively improving your intelligence. Seeing setbacks (failed assignments or poor exam grades) as an opportunity to learn and grow rather than inadequacy, lack of intelligence or talent helps  you overcome challenges and develop a positive learning attitude. ")
 
-studyingHours <- 38
+#studyingHours <- 38
 # Study and work
-selectRecommondations[6,1] <- ifelse(studyingHours>=47, "sufficient",
+selectRecommondations[6,1] <- ifelse(studyingHours>=65, "much higher than the recommended",ifelse(studyingHours>=47, "sufficient",
   ifelse(studyingHours>=42 && studyHours<=46, "about the recommended",
-  ifelse(studyingHours>=38 && studyHours<=41, "less than the recommended", "much less than the recommended")))
+  ifelse(studyingHours>=38 && studyHours<=41, "less than the recommended", "much less than the recommended"))))
 
-selectRecommondations[2,2] <- ifelse(relatedWork>=10 || nonRelatedWork>=10 || (relatedWork+nonRelatedWork)>=10,
-  paste("You reported using ", relatedWork, "hours on study related work, and", nonRelatedWork, "hours on non-study related work."
+selectRecommondations[2,2] <- ifelse(nonRelatedWork>=10,
+  paste("You reported using ", nonRelatedWork, "hours on jobs and other obligations."
   ),  "")
            
 
@@ -356,102 +381,48 @@ studentTable1$`Percentile rank` <- gsub(" ", "", studentTable1$`Percentile rank`
 Studying is a long-term endeavour and there will be times of frustration and doubt. During your education it can help to have a social network that understands that times of frustration can be part of pursuing a higher education degree. Your self-reported social support for studying placed you in the `r studentTable1[1,2]` percentile, and your responses suggest that you 
 `r selectRecommondations[1,1]` 
 
-Your annotations (feel free to annotate anywhere on these pages):
-
-******
-
 #### High School Habits
 In high school, the teacher often has the responsibility of giving homework, communicating learning material, recording attendance in class, ensure student progress, and help the students when required. The score of your self-reported high school habits placed you in the `r studentTable1[2,2]` percentile, which suggests that you 
 `r selectRecommondations[2,1]` 
 
-Your annotations (feel free to annotate anywhere on these pages):
-
-******
-
-#### Study Habits
+#### Study Habits - Note: focus here
 Weak study habits are the single greatest cause of academic problems at university. Your self-reported study habits placed you in the `r studentTable1[3,2]` percentile,
 `r selectRecommondations[3,1]` 
-**Some techniques working in high school do not work as well at university. Here you can to challenge yourself and your peers**. As a student at university, you have the responsibility for what you learn, as your lecturers will often have more focus on academic content than on pedagogy. **Decide what to focus on in your studies, you have the change to shape and challenge yourself.**
-
-Your annotations (feel free to annotate anywhere on these pages):
-
-******
+Some techniques working in high school do not work as well at university. Here you can to challenge yourself and your peers**. As a student at university, you have the responsibility for what you learn, as your lecturers will often have more focus on academic content than on pedagogy. Decide what to focus on in your studies, you have the chance to shape and challenge yourself.
 
 #### Grit
 Talent without hard work rarely amounts to anything ambitious. Making the effort to stay with a problem (or challenge) for long enough, increases your chances of cracking it and mastering new skills. This requires time and dedication, and is known as grit. Students with high self-reported values in grit, are less likely to drop out and fail exams than those with lower scores. Your self-reported grit places you in the `r studentTable1[4,2]` percentile,
 `r selectRecommondations[4,1]` 
 
-Your annotations (feel free to annotate anywhere on these pages):
-
-******
-
 #### Growth mindset 
 Seeing your intelligence, not as static quality or property, but as something that you can actively influence and grow is referred to as having a growth mindset. Students with high self-reported values in growth mindset are less likely to drop out and fail exams than those with lower scores. Your self-reported score placed you in the `r studentTable1[5,2]` percentile and suggests that you see intelligence as something rather static and outside of your control, 
 `r selectRecommondations[5,1]` 
 
-Your annotations (feel free to annotate anywhere on these pages):
-
-******
-
-#### Time Commitments (study and other)
-Studying requires a lot of time and dedication in order to succeed. Being intelligent and having talent can help but does not replace the need for dedicating time and effort to studying. The ECTS system assumes that you spend 45 hours a week on your education. You reported using or planning `r studyingHours` hours weekly for studying, which indicates that you are using
+#### Time Commitments (study and other)  - Note: focus here
+Studying requires a lot of time and dedication in order to succeed. Being intelligent and having talent can help but does not replace the need for dedicating time and effort to studying. The ECTS system assumes that you spend 45 hours a week during your education, and this means that your work in courses and projects are evaluated and graded based on what a student can do within the nominated hours.
+You reported planning to use `r studyingHours` hours weekly for studying, which indicates that you are using
 `r selectRecommondations[6,1]` 
 amount of time for studying.  Meeting study demands is difficult over long-term with too many other obligations.
 `r selectRecommondations[2,2]`
-**During your eduation, you should carefully review your commitments and other activities that you need or want to dedicate time to vis-&agrave;-vis the study demands. Should you not able to dedicate around 45 hours to study each week, you should carefully plan these hours and perhaps even minutes, so you don’t overwork in wrong places. It is quite natural for students to underestimate the workload requirement when learning about university life, as any other experience that involves facing new challenges or accomodating into new environments. We simply need experience to handle new situations.**
-
----
-Your annotations (feel free to annotate anywhere on these pages):
-
-
-
----
+During your eduation, you should carefully review your commitments and other activities that you need or want to dedicate time to vis-&agrave;-vis the study demands. Should you not able to dedicate around 45 hours to study each week, you should carefully plan these hours and perhaps even minutes, so you do n0t overwork in wrong places. As students progress they get better at adjusting their study hours and become more aware of how much time they should dedicate to the different study activities. It is quite natural for students to underestimate the workload requirement in the first year. The adjustment is a process, and you just started your transistion to university life. This takes time, for some shorter for others longer, but we all have to go through changes like these in our lives.
 
 #### Understanding of Medialogy
 Choosing a suitable education can be difficult, and students should reflect on their choice of education, especially, in the first semester(s). Your understanding about what you will learn in the Medialogy programme is in the `r studentTable1[7,2]` percentile, meaning that
 `r selectRecommondations[7,1]` 
-Previous students with different expectations either started appreciating the content, skills, and opportunities of a Medialogy degree or changed to other programmes or educations. Attending the Med Awards event (usually in November) and seeing other student projects can inspire you and show what you will be able to do if you apply yourself to what Medialogy can offer. Contacting older students in the Medialogy facebook group, study counselors, and going to the study cafe can also provide you information about the education and what it means to be a Medialogy student. You can find information about Medialogy and student testimonials [here](tinyurl.com/AAUaboutMedialogy) (tinyurl.com/AAUaboutMedialogy). 
+Previous students with different expectations either started appreciating the content, skills, and opportunities of a Medialogy degree or changed to other programmes or educations. Attending the Med Awards event (usually in November) and seeing other student projects can inspire you and show what you will be able to do if you apply yourself to what Medialogy can offer. Contacting older students in the Medialogy facebook group, study counselors, and going to the study cafe can also provide you information about the education and what it means to be a Medialogy student. You can find information about Medialogy and student testimonials [here](tinyurl.com/AAUaboutMedialogy) (tinyurl.com/AAUaboutMedialogy).
 
-----
-Your annotations (feel free to annotate anywhere on these pages):
-
-
-----
-
-
-### Student counseler services - help you with student challenges
-If you have specific problems, we recommend you to contact the student counsler. Unlike counslers in high schools, student counslers at AAU are students studying themselves, and they have probably helped other students with a similar problem to your. Supervisors, secretairies, and semester coordinates are also interested in helping you, but the student counsler is the direct resource for handling problems/challenges such as:
+### Student counseler services
+If you need help for specific challenges as a student, we recommend you contacting a student counsler. Unlike counslers at high schools, student counslers at AAU are students studying themselves. They know many of the challenges that a Medialogy student faces, having experienced it themselves or helped fellow students. The student counsler is a good resource for handling student challenges such as:
 
 - Exam/presentation anxiety
 
-- Failing courses (e.g. Math or programming) 
+- Failing courses (e.g. programming or math) 
 
 - Time management
 
-- Etc.
+- Guidance in your choice of study
 
 Find your student counseler at your study location [here](https://www.en.aau.dk/education/bachelor/medialogy/student-guidance/)  (https://www.en.aau.dk/education/bachelor/medialogy/student-guidance/).
-
-
-
-
-
-
-
-```{r include=FALSE}
-# Explain what is self-reported, percentile ranks is not a grade but only based on how you rated yourself in the questionnaire?
-# 
-#  the test results were formulated, if negative. 
-# acknowledging the choice
-# If you want to be 'here', do 'this' more"
-# 
-# refer to the published work and research?
-# 
-# Could be perceived as a constructive motivational tool, if the response would look more ahead, towards where they might want to change routines, or place energy differently, than what some interpreted as a blaming/scaring campain
-# 
-# Could acknowledge people's individual differences of how to work, but highlight the potential benefits from working in teams, and inspire the student to turn his/her attention towards trying to see/find those positive elements to group work - perhaps placed into perspective of how AAU students need to perform group-based project work, and can gain large benefits from the different skills and competences that each individual group member is able to contribute to the project and thus, overall learning outcome for the individual student.
-```
-
 
 
 
