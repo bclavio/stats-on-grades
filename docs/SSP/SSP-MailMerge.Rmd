@@ -47,6 +47,7 @@ homeDir<-Sys.getenv("HOME")
  
 ```{r include=FALSE, warning=FALSE}
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
+personalized_info <- personalized_info[order(personalized_info$rowID),]
 personalized_info <- personalized_info[,-1]
 #highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
 campus <- personalized_info$Campus[i]
@@ -76,7 +77,7 @@ urlcolor: blue
 
 This is an interpretive report of your responses to the study verification test. We hope this report will help you identify your current student profile, but also aid you in reflection and give resources to help you in your study life. 
 
-The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported value for each topic is indicated with red dots. A value less than 0.5 means that you rated yourself lower than the average student. The percentile ranks indicate the percentage of students whose scores are equal to or less than yours. A percentile rank between 25 and 75 means that most of your peers are in a similar situation as you. Low percentile ranks are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth.
+The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported values for each topic are indicated with red dots. The percentile ranks indicate the percentage of students whose scores are equal to or less than yours. A percentile rank lower than 50 means that you rated yourself lower than half the students. A percentile rank between 25 and 75 means that most of your peers are in a similar situation as you. Low percentile ranks are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth.
 
 As the report is based on the SSP questionnaire information alone, it may give only a rough indication of your true attitudes. Based on your self-reported answers we have created specific recommendations with concrete examples and links for you to get more comfortable in the Medialogy study environment (see the following pages). As follow-up to this report, we will conduct a workshop to help you understand your SSP scores, (re)define your study goals, and talk about the students services you may desire.
 
@@ -100,8 +101,9 @@ student <- subset(norm.avgGradesMelt1, norm.avgGradesMelt1$rowID ==i)
 
 pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
-  geom_jitter(height = 0, width = 0.1) +
+  #geom_jitter(height = 0, width = 0.1) +
   #geom_boxplot(width=0.1) + theme_minimal() +
+  scale_y_continuous(breaks=seq(0,1,0.25), limits = c(0,1)) +
   coord_flip() +
   labs(y="Figure 1: Boxplots of the self-ratings of all students in seven topics.") +
   geom_dotplot(data = student,
@@ -124,41 +126,41 @@ pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
 ```
 
 ```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
-studentTable <- melt(subset(personalized_info[,-c(1:5, 21:32)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
-studentTable1<- NULL
-studentTable1 <- data.frame(c(studentTable[-c(1:7),-c(1)]), apply(studentTable[-c(8:14), ], 2, rev))
-studentTable1 <- studentTable1[, c(1,5,2)]
-names(studentTable1)[2]<-"Your score"
-names(studentTable1)[3]<-"Percentile rank"
-row.names(studentTable1) <- NULL
-studentTable1$`Your score` <- as.numeric(levels(studentTable1$`Your score`))[studentTable1$`Your score`]
-
-is.num <- sapply(studentTable1, is.numeric)
-studentTable1[is.num] <- sapply(studentTable1[is.num], round, 2)
-studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
-studentTable1$`Your score` <- round(as.numeric(studentTable1$`Your score`), digits = 2)
-studentTable1 <- rbind(studentTable1, c(" "))
-studentTable1 <- studentTable1[,-c(1)]
-studentTable2 <- studentTable1
-studentTable2[1] <- NULL
-
-tabData <- ggtexttable(studentTable2, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
-showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(4.5,1.5)) # , common.legend = TRUE
+# studentTable <- melt(subset(personalized_info[,-c(1:5, 21:32)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
+# studentTable1<- NULL
+# studentTable1 <- data.frame(c(studentTable[-c(1:7),-c(1)]), apply(studentTable[-c(8:14), ], 2, rev))
+# studentTable1 <- studentTable1[, c(1,5,2)]
+# names(studentTable1)[2]<-"Your score"
+# names(studentTable1)[3]<-"Percentile rank"
+# row.names(studentTable1) <- NULL
+# studentTable1$`Your score` <- as.numeric(levels(studentTable1$`Your score`))[studentTable1$`Your score`]
+# 
+# is.num <- sapply(studentTable1, is.numeric)
+# studentTable1[is.num] <- sapply(studentTable1[is.num], round, 2)
+# studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
+# studentTable1$`Your score` <- round(as.numeric(studentTable1$`Your score`), digits = 2)
+# studentTable1 <- rbind(studentTable1, c(" "))
+# studentTable1 <- studentTable1[,-c(1)]
+# studentTable2 <- studentTable1
+# studentTable2[1] <- NULL
+# 
+# tabData <- ggtexttable(studentTable2, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
+# showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(4.5,1.5)) # , common.legend = TRUE
 ```
 
 
 ```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
-# studentTable <- melt(subset(personalized_info[,-c(1:12, 21:31)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
-# studentTable1<- studentTable
-# names(studentTable1)[3]<-"Percentile rank"
-# row.names(studentTable1) <- NULL
-# studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
-# studentTable1 <- rbind(studentTable1, c(" "))
-# studentTable1 <- studentTable1[,-c(1)]
-# studentTable1[1] <- NULL
-# 
-# tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
-# showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(4.5,1.5)) # , common.legend = TRUE
+studentTable <- melt(subset(personalized_info[,-c(1:12, 21:31)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
+studentTable1<- studentTable
+names(studentTable1)[3]<-"Percentile rank"
+row.names(studentTable1) <- NULL
+studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
+studentTable1 <- rbind(studentTable1, c(" "))
+studentTable1 <- studentTable1[,-c(1)]
+studentTable1[1] <- NULL
+
+tabData <- ggtexttable(studentTable1, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
+showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(4.5,1.5)) # , common.legend = TRUE
 ```
 
 ```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
@@ -166,13 +168,12 @@ showAnalysis
 
 ```
      
-```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
-#, fig.height=1
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height=1}
 
 studentHours <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID == i) #norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
 studentHours <- subset(studyHours, studyHours$rowID==i) #studyHours$rowID %in% highRiskStudents$rowID[i])
 studyHours$hours <-  as.numeric(studyHours$hours)
-studentHours['DotPos'] <- 35 # where the position the dot: sample size / 2
+studentHours['DotPos'] <- 67 # where the position the dot: sample size / 2
 
 ggplot(studyHours, aes(x=rowID,y=hours)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
@@ -259,7 +260,7 @@ personalized_info <- personalized_info[,-c(1)]
 socialIntegration <- personalized_info[i,20]
 studyingHours <- personalized_info[i,21]
 #relatedWork <- personalized_info[i,21] 
-nonRelatedWork <- personalized_info[i,22]
+#nonRelatedWork <- personalized_info[i,23]
 
 # scores and percentile ranks from table  
 HShabits <- studentTable1[2,2]
@@ -267,90 +268,95 @@ studyHabits <- studentTable1[3,2]
 selectRecommondations <- studentTable1[1]
 
 # Social integration
-selectRecommondations[1,1] <- ifelse(studentTable1[1,1]<0.5, 
+selectRecommondations[1,1] <- ifelse(studentTable1[1,1]<45, 
   paste("enrolled for a university degree in general and Medialogy at AAU specifically without having received a large amount of encouragement from friends, family, or other sources. Your social network can support you in times of hardship, doubt, and low morale.",
   ifelse( grepl(c("Not at all true", "Slightly true", "Somewhat true"), socialIntegration),"Make sure to dedicate some time making and strengthening bonds with fellow students who also want to achieve a university degree.", "It is good to hear that you find it easy to meet and make friends and that you expect to do so at AAU."), 
   "Making friends with fellow students at university can be a valuable source of support to rely on throughout the education. Taking active part in student unions, being a volunteer at events, boardgame nights, game jams, sports, or other types of student environment activities can help you connect with fellow students or contribute to healthy group work activities. It will broaden your social reference beyond your own semester or education. Breaking the barrier to seek social network outside your own semester can seem daunting, but can become a significantly positive part of your years as university student. If in doubt about how to initiate or engage, consider having a chat with your student counselor or students from higher semesters."),
   
-  paste("received an above average amount of encouragement from friends, family, or other sources when you enrolled for a university degree in general and Medialogy at AAU in particular. During your education it can help to have a social network that understands that times of frustration can be part of pursuing a higher education degree. Your social network can help support you in times of hardship, doubt, and low morale.",
+  paste(ifelse(studentTable1[1,1] >= 45 && studentTable1[1,1] <= 55, "received about average", "received an above average "),
+  "amount of encouragement from friends, family, or other sources when you enrolled for a university degree in general and Medialogy at AAU in particular. During your education it can help to have a social network that understands that times of frustration can be part of pursuing a higher education degree. Your social network can help support you in times of hardship, doubt, and low morale.",
         ifelse( grepl(c("Not at all true", "Somewhat true"), socialIntegration),
   "Make sure to dedicate some time making and strengthening bonds with fellow students who also want to achieve a university degree.", "It is good to hear that you find it easy to meet and make friends and that you expect to do so at AAU."),
         "Making friends with fellow students at university can be a valuable source to rely on throughout the education."))
 
 # High school habits
-selectRecommondations[2,1] <- ifelse(studentTable1[2,1]<0.5, paste(ifelse(HShabits<25,"can majorly benefit", "can benefit "),"from reflecting on your study habits. Going from high school to univesity involves many changes that you need to adjust to."),
-                                     
-  "have above average study habits. However, remember that going from high school to univesity involves many changes that you need to adjust to.")
+selectRecommondations[2,1] <- ifelse(studentTable1[2,1]<45, "can benefit from reflecting on your study habits. Going from high school to university involves many changes that you need to adjust to.",
+  paste(ifelse(studentTable1[2,1] >= 45 && studentTable1[2,1] <= 55, "have about average study habits.", "have above average study habits."), "However, remember that going from high school to university involves many changes that you need to adjust to."))
 
 # Study habits
-selectRecommondations[3,1] <- ifelse(studentTable1[3,1]<0.5, paste(ifelse(studyHabits<25,"and you will benefit tremendously", "and you will benefit"),
-  "from adopting more good study habits. As soon as possible, develop a clear daily routine in which you set aside certain periods of time to study. Learn to focus your attention and to pace yourself. Find the situations or circumstances, where your attention is challenged or removed from otherwise study-allocated time or activity. Examples can be when sitting too far back in the room during the lectures while keeping focused attention, or when multitasking too many activities while keeping the mind from wandering away from the subject matter during homework sessions, such as checking Facebook. Other useful techniques include previewing, underlining, note-taking, and reviewing. Academic counselors can help you develop your study habits and exercises for keeping focus. \n You can find a set of helpful tools to improve your study habits [here](tinyurl.com/AAUstudyPlanning) (tinyurl.com/AAUstudyPlanning) and find study related exercises [here](tinyurl.com/AAUstudySkillsExercises) (tinyurl.com/AAUstudySkillsExercises)."), 
-  paste(ifelse(studyHabits>50 && studyHabits<65,"suggesting that you are quite disciplined and know", "suggesting that you are disciplined"), ifelse(studyHabits>65, "and know quite well", "and know"),
-  "what it takes to study at university. Although your self-reported study habits are above average, you still want to put effort into this area, as you will experience many changes since high school. Develop a clear daily routine in which you set aside certain periods of time to study. Learn to focus your attention and to pace yourself. Other useful techniques include previewing, underlining, note-taking, and reviewing. In case you want to further improve your study habits have a look [here](tinyurl.com/AAUstudyPlanning) (tinyurl.com/AAUstudyPlanning) and find study related exercises [here](tinyurl.com/AAUstudySkillsExercises) (tinyurl.com/AAUstudySkillsExercises)."))
+selectRecommondations[3,1] <- ifelse(studentTable1[3,1]<45, "and you will benefit from adopting more good study habits. Develop a clear daily routine in which you set aside certain periods of time to study. Learn to focus your attention and to pace yourself. Find the situations or circumstances, where your attention is challenged or removed from otherwise study-allocated time or activity. Examples can be skipping lectures, exercises or other course activities, sitting too far back in the room during the lectures, or when multitasking too many activities while keeping the mind from wandering away from the subject matter during homework sessions, such as checking Facebook. Other useful techniques include previewing, underlining, note-taking, and reviewing. Academic counselors can help you develop your study habits and exercises for keeping focus. \n You can find a set of helpful tools to improve your study habits [here](tinyurl.com/AAUstudyPlanning) (tinyurl.com/AAUstudyPlanning) and find study related exercises [here](tinyurl.com/AAUstudySkillsExercises) (tinyurl.com/AAUstudySkillsExercises).", 
+  paste(ifelse(studyHabits >= 45 && studyHabits <= 65,"suggesting that you are quite disciplined and know", "suggesting that you are disciplined"), ifelse(studyHabits>65, "and know quite well", "and know"),
+  paste("what it takes to study at university. Although your self-reported study habits are", ifelse(studyHabits >= 45 && studyHabits <= 55, "about average,", "above average,"), "you still want to put effort into this area, as you will experience many changes since high school. Develop a clear daily routine in which you set aside certain periods of time to study. Learn to focus your attention and to pace yourself. Other useful techniques include previewing, underlining, note-taking, and reviewing. In case you want to further improve your study habits have a look [here](tinyurl.com/AAUstudyPlanning) (tinyurl.com/AAUstudyPlanning) and find study related exercises [here](tinyurl.com/AAUstudySkillsExercises) (tinyurl.com/AAUstudySkillsExercises).")))
 
 # Grit
-selectRecommondations[4,1] <- ifelse(studentTable1[4,1]<0.5, 
+selectRecommondations[4,1] <- ifelse(studentTable1[4,1]<45, 
   "and it appears you would benefit from more perseverance and dedication to solving problems, achieving study goals, etc. Previous Medialogy cohorts have shown that no matter the high school diploma, students can make it through the education if they persist, and invest the time and effort. Grit is a part of university life. Despite being a demanding part, it is often also what leads to rewarding experiences and new skill sets. Remember this next time you encounter a difficult problem and you feel like giving up. Remove yourself from distractions, be tenacious, and keep grinding.",
-  "and your perseverance and dedication to solving problems are therefore above average. Previous Medialogy cohorts have shown that even students with poor high school grades will make it through the education if they persist and invest the time and effort. Remember this next time you encounter a difficult problem and you feel like giving up.")
+  paste("and your perseverance and dedication to solving problems are therefore", ifelse(studentTable1[4,1] >= 45 && studentTable1[4,1] <= 55, "about average.", "above average."), "Previous Medialogy cohorts have shown that even students with poor high school grades will make it through the education if they persist and invest the time and effort. Remember this next time you encounter a difficult problem and you feel like giving up."))
 
 # Growth mindset
-selectRecommondations[5,1] <- ifelse(studentTable1[5,1]<0.5, 
+selectRecommondations[5,1] <- ifelse(studentTable1[5,1]<50, 
   "meaning that you see intelligence as something rather static and outside of your control to affect. Instead of seeing setbacks as a manifestation of inadequacy, lack of intelligence, or lack of talent, consider them an opportunity to learn and grow your mindset, to overcome academic challenges in your study life. Develop a positive learning attitude, in which challenge is not unwanted, but a logical part of the growth journey. Such challenges include lower than expected outcomes e.g. failed assignments, exams, or low grades. We all have talents and weaknesses. We naturally need to work harder on our personal weaknesses, but we are still capable.",
   "meaning that you are open to actively improving your intelligence. Seeing setbacks (failed assignments or poor exam grades) as an opportunity to learn and grow rather than inadequacy, lack of intelligence or talent helps  you overcome challenges and develop a positive learning attitude. ")
 
 #studyingHours <- 38
 # Study and work
-selectRecommondations[6,1] <- ifelse(studyingHours>=65, "much higher than the recommended",ifelse(studyingHours>=47, "sufficient",
-  ifelse(studyingHours>=42 && studyHours<=46, "about the recommended",
-  ifelse(studyingHours>=38 && studyHours<=41, "less than the recommended", "much less than the recommended"))))
+selectRecommondations[6,1] <- ifelse(studyingHours>=55, "much higher than the recommended",ifelse(studyingHours>=47, "sufficient",
+  ifelse(studyingHours>=42 && studyingHours<=46, "about the recommended",
+  ifelse(studyingHours>=10 && studyingHours<=41, "less than the recommended", "much less than the recommended or entered an unrecognized entry in the questionnaire"))))
 
-selectRecommondations[2,2] <- ifelse(nonRelatedWork>=10,
-  paste("You reported using ", nonRelatedWork, "hours on jobs and other obligations."
-  ),  "")
+# selectRecommondations[2,2] <- ifelse(nonRelatedWork>=10,
+#   paste("You reported using ", nonRelatedWork, "hours on jobs and other obligations."
+#   ),  "")
            
 
 # Understanding Medialogy
-contentCreate <- ifelse(grepl("Not",personalized_info[i,23]), NA, "manual content creation,")
-PBL <- ifelse(grepl("Disgree",personalized_info[i,25]), NA, "Although you have group responsibilities related to you project, the group is not responsible for the individual learning goals, defined in the study plan.") 
-aes <- ifelse(grepl("Not",personalized_info[i,26]), NA, "work with aesthetics,")
-makeMovie <- ifelse(grepl("Not",personalized_info[i,27]), NA, "professional movie making,") 
-rigging <- ifelse(grepl("Not",personalized_info[i,28]), NA, "working as a rigging artist,") 
-adobe <- ifelse(grepl("Not",personalized_info[i,29]), NA, "using Adobe software") 
-applySkills <- ifelse(grepl("Not",personalized_info[i,24]) || grepl("Correct",personalized_info[i,30]), 
-  paste("but learn more about applying",
-  ifelse(grepl("Not",personalized_info[i,24]), "math knowledge", NA),
-  ifelse(grepl("Not",personalized_info[i,24]) && grepl("Correct",personalized_info[i,31]), "and", NA),
-  ifelse(grepl("Correct",personalized_info[i,30]), "programming skills.", NA), 
-  "at AAU"), "")
+# contentCreate <- ifelse(grepl("Not",personalized_info[i,23]), NA, "manual content creation,")
+# PBL <- ifelse(grepl("Disgree",personalized_info[i,25]), NA, "Although you have group responsibilities related to you project, the group is not responsible for the individual learning goals, defined in the study plan.") 
+# aes <- ifelse(grepl("Not",personalized_info[i,25]), NA, "work with aesthetics,")
+# makeMovie <- ifelse(grepl("Not",personalized_info[i,26]), NA, "professional movie making,") 
+# rigging <- ifelse(grepl("Not",personalized_info[i,27]), NA, "working as a rigging artist,") 
+# adobe <- ifelse(grepl("Not",personalized_info[i,28]), NA, "using Adobe software") 
+# applySkills <- ifelse(grepl("Not",personalized_info[i,24]) || grepl("Correct",personalized_info[i,30]), 
+#   paste("but learn more about applying",
+#   ifelse(grepl("Not",personalized_info[i,24]), "math knowledge", NA),
+#   ifelse(grepl("Not",personalized_info[i,24]) && grepl("Correct",personalized_info[i,31]), "and", NA),
+#   ifelse(grepl("Correct",personalized_info[i,29]), "programming skills.", NA), 
+#   "at AAU"), "")
+# 
+# toBeMed <- rbind(
+#   ifelse(grepl("Not",personalized_info[i,23]), NA, "manual content creation"),
+#   ifelse(grepl("Not",personalized_info[i,25]), NA, "work with aesthetics"),
+#   ifelse(grepl("Not",personalized_info[i,26]), NA, "professional moving making"),
+#   ifelse(grepl("Not",personalized_info[i,27]), NA, "working as a rigging artist"),
+#   ifelse(grepl("Not",personalized_info[i,28]), NA, "using adobe software")
+# )
+# toBeMed <- na.omit(toBeMed)
+# toBeMed[nrow(toBeMed),] <- ifelse(is.na(toBeMed[2]), ".",paste("and", toBeMed[nrow(toBeMed)]))
+# 
+# toBeMedList <- paste(toBeMed, collapse = ", ")
 
-toBeMed <- rbind(
-  ifelse(grepl("Not",personalized_info[i,23]), NA, "manual content creation"),
-  ifelse(grepl("Not",personalized_info[i,26]), NA, "work with aesthetics"),
-  ifelse(grepl("Not",personalized_info[i,27]), NA, "professional moving making"),
-  ifelse(grepl("Not",personalized_info[i,28]), NA, "working as a rigging artist"),
-  ifelse(grepl("Not",personalized_info[i,29]), NA, "using adobe software")
-)
-toBeMed <- na.omit(toBeMed)
-toBeMed[nrow(toBeMed),] <- ifelse(is.na(toBeMed[2]), ".",paste("and", toBeMed[nrow(toBeMed)]))
+# applySkills <- ifelse(grepl("Not",personalized_info[i,24]) && !grepl("correct",personalized_info[i,30]), 
+#   ", but learn more about applying math knowledge and programming skills at AAU.",
+#     ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), 
+#       paste(", but learn more about applying",
+#       ifelse(grepl("Not",personalized_info[i,24]), "math knowledge", ""),
+#       ifelse(!grepl("Correct",personalized_info[i,30]), "programming skills", ""), 
+#       "at AAU."), "."))
+# 
+# PBL <- ifelse(grepl("Disgree",personalized_info[i,25]), "", "Although you have group responsibilities related to your project, the group is not responsible for the individual learning goals, defined in the study plan.") 
 
-toBeMedList <- paste(toBeMed, collapse = ", ")
+# selectRecommondations[7,1] <- ifelse(studentTable1[7,1]<0.5, 
+#   paste(ifelse(studentTable1[7,1]<0.3,
+#   "your current conception of Medialogy is","your understanding of Medialogy is"), " different from the study plan. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming.", 
+#   ifelse(is.na(toBeMed), "",paste0("Contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about: ",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL), 
+#   paste("you have a pretty good idea of what you will learn at Medialogy. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming.",
+#   ifelse(is.na(toBeMed), "",paste0("However, contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about: ",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL))
 
-applySkills <- ifelse(grepl("Not",personalized_info[i,24]) && !grepl("correct",personalized_info[i,30]), 
-  ", but learn more about applying math knowledge and programming skills at AAU.",
-    ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), 
-      paste(", but learn more about applying",
-      ifelse(grepl("Not",personalized_info[i,24]), "math knowledge", ""),
-      ifelse(!grepl("Correct",personalized_info[i,30]), "programming skills", ""), 
-      "at AAU."), "."))
-
-PBL <- ifelse(grepl("Disgree",personalized_info[i,25]), "", "Although you have group responsibilities related to your project, the group is not responsible for the individual learning goals, defined in the study plan.") 
-
-selectRecommondations[7,1] <- ifelse(studentTable1[7,1]<0.5, 
+selectRecommondations[7,1] <- ifelse(studentTable1[7,1]<50, 
   paste(ifelse(studentTable1[7,1]<0.3,
-  "your current conception of Medialogy is","your understanding of Medialogy is"), " different from the study plan. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming.", 
-  ifelse(is.na(toBeMed), "",paste0("Contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about: ",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL), 
-  paste("you have a pretty good idea of what you will learn at Medialogy. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming.",
-  ifelse(is.na(toBeMed), "",paste0("However, contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about: ",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL))
+  "your current conception of Medialogy is","your understanding of Medialogy is"), " different from the study plan. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming."), 
+  paste("you have a pretty good idea of what you will learn at Medialogy. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming."))
+
 
 # selectRecommondations <- gsub("\\,\\s+”", ",", selectRecommondations)
 
@@ -360,59 +366,61 @@ selectRecommondations[7,1] <- ifelse(studentTable1[7,1]<0.5,
 
 
 ```{r include=FALSE}
-studentTable1 <- studentTable1[-8, ]
+#studentTable1 <- studentTable1[-8, ]
 studentTable1['th'] <- as.numeric(studentTable1$`Percentile rank`) %% 10
 
-studentTable1$`Percentile rank` <-  ifelse(grepl("1", studentTable1$th), 
+studentTable1$`Percentile rank` <-  ifelse(grepl("1", studentTable1$th),
                                           paste(studentTable1$`Percentile rank`, "st"),
-                                    ifelse(grepl("2", studentTable1$th), 
+                                    ifelse(grepl("2", studentTable1$th),
                                           paste(studentTable1$`Percentile rank`, "nd"),
                                     ifelse(grepl("3", studentTable1$th),
                                           paste(studentTable1$`Percentile rank`, "rd"),
                                           paste(studentTable1$`Percentile rank`, "th"))))
 
-studentTable1$`Percentile rank` <- gsub(" ", "", studentTable1$`Percentile rank`) 
+studentTable1$`Percentile rank` <- gsub(" ", "", studentTable1$`Percentile rank`)
 
 ```
 
 
 
 #### Social Support for Studying
-Studying is a long-term endeavour and there will be times of frustration and doubt. During your education it can help to have a social network that understands that times of frustration can be part of pursuing a higher education degree. Your self-reported social support for studying placed you in the `r studentTable1[1,2]` percentile, and your responses suggest that you 
+Studying is a long-term endeavour and there will be times of frustration and doubt. During your education it can help to have a social network that understands that times of frustration can be part of pursuing a higher education degree. Your self-reported social support for studying placed you in the `r studentTable1[1,1]` percentile, and your responses suggest that you 
 `r selectRecommondations[1,1]` 
 
 #### High School Habits
-In high school, the teacher often has the responsibility of giving homework, communicating learning material, recording attendance in class, ensure student progress, and help the students when required. The score of your self-reported high school habits placed you in the `r studentTable1[2,2]` percentile, which suggests that you 
+In high school, the teacher often has the responsibility of giving homework, communicating learning material, recording attendance in class, ensure student progress, and help the students when required. The score of your self-reported high school habits placed you in the `r studentTable1[2,1]` percentile, which suggests that you 
 `r selectRecommondations[2,1]` 
+As a student at university, you have the responsibility for what you learn. Your lecturers will often have more focus on academic content than on pedagogy and will not be able to allocate the amount of attention towards you as you might have received in high school. Adopting good or improving your study habits will help you and your learning progress. Think about the various opportunities in terms of jobs a degree in Medialogy provides. You can use this in order to fuel your habit change, direct your ambition, as well as your sense of personal responsibility for your future. We know this can be difficult and takes time, as this is a process that is very individual.
 
-#### Study Habits - Note: focus here
-Weak study habits are the single greatest cause of academic problems at university. Your self-reported study habits placed you in the `r studentTable1[3,2]` percentile,
+
+#### Study Habits
+Weak study habits are the single greatest cause of academic problems at university. Your self-reported study habits placed you in the `r studentTable1[3,1]` percentile,
 `r selectRecommondations[3,1]` 
-Some techniques working in high school do not work as well at university. Here you can to challenge yourself and your peers**. As a student at university, you have the responsibility for what you learn, as your lecturers will often have more focus on academic content than on pedagogy. Decide what to focus on in your studies, you have the chance to shape and challenge yourself.
+Some techniques working in high school do not work as well as at university. Here you can to challenge yourself and your peers. As a student at university, you have the responsibility for what you learn, as your lecturers will often have more focus on academic content than on pedagogy. Decide what to focus on in your studies, you have the chance to shape and challenge yourself.
 
 #### Grit
-Talent without hard work rarely amounts to anything ambitious. Making the effort to stay with a problem (or challenge) for long enough, increases your chances of cracking it and mastering new skills. This requires time and dedication, and is known as grit. Students with high self-reported values in grit, are less likely to drop out and fail exams than those with lower scores. Your self-reported grit places you in the `r studentTable1[4,2]` percentile,
+Talent without hard work rarely amounts to anything ambitious. Making the effort to stay with a problem (or challenge) for long enough, increases your chances of cracking it and mastering new skills. This requires time and dedication, and is known as grit. Students with high self-reported values in grit, are more likely to obtain their degree out and pass exams than those with lower scores. Your self-reported grit places you in the `r studentTable1[4,1]` percentile,
 `r selectRecommondations[4,1]` 
 
 #### Growth mindset 
-Seeing your intelligence, not as static quality or property, but as something that you can actively influence and grow is referred to as having a growth mindset. Students with high self-reported values in growth mindset are less likely to drop out and fail exams than those with lower scores. Your self-reported score placed you in the `r studentTable1[5,2]` percentile and suggests that you see intelligence as something rather static and outside of your control, 
+Seeing your intelligence, not as static quality or property, but as something that you can actively influence and grow is referred to as having a growth mindset. Students with high self-reported values in growth mindset are more likely to finish their degree and master exams than those with lower scores. Your self-reported score placed you in the `r studentTable1[5,1]` percentile and suggests that you see intelligence as something rather static and outside of your control, 
 `r selectRecommondations[5,1]` 
 
-#### Time Commitments (study and other)  - Note: focus here
+#### Time Commitments (study and other)
 Studying requires a lot of time and dedication in order to succeed. Being intelligent and having talent can help but does not replace the need for dedicating time and effort to studying. The ECTS system assumes that you spend 45 hours a week during your education, and this means that your work in courses and projects are evaluated and graded based on what a student can do within the nominated hours.
 You reported planning to use `r studyingHours` hours weekly for studying, which indicates that you are using
 `r selectRecommondations[6,1]` 
 amount of time for studying.  Meeting study demands is difficult over long-term with too many other obligations.
-`r selectRecommondations[2,2]`
-During your eduation, you should carefully review your commitments and other activities that you need or want to dedicate time to vis-&agrave;-vis the study demands. Should you not able to dedicate around 45 hours to study each week, you should carefully plan these hours and perhaps even minutes, so you do n0t overwork in wrong places. As students progress they get better at adjusting their study hours and become more aware of how much time they should dedicate to the different study activities. It is quite natural for students to underestimate the workload requirement in the first year. The adjustment is a process, and you just started your transistion to university life. This takes time, for some shorter for others longer, but we all have to go through changes like these in our lives.
+During your eduation, you should carefully review your commitments and other activities that you need or want to dedicate time to vis-&agrave;-vis the study demands. Should you not able to dedicate around 45 hours to study each week, you should carefully plan these hours and perhaps even minutes, so you do not overwork in wrong places. As students progress they get better at adjusting their study hours and become more aware of how much time they should dedicate to the different study activities. It is quite natural for students to underestimate the workload requirement in the first year. The adjustment is a process, and you just started your transistion to university life. This takes time, for some shorter for others longer.
 
 #### Understanding of Medialogy
-Choosing a suitable education can be difficult, and students should reflect on their choice of education, especially, in the first semester(s). Your understanding about what you will learn in the Medialogy programme is in the `r studentTable1[7,2]` percentile, meaning that
+Choosing a suitable education can be difficult, and students should reflect on their choice of education, especially, in the first semester(s). Your understanding about what you will learn in the Medialogy programme is in the `r studentTable1[7,1]` percentile, meaning that
 `r selectRecommondations[7,1]` 
-Previous students with different expectations either started appreciating the content, skills, and opportunities of a Medialogy degree or changed to other programmes or educations. Attending the Med Awards event (usually in November) and seeing other student projects can inspire you and show what you will be able to do if you apply yourself to what Medialogy can offer. Contacting older students in the Medialogy facebook group, study counselors, and going to the study cafe can also provide you information about the education and what it means to be a Medialogy student. You can find information about Medialogy and student testimonials [here](tinyurl.com/AAUaboutMedialogy) (tinyurl.com/AAUaboutMedialogy).
+Students learn only little about: manual content creation, work with aesthetics, professional moving making, working as a rigging artist, and using adobe software, but learn more about applying math knowledge and programming skills. Previous students with different expectations either started appreciating the content, skills, and opportunities of a Medialogy degree or changed to other programmes or educations. Attending the Med Awards event (usually in November) and seeing other student projects can inspire you and show what you will be able to do if you apply yourself to what Medialogy can offer. Contacting older students in the Medialogy facebook group, study counselors, and going to the study cafe can also provide you information about the education and what it means to be a Medialogy student. You can find information about Medialogy and student testimonials [here](tinyurl.com/AAUaboutMedialogy) (tinyurl.com/AAUaboutMedialogy).
 
-### Student counseler services
-If you need help for specific challenges as a student, we recommend you contacting a student counsler. Unlike counslers at high schools, student counslers at AAU are students studying themselves. They know many of the challenges that a Medialogy student faces, having experienced it themselves or helped fellow students. The student counsler is a good resource for handling student challenges such as:
+
+## Student counselor services
+If you need help for specific challenges as a student, we recommend you to contact a student counselor. Unlike counselors at high schools, student counselors at AAU are students studying themselves. They know many of the challenges that a Medialogy student faces, having experienced it themselves or helped fellow students. The student counselor is a good resource for handling student challenges such as:
 
 - Exam/presentation anxiety
 
@@ -422,7 +430,7 @@ If you need help for specific challenges as a student, we recommend you contacti
 
 - Guidance in your choice of study
 
-Find your student counseler at your study location [here](https://www.en.aau.dk/education/bachelor/medialogy/student-guidance/)  (https://www.en.aau.dk/education/bachelor/medialogy/student-guidance/).
+Find your student counselor at your study location [here](tinyurl.com/AAUstudentGuidance) (tinyurl.com/AAUstudentGuidance).
 
 
 

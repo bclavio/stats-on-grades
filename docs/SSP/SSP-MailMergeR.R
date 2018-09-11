@@ -13,7 +13,7 @@ library(stringr)
 #library(CTT)
 #library(gsubfn)
 library(Hmisc)
-library(psych)
+#library(psych)
 library(ggplot2)
 library(reshape2)
 #detach("package:RMySQL", unload=TRUE)
@@ -32,7 +32,7 @@ dfSSPgradesAAL<-read.csv("SSPgradesTestAALEdited.csv", header = TRUE, fill=TRUE,
 ####################################
 ###### the answers are not in use
 #dfSSPanswersCPH<-read.csv("SSPanswersTestCPH 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersAAL<-read.csv("SSPanswersTestAALEdited.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPanswersAAL<-read.csv("SSPanswersTestAALEdited1.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
 ##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("No influence","Not at all true",dfSSPanswersAAL))
 ##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Limited influence","Slightly true",dfSSPanswersAAL))
 ##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Some influence","Some influence",dfSSPanswersAAL))
@@ -113,26 +113,27 @@ norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
 norm.avgGrades["Campus"] <- dfSSPgrades$Campus
 norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
 norm.avgGrades["Email"] <- dfSSPgrades$Email.address
+norm.avgGradesAAL <- norm.avgGrades
 
 ####################################
 # Students with averages above 1 are most likely to continue Medialogy while
 # students with averages below -1 are most likely to dropout.
-scaled.avgGrades <- avgGrades
-scaled.avgGrades[1:14] <- scale(avgGrades[1:7])
-
-# checks that we get mean of 0 and sd of 1
-colMeans(scaled.avgGrades)
-apply(scaled.avgGrades, 2, sd)
-
-scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
-scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
+# scaled.avgGrades <- avgGrades
+# scaled.avgGrades[1:14] <- scale(avgGrades[1:7])
+# 
+# # checks that we get mean of 0 and sd of 1
+# colMeans(scaled.avgGrades)
+# apply(scaled.avgGrades, 2, sd)
+# 
+# scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
+# scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 
 ####################################
 ## Graphs
 
 # density distribution of total SSP score
-ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
-  scale_x_discrete(breaks=seq(7,11,1), name ="Total score")
+# ggplot(dfSSPgradesStat, aes(rowSums(dfSSPgradesStat))) + geom_density()+
+#   scale_x_discrete(breaks=seq(7,11,1), name ="Total score")
 
 # OLD: gradesum calculated for all SSP topics, high risk student 
 dfSSPgradesSum <- data.frame(rowID = scaled.avgGrades$rowID, campus = scaled.avgGrades$Campus, gradeSums = rowSums(dfSSPgradesStat))
@@ -148,42 +149,47 @@ ggplot(dfSSPgradesStat, aes(rowSums(selectedTopics))) + geom_histogram()
 # high risk students
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
 highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
-norm.avgGradesMelt <- NULL
-norm.avgGradesMelt <- melt(norm.avgGrades[,-10], id.vars = c("rowID", "Campus"))
-norm.avgGradesMelt$variable <- gsub("\\.", " ", norm.avgGradesMelt$variable)
-norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskStudents$rowID, 1, 0)
-norm.avgGradesMelt$variable <- factor(norm.avgGradesMelt$variable, levels = c('Understanding of Medialogy', 'Study and work', 
+
+# use in CPH script
+norm.avgGradesAAL <- norm.avgGrades
+norm.avgGradesMeltAAL <- NULL
+norm.avgGradesMeltAAL <- melt(norm.avgGradesAAL[,-10], id.vars = c("rowID", "Campus"))
+norm.avgGradesMeltAAL$variable <- gsub("\\.", " ", norm.avgGradesMeltAAL$variable)
+norm.avgGradesMeltAAL['highRisk'] <- ifelse(norm.avgGradesMeltAAL$rowID %in% highRiskStudents$rowID, 1, 0)
+norm.avgGradesMeltAAL$variable <- factor(norm.avgGradesMeltAAL$variable, levels = c('Understanding of Medialogy', 'Study and work', 
                                                                               'Growth mindset','Grit','Study habits',
                                                                               'High school habits','Social support for studying'),ordered = TRUE)
 
 dfSSPanswers["rowID"] <- seq(1:nrow(dfSSPanswers))
-studyHours <- dfSSPanswers [, c('rowID', 'Campus', 'Response 113')]
-studyHours['highRisk'] <- ifelse(studyHours$rowID %in% highRiskStudents$rowID, 1, 0)
-names(studyHours)[3]<-"hours"
-
+studyHoursAAL <- dfSSPanswers [, c('rowID', 'Campus', 'Response 113')]
+studyHoursAAL['highRisk'] <- ifelse(studyHoursAAL$rowID %in% highRiskStudents$rowID, 1, 0)
+names(studyHoursAAL)[3]<-"hours"
 
 #######################################################################
 
 # Preparing the dataset to the mailmerge in rmarkdown
+answersAAL <- dfSSPanswers[, c(78,124,128:135)] # 10
+names(answersAAL) <- c("social", "studyHours", "keyboard", "mathFractions", "aes", "movie", "modelling", "software", "programming", "SPV")
 
 studentData <- sqldf('Select rowID, Campus from dfSSPgrades')
 studentData['name'] <- paste(dfSSPgrades[,2],dfSSPgrades[,1])
 studentData['email'] <- dfSSPgrades[,5]
 studentData['initials'] <-  gsub("@student.aau.dk", "",dfSSPgrades[,5])
-avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, dfSSPanswers[, c(78,124,125,128:134)])
+#avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, answers)
 # 67-11: since going to uni.. friends -> social integration easy: 67+11
 #104-11: study hours -> 113+11
 #106-11: study activities + non related -> null and 114+11
 #109-11: 3D modelling to 116-11: programming -> 117:123 + 11
 
-studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
-studentData$rowID <- as.numeric(levels(studentData$rowID))[studentData$rowID]
+#studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
+#studentData$rowID <- as.numeric(levels(studentData$rowID))[studentData$rowID]
 studentData <- studentData[with(studentData, order(studentData$rowID)),]
+studentDataAAL <- studentData
 
-write.csv(studentData,file = "studentData.csv")
-write.csv(highRiskStudents,file = "highRiskStudents.csv")
-personalized_info <- read.csv(file = "studentDataAAL.csv")
-highRiskStudents <- read.csv(file = "highRiskStudents.csv")
+write.csv(studentData,file = "studentDataAAL.csv")
+write.csv(highRiskStudents,file = "highRiskStudentsAAL.csv")
+#personalized_info <- read.csv(file = "studentDataAAL.csv")
+#highRiskStudents <- read.csv(file = "highRiskStudentsAAL.csv")
 
 #######################################################################
 

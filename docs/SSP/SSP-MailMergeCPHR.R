@@ -35,26 +35,26 @@ dfSSPanswers["Campus"]<-"CPH"
 ###################################
 
 dfSSPgrades["Campus"]<-"CPH"
-dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
+dfSSPgrades["rowID"] <- 69+seq(1:nrow(dfSSPgrades))
 
 # computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
 # Problem Q93, Q95 and Q96 contained strings, so I had to change them manually:
 # Q93 (study hours): 0 > x < 29 (0%) ; 30 > x < 34 (30%) ; 35 > x < 40 (60%) ; 41 > x (100%)
 dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(0,30)) == 1L] <- 0
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.3
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.6
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.9
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.03
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.06
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.09
 
 # Q95 (related work): 0 = x (0%) ; 1 > x < 4 (30%) ; 5 > x < 9 (60%) ; 10 > x (100%)
 dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.3
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.6
-dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0.9
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,4)) == 1L] <- 0.03
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(5,9)) == 1L] <- 0.06
+dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(10,1000)) == 1L] <- 0.09
 
 # Q96 (unrelated work): 0 = x (100%) ; 1 > x < 4 (60%) ; 5 > x < 9 (30%) ; 10 > x (0%)
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.9
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.6
-dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.3
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,0)) == 1L] <- 0.09
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(0,4)) == 1L] <- 0.06
+dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(5,9)) == 1L] <- 0.03
 dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) == 1L] <- 0
 
 ###############################################
@@ -85,13 +85,13 @@ dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:119], function(x) as.numeri
 
 # manually selected SSP items into new categories
 avgGrades <- NULL
-avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:106)])) # removed 5
-avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[93:97]))
+avgGrades['Understanding of Medialogy'] <- list(rowMeans(dfSSPgradesStat[c(98:99,101:106)])) 
+avgGrades['Study and work'] <- list(rowMeans(dfSSPgradesStat[c(93,95:97)]))
 avgGrades['Growth mindset'] <- list(rowMeans(dfSSPgradesStat[62:64]))
 avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[57:61]))
 avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[65:68]))
 avgGrades['High school habits'] <- list(rowMeans(dfSSPgradesStat[34:45]))
-avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[c(2:4,7:8,55:56)])) # removed 4, added 2
+avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[c(2:4,7:8,55:56)])) 
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
 
 
@@ -102,13 +102,16 @@ avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x
 
 # normalizes avg scores based on minimum and maximum possible score 
 normalize <- function(x) {
-  return ((x) / (0.75))
+  return ((x) / (0.09))
 }
 
 norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
 norm.avgGrades["Campus"] <- dfSSPgrades$Campus
-norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
+norm.avgGrades["rowID"] <- 69 + seq(1:nrow(norm.avgGrades))
 norm.avgGrades["Email"] <- dfSSPgrades$Email.address
+
+#norm.avgGrades1 <- norm.avgGrades
+norm.avgGrades <- rbind(norm.avgGrades, norm.avgGradesAAL)
 
 ####################################
 # Students with averages above 1 are most likely to continue Medialogy while
@@ -121,7 +124,7 @@ colMeans(scaled.avgGrades)
 apply(scaled.avgGrades, 2, sd)
 
 scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
-scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
+scaled.avgGrades["rowID"] <- 69 + seq(1:nrow(scaled.avgGrades))
 
 ####################################
 ## Graphs
@@ -145,6 +148,8 @@ ggplot(dfSSPgradesStat, aes(rowSums(selectedTopics))) + geom_histogram()
 # high risk students
 highRiskStudents <- data.frame(gradeSums= dfSSPgradesSum$gradeSums[order(dfSSPgradesSum$gradeSums)[1:20]])
 highRiskStudents<- data.frame(dfSSPgradesSum[dfSSPgradesSum$gradeSums %in% highRiskStudents$gradeSums,])
+
+
 norm.avgGradesMelt <- NULL
 norm.avgGradesMelt <- melt(norm.avgGrades[,-10], id.vars = c("rowID", "Campus"))
 norm.avgGradesMelt$variable <- gsub("\\.", " ", norm.avgGradesMelt$variable)
@@ -152,165 +157,186 @@ norm.avgGradesMelt['highRisk'] <- ifelse(norm.avgGradesMelt$rowID %in% highRiskS
 norm.avgGradesMelt$variable <- factor(norm.avgGradesMelt$variable, levels = c('Understanding of Medialogy', 'Study and work', 
                                                                               'Growth mindset','Grit','Study habits',
                                                                               'High school habits','Social support for studying'),ordered = TRUE)
+#merge with AAL
+#norm.avgGradesMelt1 <- norm.avgGradesMelt
+#norm.avgGradesMelt <- rbind(norm.avgGradesMelt, norm.avgGradesMeltAAL)
 
-dfSSPanswers["rowID"] <- seq(1:nrow(dfSSPanswers))
+norm.avgGradesMelt <- norm.avgGradesMelt[order(norm.avgGradesMelt$rowID),]
+
+
+dfSSPanswers["rowID"] <- 69 + seq(1:nrow(dfSSPanswers))
 studyHours <- dfSSPanswers [, c('rowID', 'Campus', 'Response 93')]
 studyHours['highRisk'] <- ifelse(studyHours$rowID %in% highRiskStudents$rowID, 1, 0)
 names(studyHours)[3]<-"hours"
 
+# merge with AAL
+studyHours <- rbind(studyHoursAAL, studyHours)
 
 #######################################################################
 
 # Preparing the dataset to the mailmerge in rmarkdown
+answers <- dfSSPanswers[, c(67,104,109:110, 112:117)] # 10
+names(answers) <- c("social", "studyHours", "keyboard", "mathFractions", "aes", "movie", "modelling", "software", "programming", "SPV")
+
+answers <- rbind(answers, answersAAL)
 
 studentDataCPH <- sqldf('Select rowID, Campus from dfSSPgrades')
 studentDataCPH['name'] <- paste(dfSSPgrades[,2],dfSSPgrades[,1])
 studentDataCPH['email'] <- dfSSPgrades[,5]
 studentDataCPH['initials'] <-  gsub("@student.aau.dk", "",dfSSPgrades[,5])
-avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, dfSSPanswers[, c(67,104,106:107,109:116)])
-studentDataCPH <- merge(studentDataCPH, avgPer, by= c("rowID","Campus"))
-studentDataCPH$rowID <- as.numeric(levels(studentDataCPH$rowID))[studentDataCPH$rowID]
-studentDataCPH <- studentDataCPH[with(studentDataCPH, order(studentDataCPH$rowID)),]
+avgPer <- data.frame(norm.avgGrades, apply(norm.avgGrades[, 7:1], 2, function(c) ecdf(c)(c))*100, answers) # removed 106:107, 111
 
-write.csv(studentDataCPH,file = "studentDataCPH.csv")
-write.csv(highRiskStudents,file = "highRiskStudents.csv")
-personalized_infoCPH <- read.csv(file = "studentDataCPH.csv")
-personalized_infoAAL <- read.csv(file = "studentDataAAL.csv")
-personalized_info <- rbind(personalized_infoCPH, personalized_infoAAL) 
-personalized_info <- read.csv(file = "studentData.csv")
-highRiskStudents <- read.csv(file = "highRiskStudents.csv")
+studentData <- rbind(studentDataCPH, studentDataAAL)
+studentData <- merge(studentData, avgPer, by= c("rowID","Campus"))
+studentData$rowID <- as.numeric(levels(studentData$rowID))[studentData$rowID]
+studentData <- studentData[with(studentData, order(studentData$rowID)),]
+
+#write.csv(studentDataCPH,file = "studentDataCPH.csv")
+#write.csv(highRiskStudents,file = "highRiskStudentsCPH.csv")
+
+#merge
+#personalized_infoCPH <- read.csv(file = "studentDataCPH.csv")
+#personalized_infoAAL <- read.csv(file = "studentDataAAL.csv")
+#personalized_info <- rbind(personalized_infoCPH, personalized_infoAAL) 
+personalized_info <- studentData
+write.csv(personalized_info,file = "studentData.csv")
+#personalized_info <- read.csv(file = "studentData.csv")
+#highRiskStudents <- read.csv(file = "highRiskStudents.csv")
 
 #######################################################################
-
-# Boxplots are the best data representation for understanding the dataset, 
-# but the students might gain more from a simpler (and gamified) graph, 
-# such as the radar/spider web chart with their scores in comparison to the average/median student
-# and the percentile rank for each topic.
-
-#create a vector with axis names
-labs <- c("Campus","name","Understanding of\n Medialogy", "Time com-\n mitment", "Growth\n mindset", "Grit", "Study habits\n at AAU", "High school\n habits", "Social support\n for studying")
-#use the new vector to change the column names
-#colnames(dfStudentMedian)<- labs
-
-# import percentiles
-dfSPPscore <- read.csv("studentData.csv", header = T)
-# calculate the median of the scores times 100 to be on the same scale as percentiles, not the percentiles
-SSPmedian <- data.frame(Campus="AAL/CPH",name="Median",t(colMedians(dfSPPscore[,7:13])))
-colnames(SSPmedian)<- labs
-dfSPPscore <- dfSPPscore[,c(3:4,7:13)]
-colnames(dfSPPscore)<- labs
-# median as the last row in the dataset
-dfSPPscoreAddon <- rbind(dfSPPscore, SSPmedian)
-
-# function to create the coordinates for the radarplot and remove outer line
-coord_radar <- function (theta = "x", start = 0, direction = 1) 
-{
-  theta <- match.arg(theta, c("x", "y"))
-  r <- if (theta == "x")
-    "y"
-  else "x"
-  
-  #dirty
-  rename_data <- function(coord, data) {
-    if (coord$theta == "y") {
-      plyr::rename(data, c("y" = "theta", "x" = "r"), warn_missing = FALSE)
-    } else {
-      plyr::rename(data, c("y" = "r", "x" = "theta"), warn_missing = FALSE)
-    }
-  }
-  theta_rescale <- function(coord, x, scale_details) {
-    rotate <- function(x) (x + coord$start) %% (2 * pi) * coord$direction
-    rotate(scales::rescale(x, c(0, 2 * pi), scale_details$theta.range))
-  }
-  
-  r_rescale <- function(coord, x, scale_details) {
-    scales::rescale(x, c(0, 0.4), scale_details$r.range)
-  }
-  
-  ggproto("CordRadar", CoordPolar, theta = theta, r = r, start = start,
-          direction = sign(direction),
-          is_linear = function(coord) TRUE,
-          render_bg = function(self, scale_details, theme) {
-            scale_details <- rename_data(self, scale_details)
-            
-            theta <- if (length(scale_details$theta.major) > 0)
-              theta_rescale(self, scale_details$theta.major, scale_details)
-            thetamin <- if (length(scale_details$theta.minor) > 0)
-              theta_rescale(self, scale_details$theta.minor, scale_details)
-            thetafine <- seq(0, 2 * pi, length.out = 100)
-            
-            rfine <- c(r_rescale(self, scale_details$r.major, scale_details))
-            
-            # This gets the proper theme element for theta and r grid lines:
-            #   panel.grid.major.x or .y
-            majortheta <- paste("panel.grid.major.", self$theta, sep = "")
-            minortheta <- paste("panel.grid.minor.", self$theta, sep = "")
-            majorr     <- paste("panel.grid.major.", self$r,     sep = "")
-            
-            ggplot2:::ggname("grill", grid::grobTree(
-              ggplot2:::element_render(theme, "panel.background"),
-              if (length(theta) > 0) ggplot2:::element_render(
-                theme, majortheta, name = "angle",
-                x = c(rbind(0, 0.45 * sin(theta))) + 0.5,
-                y = c(rbind(0, 0.45 * cos(theta))) + 0.5,
-                id.lengths = rep(2, length(theta)),
-                default.units = "native"
-              ),
-              if (length(thetamin) > 0) ggplot2:::element_render(
-                theme, minortheta, name = "angle",
-                x = c(rbind(0, 0.45 * sin(thetamin))) + 0.5,
-                y = c(rbind(0, 0.45 * cos(thetamin))) + 0.5,
-                id.lengths = rep(2, length(thetamin)),
-                default.units = "native"
-              ),
-              
-              ggplot2:::element_render(
-                theme, majorr, name = "radius",
-                x = rep(rfine, each = length(thetafine)) * sin(thetafine) + 0.5,
-                y = rep(rfine, each = length(thetafine)) * cos(thetafine) + 0.5,
-                id.lengths = rep(length(thetafine), length(rfine)),
-                default.units = "native"
-              )
-            ))
-          })
-}
-#define plot theme
-RadarTheme<-theme(panel.background=element_blank(),
-                  plot.title= element_text(size = 25,face=c("bold", "italic")),
-                  plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
-                  text=element_text(family="serif"), aspect.ratio = 1,
-                  #legend.position="bottom",legend.title=element_blank(),
-                  #legend.direction="horizontal", legend.text = element_text(size = 20),
-                  strip.text.x = element_text(size = rel(0.8)),
-                  axis.text.x = element_text(size = 20),
-                  axis.ticks.y = element_blank(),
-                  axis.text.y = element_blank(),
-                  #axis.line.x=element_line(size=0.5),
-                  panel.grid.major=element_line(size=0.3,linetype = 2,colour="grey"),
-                  #legend.key=element_rect(fill=NA),
-                  line = element_blank(),
-                  title = element_blank(),
-                  legend.position="none") 
-                  #text=element_text(size=15, family="Arial")) # changed font
- 
-#define plot theme
+# 
+# # Boxplots are the best data representation for understanding the dataset, 
+# # but the students might gain more from a simpler (and gamified) graph, 
+# # such as the radar/spider web chart with their scores in comparison to the average/median student
+# # and the percentile rank for each topic.
+# 
+# #create a vector with axis names
+# labs <- c("Campus","name","Understanding of\n Medialogy", "Time com-\n mitment", "Growth\n mindset", "Grit", "Study habits\n at AAU", "High school\n habits", "Social support\n for studying")
+# #use the new vector to change the column names
+# #colnames(dfStudentMedian)<- labs
+# 
+# # import percentiles
+# dfSPPscore <- read.csv("studentData.csv", header = T)
+# # calculate the median of the scores times 100 to be on the same scale as percentiles, not the percentiles
+# SSPmedian <- data.frame(Campus="AAL/CPH",name="Median",t(colMedians(dfSPPscore[,7:13])))
+# colnames(SSPmedian)<- labs
+# dfSPPscore <- dfSPPscore[,c(3:4,7:13)]
+# colnames(dfSPPscore)<- labs
+# # median as the last row in the dataset
+# dfSPPscoreAddon <- rbind(dfSPPscore, SSPmedian)
+# 
+# # function to create the coordinates for the radarplot and remove outer line
+# coord_radar <- function (theta = "x", start = 0, direction = 1) 
+# {
+#   theta <- match.arg(theta, c("x", "y"))
+#   r <- if (theta == "x")
+#     "y"
+#   else "x"
+#   
+#   #dirty
+#   rename_data <- function(coord, data) {
+#     if (coord$theta == "y") {
+#       plyr::rename(data, c("y" = "theta", "x" = "r"), warn_missing = FALSE)
+#     } else {
+#       plyr::rename(data, c("y" = "r", "x" = "theta"), warn_missing = FALSE)
+#     }
+#   }
+#   theta_rescale <- function(coord, x, scale_details) {
+#     rotate <- function(x) (x + coord$start) %% (2 * pi) * coord$direction
+#     rotate(scales::rescale(x, c(0, 2 * pi), scale_details$theta.range))
+#   }
+#   
+#   r_rescale <- function(coord, x, scale_details) {
+#     scales::rescale(x, c(0, 0.4), scale_details$r.range)
+#   }
+#   
+#   ggproto("CordRadar", CoordPolar, theta = theta, r = r, start = start,
+#           direction = sign(direction),
+#           is_linear = function(coord) TRUE,
+#           render_bg = function(self, scale_details, theme) {
+#             scale_details <- rename_data(self, scale_details)
+#             
+#             theta <- if (length(scale_details$theta.major) > 0)
+#               theta_rescale(self, scale_details$theta.major, scale_details)
+#             thetamin <- if (length(scale_details$theta.minor) > 0)
+#               theta_rescale(self, scale_details$theta.minor, scale_details)
+#             thetafine <- seq(0, 2 * pi, length.out = 100)
+#             
+#             rfine <- c(r_rescale(self, scale_details$r.major, scale_details))
+#             
+#             # This gets the proper theme element for theta and r grid lines:
+#             #   panel.grid.major.x or .y
+#             majortheta <- paste("panel.grid.major.", self$theta, sep = "")
+#             minortheta <- paste("panel.grid.minor.", self$theta, sep = "")
+#             majorr     <- paste("panel.grid.major.", self$r,     sep = "")
+#             
+#             ggplot2:::ggname("grill", grid::grobTree(
+#               ggplot2:::element_render(theme, "panel.background"),
+#               if (length(theta) > 0) ggplot2:::element_render(
+#                 theme, majortheta, name = "angle",
+#                 x = c(rbind(0, 0.45 * sin(theta))) + 0.5,
+#                 y = c(rbind(0, 0.45 * cos(theta))) + 0.5,
+#                 id.lengths = rep(2, length(theta)),
+#                 default.units = "native"
+#               ),
+#               if (length(thetamin) > 0) ggplot2:::element_render(
+#                 theme, minortheta, name = "angle",
+#                 x = c(rbind(0, 0.45 * sin(thetamin))) + 0.5,
+#                 y = c(rbind(0, 0.45 * cos(thetamin))) + 0.5,
+#                 id.lengths = rep(2, length(thetamin)),
+#                 default.units = "native"
+#               ),
+#               
+#               ggplot2:::element_render(
+#                 theme, majorr, name = "radius",
+#                 x = rep(rfine, each = length(thetafine)) * sin(thetafine) + 0.5,
+#                 y = rep(rfine, each = length(thetafine)) * cos(thetafine) + 0.5,
+#                 id.lengths = rep(length(thetafine), length(rfine)),
+#                 default.units = "native"
+#               )
+#             ))
+#           })
+# }
+# #define plot theme
 # RadarTheme<-theme(panel.background=element_blank(),
 #                   plot.title= element_text(size = 25,face=c("bold", "italic")),
 #                   plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
-#                   text=element_text(size=15, family="Arial"), 
-#                   aspect.ratio = 1,
-#                   legend.position="bottom",legend.title=element_blank(),
-#                   legend.direction="horizontal", legend.text = element_text(size = 15),
+#                   text=element_text(family="serif"), aspect.ratio = 1,
+#                   #legend.position="bottom",legend.title=element_blank(),
+#                   #legend.direction="horizontal", legend.text = element_text(size = 20),
 #                   strip.text.x = element_text(size = rel(0.8)),
-#                   #strip.text.x = element_text(size=15, face = "bold"),
-#                   axis.text.x = element_text(size = 15, face = "bold"),
+#                   axis.text.x = element_text(size = 20),
 #                   axis.ticks.y = element_blank(),
 #                   axis.text.y = element_blank(),
-#                   axis.line.x=element_line(size=0.5),
-#                   panel.grid.major=element_line(size=0.3,linetype = 2,colour="grey"))
-                  
+#                   #axis.line.x=element_line(size=0.5),
+#                   panel.grid.major=element_line(size=0.3,linetype = 2,colour="grey"),
+#                   #legend.key=element_rect(fill=NA),
+#                   line = element_blank(),
+#                   title = element_blank(),
+#                   legend.position="none") 
+#                   #text=element_text(size=15, family="Arial")) # changed font
+#  
+# #define plot theme
+# # RadarTheme<-theme(panel.background=element_blank(),
+# #                   plot.title= element_text(size = 25,face=c("bold", "italic")),
+# #                   plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+# #                   text=element_text(size=15, family="Arial"), 
+# #                   aspect.ratio = 1,
+# #                   legend.position="bottom",legend.title=element_blank(),
+# #                   legend.direction="horizontal", legend.text = element_text(size = 15),
+# #                   strip.text.x = element_text(size = rel(0.8)),
+# #                   #strip.text.x = element_text(size=15, face = "bold"),
+# #                   axis.text.x = element_text(size = 15, face = "bold"),
+# #                   axis.ticks.y = element_blank(),
+# #                   axis.text.y = element_blank(),
+# #                   axis.line.x=element_line(size=0.5),
+# #                   panel.grid.major=element_line(size=0.3,linetype = 2,colour="grey"))
+#                   
 
 #######################################################################
+
+#personalized_info <- personalized_info[order(personalized_info$rowID),]
+
 
 # The for loop renders the student report pdf files
 # note: sometimes the loop can't run all students > check output folder or run from last completed student file 
@@ -318,11 +344,13 @@ for (i in 1:nrow(personalized_info)){
   rmarkdown::render(input = "C:/Users/BiancaClavio/Documents/PBLstats-on-grades/docs/SSP/SSP-MailMerge.Rmd",
                     output_format = "pdf_document",
                     output_file = gsub(" ", "", paste("SSP_", ifelse(personalized_info$Campus[i] == 'AAL',
-                                                     "AAL_Individual-student-feedback_",
-                                                     "CPH_Individual-student-feedback_"),
+                                                                     "AAL_Individual-student-feedback_",
+                                                                     "CPH_Individual-student-feedback_"),
                                                       personalized_info$initials[i], ".pdf", sep='')),
-                    output_dir = "handouts")
+                    output_dir = "handouts2018")
 }
+
+
 
 ############################################################################
 
@@ -339,9 +367,9 @@ for (i in 1:nrow(personalized_info)){
 #   coordinator <- ifelse(personalized_info$Campus[i] == 'AAL', "Hendrik (hk@create.aau.dk)", "Jon (jpe@create.aau.dk)")
 #   mailBody <- paste("Dear",name, "
 # 
-# In September, you participated in the Study Verification Test (SSP), in which you answered a series of questions on Moodle. We collected this information to better understand your hopes, expectations, and worries about student life at AAU in general and about Medialogy in particular. We use the information to improve your study environment and to reach out and provide individual support to those of you who seek or need it to adjust to university life and master your chosen programme.
-# We have analysed your responses in your respective cohort; more specifically within the first semester students in Aalborg and Copenhagen in 2017. One major outcome of this effort is the attached student report. It provides personalized feedback on important factors for finishing a university degree as well as specific recommendations and links to AAU resources that can be of help.
-# Currently only the semester coordinator, supervisors, and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, teachers, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
+# Last week, you participated in the Study Verification Test (SSP), in which you answered a series of questions on Moodle. We collected this information to better understand your hopes, expectations, and worries about student life at AAU in general and about Medialogy in particular. We use the information to improve your study environment and to reach out and provide individual support to those of you who seek or need it to adjust to university life and master your chosen programme.
+# We have analysed your responses in your respective cohort; more specifically within the first semester students in Aalborg and Copenhagen in 2018. One major outcome of this effort is the attached student report. It provides personalized feedback on important factors for finishing a university degree as well as specific recommendations and links to AAU resources that can be of help.
+# Currently only the semester coordinator and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, teachers, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
 # 
 # Please contact",coordinator,"via email and add Bianca in CC (bcch@create.aau.dk) if you have any questions.
 # 
