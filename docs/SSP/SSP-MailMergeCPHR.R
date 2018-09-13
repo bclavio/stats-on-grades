@@ -29,7 +29,7 @@ dfSSPgrades<-read.csv("SSPgradesTestCPHEdited.csv", header = TRUE, fill=TRUE, se
 
 ####################################
 ###### the answers are not in use
-dfSSPanswers<-read.csv("SSPanswersTestCPHEdited.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPanswers<-read.csv("SSPanswersTestCPHMinusFive.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
 dfSSPanswers["Campus"]<-"CPH"
 #dfSSPanswers[c('Response 93','Response 95','Response 96')] <- data.frame(lapply(dfSSPanswers[c('Response 93','Response 95','Response 96')], function(x) { gsub("-", 0, x) }))
 ###################################
@@ -40,7 +40,7 @@ dfSSPgrades["rowID"] <- 69+seq(1:nrow(dfSSPgrades))
 # computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
 # Problem Q93, Q95 and Q96 contained strings, so I had to change them manually:
 # Q93 (study hours): 0 > x < 29 (0%) ; 30 > x < 34 (30%) ; 35 > x < 40 (60%) ; 41 > x (100%)
-dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(0,30)) == 1L] <- 0
+dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(-5,30)) == 1L] <- 0
 dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.03
 dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.06
 dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.09
@@ -174,9 +174,11 @@ studyHours <- rbind(studyHoursAAL, studyHours)
 
 #######################################################################
 
+dfSSPanswersNA<-read.csv("SSPanswersTestCPH.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+
 # Preparing the dataset to the mailmerge in rmarkdown
-answers <- dfSSPanswers[, c(67,104,109:110, 112:117)] # 10
-names(answers) <- c("social", "studyHours", "keyboard", "mathFractions", "aes", "movie", "modelling", "software", "programming", "SPV")
+answers <- data.frame(dfSSPanswers[, c(67,104)], dfSSPanswersNA[, 104])
+names(answers) <- c("social", "studyHours", "studyHoursNA")
 
 answers <- rbind(answers, answersAAL)
 
@@ -361,16 +363,19 @@ for (i in 1:nrow(personalized_info)){
 # library(RDCOMClient)
 
 # for (i in 1:nrow(personalized_info)){
-#   subject <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP_AAL_Individual-student-feedback_", "SSP_AAL_Individual-student-feedback_")
-#   attachmentPath <- gsub(" ", "", paste('C:/Users/BiancaClavio/Documents/stats-on-grades/docs/handouts/', subject, personalized_info$initial[i],'.pdf'))
+#   subject <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP-CPH’18: Individual student feedback", "SSP-AAL’18: Individual student feedback") 
+#   file <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP_AAL_Individual-student-feedback_", "SSP_AAL_Individual-student-feedback_") 
+#   attachmentPath <- gsub(" ", "", paste('Z:/BNC/PBL development project/data/analysis_data/SSP/2018/student-handouts2018/', file, personalized_info$initial[i],'.pdf'))
 #   name <- personalized_info$name[i]
 #   coordinator <- ifelse(personalized_info$Campus[i] == 'AAL', "Hendrik (hk@create.aau.dk)", "Jon (jpe@create.aau.dk)")
 #   mailBody <- paste("Dear",name, "
 # 
-# Last week, you participated in the Study Verification Test (SSP), in which you answered a series of questions on Moodle. We collected this information to better understand your hopes, expectations, and worries about student life at AAU in general and about Medialogy in particular. We use the information to improve your study environment and to reach out and provide individual support to those of you who seek or need it to adjust to university life and master your chosen programme.
+# As a part of the semester start, you participated in the Study Verification Test (SSP), in which you answered a series of questions on Moodle. We collected this information to better understand your hopes, expectations, and worries about student life at AAU in general and about Medialogy in particular. We use the information to improve your study environment and to reach out and provide individual support to those of you who seek or need it to adjust to university life and master your chosen programme.
 # We have analysed your responses in your respective cohort; more specifically within the first semester students in Aalborg and Copenhagen in 2018. One major outcome of this effort is the attached student report. It provides personalized feedback on important factors for finishing a university degree as well as specific recommendations and links to AAU resources that can be of help.
-# Currently only the semester coordinator and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, teachers, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
+# Currently only the semester coordinator and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, supervisors, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
 # 
+# As a follow-up to this report, we will conduct a workshop to help you understand this report, (re)define your study goals, and talk about the students services you may desire.
+#
 # Please contact",coordinator,"via email and add Bianca in CC (bcch@create.aau.dk) if you have any questions.
 # 
 # Best regards,

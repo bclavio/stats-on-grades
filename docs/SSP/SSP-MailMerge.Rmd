@@ -61,7 +61,7 @@ rowID <- personalized_info$rowID[i]
 header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
-- \fancyhead[RE,RO]{STUDENT DRAFT}
+- \fancyhead[RE,RO]{`r name`}
 - \fancyhead[LE,LO]{Medialogy, `r campus`, 2017}
 - \fancyfoot[CE,CO]{STUDY VERIFICATION TEST}
 - \fancyfoot[LE,RO]{\thepage}
@@ -77,9 +77,9 @@ urlcolor: blue
 
 This is an interpretive report of your responses to the study verification test. We hope this report will help you identify your current student profile, but also aid you in reflection and give resources to help you in your study life. 
 
-The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported values for each topic are indicated with red dots. The percentile ranks indicate the percentage of students whose scores are equal to or less than yours. A percentile rank lower than 50 means that you rated yourself lower than half the students. A percentile rank between 25 and 75 means that most of your peers are in a similar situation as you. Low percentile ranks are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth.
+The boxplots[^1] below show how you compare to a larger sample of first semester Medialogy students from Aalborg and Copenhagen. Specifically, they indicate the average self-ratings of all students in seven topics: social support for studying, high school habits, study habits at AAU, grit (i.e. perseverance when facing challenges and passion for long-term goals), growth mindset (i.e. believing that anyone can become smarter or more talented through effort and learning), time commitments (study and other), and understanding of Medialogy (see Figure 1) and the self-reported study hours per week (see Figure 2). Your self-reported values for each topic are indicated with red dots. The percentile ranks indicate the percentage of students whose scores are equal to or less than yours. A percentile rank lower than 50 means that you rated yourself lower than half the students. Low percentile ranks are not something to worry about or blame yourself for, as it is a starting point for your development and potential growth.
 
-As the report is based on the SSP questionnaire information alone, it may give only a rough indication of your true attitudes. Based on your self-reported answers we have created specific recommendations with concrete examples and links for you to get more comfortable in the Medialogy study environment (see the following pages). As follow-up to this report, we will conduct a workshop to help you understand your SSP scores, (re)define your study goals, and talk about the students services you may desire.
+As the report is based on the questionnaire information alone, it may give only a rough indication of your true attitudes. Based on your self-reported answers we have created specific recommendations with concrete examples and links for you to get more comfortable in the Medialogy study environment (see the following pages). As a follow-up to this report, we will conduct a workshop to help you understand this report, (re)define your study goals, and talk about the students services you may desire.
 
 [^1]: A *boxplot* illustrates the full range of variation (from min to max), the likely range of variation called the interquartile range (IQR) and a typical value (median). The three lines inside the curved box denotes the IQR, corresponding to the middle scores of the dataset - ranging from the 25th to the 75th percentile, in which the middle line marks the median.
 
@@ -168,9 +168,9 @@ showAnalysis
 
 ```
      
-```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height=1}
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height=1.2}
 
-studentHours <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID == i) #norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
+#studentHours <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID == i) #norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
 studentHours <- subset(studyHours, studyHours$rowID==i) #studyHours$rowID %in% highRiskStudents$rowID[i])
 studyHours$hours <-  as.numeric(studyHours$hours)
 studentHours['DotPos'] <- 67 # where the position the dot: sample size / 2
@@ -179,9 +179,11 @@ ggplot(studyHours, aes(x=rowID,y=hours)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
   #geom_jitter(height = 0, width = 0.1) +
   #geom_boxplot(width=0.1) + theme_minimal() +
-  scale_y_continuous(breaks=seq(0,100,5), limits = c(0,75)) +
+  scale_y_continuous(breaks=seq(0,100,5), limits = c(-5,70)) +
+  geom_hline(yintercept = 0) +
+  annotate("text", label = "NA", x = 20, y = -4) +
   coord_flip() +
-  labs(y="Figure 2: Boxplot of the self-reported hours spent studying per week of all students.") +
+  labs(y="Figure 2: Boxplot of the self-reported study hours planned per week of all students.\n Data points in NA (i.e. not applicable) are unrecognized entries and not numbers.") +
   geom_dotplot(data = studentHours,
                aes(x=DotPos, y=hours, fill = "green"),
                binaxis='y',
@@ -259,12 +261,13 @@ Keep an open mind as you consider each statement. When it seems accurate, give s
 personalized_info <- personalized_info[,-c(1)]
 socialIntegration <- personalized_info[i,20]
 studyingHours <- personalized_info[i,21]
+studyingHoursNA <- personalized_info[i,22]
 #relatedWork <- personalized_info[i,21] 
 #nonRelatedWork <- personalized_info[i,23]
 
 # scores and percentile ranks from table  
-HShabits <- studentTable1[2,2]
-studyHabits <- studentTable1[3,2]
+HShabits <- studentTable1[2,1]
+studyHabits <- studentTable1[3,1]
 selectRecommondations <- studentTable1[1]
 
 # Social integration
@@ -300,9 +303,9 @@ selectRecommondations[5,1] <- ifelse(studentTable1[5,1]<50,
 
 #studyingHours <- 38
 # Study and work
-selectRecommondations[6,1] <- ifelse(studyingHours>=55, "much higher than the recommended",ifelse(studyingHours>=47, "sufficient",
-  ifelse(studyingHours>=42 && studyingHours<=46, "about the recommended",
-  ifelse(studyingHours>=10 && studyingHours<=41, "less than the recommended", "much less than the recommended or entered an unrecognized entry in the questionnaire"))))
+selectRecommondations[6,1] <- ifelse(studyingHours>=55, "are using much higher than the recommended amount of time for studying.",ifelse(studyingHours>=47, "are using sufficient amount of time for studying.",
+  ifelse(studyingHours>=42 && studyingHours<=46, "are using about the recommended amount of time for studying.",
+  ifelse(studyingHours>=0 && studyingHours<=41, "are using less than the recommended amount of time for studying.", "entered an unrecognized entry in the questionnaire."))))
 
 # selectRecommondations[2,2] <- ifelse(nonRelatedWork>=10,
 #   paste("You reported using ", nonRelatedWork, "hours on jobs and other obligations."
@@ -408,9 +411,9 @@ Seeing your intelligence, not as static quality or property, but as something th
 
 #### Time Commitments (study and other)
 Studying requires a lot of time and dedication in order to succeed. Being intelligent and having talent can help but does not replace the need for dedicating time and effort to studying. The ECTS system assumes that you spend 45 hours a week during your education, and this means that your work in courses and projects are evaluated and graded based on what a student can do within the nominated hours.
-You reported planning to use `r studyingHours` hours weekly for studying, which indicates that you are using
+You reported planning to use "`r studyingHoursNA`" hours weekly for studying, which indicates that you 
 `r selectRecommondations[6,1]` 
-amount of time for studying.  Meeting study demands is difficult over long-term with too many other obligations.
+Meeting study demands is difficult over long-term with too many other obligations.
 During your eduation, you should carefully review your commitments and other activities that you need or want to dedicate time to vis-&agrave;-vis the study demands. Should you not able to dedicate around 45 hours to study each week, you should carefully plan these hours and perhaps even minutes, so you do not overwork in wrong places. As students progress they get better at adjusting their study hours and become more aware of how much time they should dedicate to the different study activities. It is quite natural for students to underestimate the workload requirement in the first year. The adjustment is a process, and you just started your transistion to university life. This takes time, for some shorter for others longer.
 
 #### Understanding of Medialogy

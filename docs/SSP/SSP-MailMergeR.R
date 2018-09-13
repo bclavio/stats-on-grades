@@ -32,7 +32,7 @@ dfSSPgradesAAL<-read.csv("SSPgradesTestAALEdited.csv", header = TRUE, fill=TRUE,
 ####################################
 ###### the answers are not in use
 #dfSSPanswersCPH<-read.csv("SSPanswersTestCPH 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersAAL<-read.csv("SSPanswersTestAALEdited1.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPanswersAAL<-read.csv("SSPanswersTestAALMinusFive.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
 ##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("No influence","Not at all true",dfSSPanswersAAL))
 ##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Limited influence","Slightly true",dfSSPanswersAAL))
 ##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Some influence","Some influence",dfSSPanswersAAL))
@@ -53,7 +53,7 @@ dfSSPgrades <- dfSSPgradesAAL
 dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
 
 # TODO: the students entered also text in questions 113 which I had to change manually
-dfSSPgrades$`Q. 113 /0.75` [findInterval(dfSSPanswers$`Response 113`, c(0,29)) == 1L] <- 0
+dfSSPgrades$`Q. 113 /0.75` [findInterval(dfSSPanswers$`Response 113`, c(-5,29)) == 1L] <- 0
 dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$`Response 113`, c(30,37)) == 1L] <- 0.25
 dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$`Response 113`, c(38,41)) == 1L] <- 0.50
 dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$`Response 113`, c(42,1000)) == 1L] <- 0.75
@@ -167,9 +167,11 @@ names(studyHoursAAL)[3]<-"hours"
 
 #######################################################################
 
+dfSSPanswersNA<-read.csv("SSPanswersTestAALNA.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+
 # Preparing the dataset to the mailmerge in rmarkdown
-answersAAL <- dfSSPanswers[, c(78,124,128:135)] # 10
-names(answersAAL) <- c("social", "studyHours", "keyboard", "mathFractions", "aes", "movie", "modelling", "software", "programming", "SPV")
+answersAAL <- data.frame(dfSSPanswers[, c(78,124)], dfSSPanswersNA[,124])
+names(answersAAL) <- c("social", "studyHours", "studyHoursNA")
 
 studentData <- sqldf('Select rowID, Campus from dfSSPgrades')
 studentData['name'] <- paste(dfSSPgrades[,2],dfSSPgrades[,1])
