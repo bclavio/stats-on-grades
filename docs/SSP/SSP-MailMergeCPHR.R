@@ -360,12 +360,15 @@ for (i in 1:nrow(personalized_info)){
 # Sends mails with SSP student reports:
 
 # library(sendmailR)
+# #install.packages("RDCOMClient", repos = "http://www.omegahat.net/R")
 # library(RDCOMClient)
-
+# 
+# # note: attachment path can only be from a local driver and not a network driver such as Fileshare
+# 
 # for (i in 1:nrow(personalized_info)){
-#   subject <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP-CPH’18: Individual student feedback", "SSP-AAL’18: Individual student feedback") 
-#   file <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP_AAL_Individual-student-feedback_", "SSP_AAL_Individual-student-feedback_") 
-#   attachmentPath <- gsub(" ", "", paste('Z:/BNC/PBL development project/data/analysis_data/SSP/2018/student-handouts2018/', file, personalized_info$initial[i],'.pdf'))
+#   subject <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP-AAL’18: Individual student feedback", "SSP-CPH’18: Individual student feedback")
+#   file <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP_AAL_Individual-student-feedback_", "SSP_CPH_Individual-student-feedback_")
+#   attachmentPath <- gsub(" ", "", paste('C:/Users/BiancaClavio/Documents/student-handouts2018/', file, personalized_info$initials[i],'.pdf'))
 #   name <- personalized_info$name[i]
 #   coordinator <- ifelse(personalized_info$Campus[i] == 'AAL', "Hendrik (hk@create.aau.dk)", "Jon (jpe@create.aau.dk)")
 #   mailBody <- paste("Dear",name, "
@@ -375,7 +378,7 @@ for (i in 1:nrow(personalized_info)){
 # Currently only the semester coordinator and the study board have access to this information. But you are welcome to share your student reports with peers, study counsellors, supervisors, or others - should you desire to do so. Depending on individual results and needs we might approach you again in the future.
 # 
 # As a follow-up to this report, we will conduct a workshop to help you understand this report, (re)define your study goals, and talk about the students services you may desire.
-#
+# 
 # Please contact",coordinator,"via email and add Bianca in CC (bcch@create.aau.dk) if you have any questions.
 # 
 # Best regards,
@@ -390,11 +393,11 @@ for (i in 1:nrow(personalized_info)){
 #   outMail[["To"]] = as.character(personalized_info$email[i])
 #   outMail[["Cc"]] = ifelse(personalized_info$Campus[i] == 'AAL', "hk@create.aau.dk", "jpe@create.aau.dk")
 #   outMail[["subject"]] = subject
-#     outMail[["body"]] = mailBody
+#   outMail[["body"]] = mailBody
 #   outMail[["Attachments"]]$Add(attachmentPath)
-#   
+# 
 #   ####### Uncomment below to send mails:
-#   ##### outMail$Send()
+#   outMail$Send()
 # }
 
 

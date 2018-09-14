@@ -332,8 +332,9 @@ for (i in 1:nrow(personalized_info)){
 
 # Sends mails with SSP student reports:
 
-# library(sendmailR)
-# library(RDCOMClient)
+library(sendmailR)
+#install.packages("RDCOMClient", repos = "http://www.omegahat.net/R")
+library(RDCOMClient)
 
 # for (i in 1:nrow(personalized_info)){
 #   subject <- ifelse(personalized_info$Campus[i] == 'AAL', "SSP_AAL_Individual-student-feedback_", "SSP_AAL_Individual-student-feedback_")
@@ -357,12 +358,12 @@ for (i in 1:nrow(personalized_info)){
 #   ## create an email
 #   outMail = OutApp$CreateItem(0)
 #   ## configure  email parameter
-#   outMail[["To"]] = as.character(personalized_info$email[i])
+#   outMail[["To"]] = #as.character(personalized_info$email[i])
 #   outMail[["Cc"]] = ifelse(personalized_info$Campus[i] == 'AAL', "hk@create.aau.dk", "jpe@create.aau.dk")
 #   outMail[["subject"]] = subject
 #     outMail[["body"]] = mailBody
 #   outMail[["Attachments"]]$Add(attachmentPath)
-#   
+# 
 #   ####### Uncomment below to send mails:
 #   ##### outMail$Send()
 # }
