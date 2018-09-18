@@ -40,10 +40,10 @@ dfSSPgrades["rowID"] <- 69+seq(1:nrow(dfSSPgrades))
 # computes grades for Q93, Q95 and Q96 (note: change the question type next year to avoid this conversion)
 # Problem Q93, Q95 and Q96 contained strings, so I had to change them manually:
 # Q93 (study hours): 0 > x < 29 (0%) ; 30 > x < 34 (30%) ; 35 > x < 40 (60%) ; 41 > x (100%)
-dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(-5,30)) == 1L] <- 0
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,35)) == 1L] <- 0.03
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(35,40)) == 1L] <- 0.06
-dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(40,1000)) == 1L] <- 0.09
+dfSSPgrades$`Q. 93 /0.09` [findInterval(dfSSPanswers$`Response 93`, c(-5,29)) == 1L] <- 0
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(30,37)) == 1L] <- 0.03
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(38,41)) == 1L] <- 0.06
+dfSSPgrades$`Q. 93 /0.09`[findInterval(dfSSPanswers$`Response 93`, c(42,1000)) == 1L] <- 0.09
 
 # Q95 (related work): 0 = x (0%) ; 1 > x < 4 (30%) ; 5 > x < 9 (60%) ; 10 > x (100%)
 dfSSPgrades$`Q. 95 /0.09`[findInterval(dfSSPanswers$`Response 95`, c(0,0)) == 1L] <- 0
@@ -59,6 +59,14 @@ dfSSPgrades$`Q. 96 /0.09`[findInterval(dfSSPanswers$`Response 96`, c(10,1000)) =
 
 ###############################################
 # counts study hours for the campi (only used for p1 semester start)
+studyHoursTable <- data.frame(
+  c(
+    "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09`== 0.0,  ]),
+    "30-37" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.03,  ]),
+    "38-41" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.06, ]),
+    "42+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.09 , ]),
+    "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "CPH", ])))
+
 # studyHoursTable <- data.frame(
 #     c(
 #     "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "AAL", ]),
@@ -338,7 +346,6 @@ write.csv(personalized_info,file = "studentData.csv")
 #######################################################################
 
 #personalized_info <- personalized_info[order(personalized_info$rowID),]
-
 
 # The for loop renders the student report pdf files
 # note: sometimes the loop can't run all students > check output folder or run from last completed student file 

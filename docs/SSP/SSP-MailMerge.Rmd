@@ -61,8 +61,8 @@ rowID <- personalized_info$rowID[i]
 header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
-- \fancyhead[RE,RO]{`r name`}
-- \fancyhead[LE,LO]{Medialogy, `r campus`, 2017}
+- \fancyhead[RE,RO]{STUDENT DRAFT}
+- \fancyhead[LE,LO]{Medialogy, `r campus`, 2018}
 - \fancyfoot[CE,CO]{STUDY VERIFICATION TEST}
 - \fancyfoot[LE,RO]{\thepage}
 output:
@@ -122,7 +122,7 @@ pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
         panel.grid.minor = element_blank(),
         legend.position="none")
 
-#pScore
+pScore
 ```
 
 ```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 

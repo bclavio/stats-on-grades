@@ -60,20 +60,14 @@ dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$`Response 113`, c(42,1000))
 
 ###############################################
 # counts study hours for the campi (only used for p1 semester start)
-# studyHoursTable <- data.frame(
-#     c(
-#     "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "AAL", ]),
-#     "30-34" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.3 & dfSSPgrades$Campus == "AAL", ]),
-#     "35-40" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.6 & dfSSPgrades$Campus == "AAL", ]),
-#     "41+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "AAL", ]),
-#     "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "AAL", ])),
-#     c(
-#     "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.0 & dfSSPgrades$Campus == "CPH", ]),
-#     "30-34" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.3 & dfSSPgrades$Campus == "CPH", ]),
-#     "35-40" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.6 & dfSSPgrades$Campus == "CPH", ]),
-#     "41+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 93 /0.09` == 0.9 & dfSSPgrades$Campus == "CPH", ]),
-#     "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "CPH", ])))
-# names(studyHoursTable)[1]<-"AAL"
+studyHoursTable <- data.frame(
+    c(
+      "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75`== 0.0 & dfSSPgrades$Campus == "AAL", ]),
+      "30-37" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.25 & dfSSPgrades$Campus == "AAL", ]),
+      "38-41" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.50 & dfSSPgrades$Campus == "AAL", ]),
+      "42+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.75 & dfSSPgrades$Campus == "AAL", ]),
+    "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "AAL", ])))
+#names(studyHoursTable)[1]<-"AAL"
 # names(studyHoursTable)[2]<-"CPH"
 # names(dfSSPgrades)[1]<-"Surname"
 ###############################################
