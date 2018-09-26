@@ -13,18 +13,32 @@ library(reshape2)
 library(MASS)
 library(manipulate)
 library(stringr)
+#library(CTT)
+#library(gsubfn)
 library(Hmisc)
+#library(psych)
 library(ggplot2)
 library(ggpubr)
 library(gtable)
 library(cowplot)
 
+
+#radarchart w/ggplot2 
+#load library
+library(miscTools)
+library(extrafont)
+library(ggrepel)
+#font_import(pattern="[A/a]rial")
+#loadfonts(device="win")
+
 # Setting the directory for knitr, as the dir is reset after running a code chunk.
-# use the fileshare directory 
 library(knitr)
 library(kableExtra)
+#opts_knit$set(root.dir = if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP'} else {paste(homeDir,"~/SVN/01Projects/SSP/", sep = "")})
 opts_knit$set(root.dir = 'Z:/BNC/PBL development project/data/analysis_data/SSP/2018/')
+
 knitr::opts_chunk$set(fig.height=3.5) 
+
 homeDir<-Sys.getenv("HOME")
 
 ```
@@ -35,6 +49,7 @@ homeDir<-Sys.getenv("HOME")
 personalized_info <- read.csv("studentData.csv", stringsAsFactors = FALSE)
 personalized_info <- personalized_info[order(personalized_info$rowID),]
 personalized_info <- personalized_info[,-1]
+#highRiskStudents <- read.csv(file = "highRiskStudents.csv", stringsAsFactors = FALSE)
 campus <- personalized_info$Campus[i]
 name <- personalized_info$name[i]
 rowID <- personalized_info$rowID[i]
@@ -46,7 +61,7 @@ rowID <- personalized_info$rowID[i]
 header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
-- \fancyhead[RE,RO]{`r name`}
+- \fancyhead[RE,RO]{STUDENT DRAFT}
 - \fancyhead[LE,LO]{Medialogy, `r campus`, 2018}
 - \fancyfoot[CE,CO]{STUDY VERIFICATION TEST}
 - \fancyfoot[LE,RO]{\thepage}
@@ -54,6 +69,8 @@ output:
   pdf_document: default
 urlcolor: blue
 ---
+
+
 
 
 # Personalized Feedback for the Study Verification Test
@@ -68,7 +85,6 @@ As the report is based on the questionnaire information alone, it may give only 
 
 
 ```{r include=FALSE}
-# computes Figure 1 with the violin plots of each SSP topic 
 
 norm.avgGradesMelt1 <- norm.avgGradesMelt
 norm.avgGradesMelt1$variable <- gsub("Social support for studying","Social support for studying",norm.avgGradesMelt1$variable)
@@ -85,6 +101,8 @@ student <- subset(norm.avgGradesMelt1, norm.avgGradesMelt1$rowID ==i)
 
 pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
+  #geom_jitter(height = 0, width = 0.1) +
+  #geom_boxplot(width=0.1) + theme_minimal() +
   scale_y_continuous(breaks=seq(0,1,0.25), limits = c(0,1)) +
   coord_flip() +
   labs(y="Figure 1: Boxplots of the self-ratings of all students in seven topics.") +
@@ -103,12 +121,35 @@ pScore <- ggplot(norm.avgGradesMelt1, aes(x=variable, y=value)) +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         legend.position="none")
+
+pScore
+```
+
+```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
+# studentTable <- melt(subset(personalized_info[,-c(1:5, 21:32)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
+# studentTable1<- NULL
+# studentTable1 <- data.frame(c(studentTable[-c(1:7),-c(1)]), apply(studentTable[-c(8:14), ], 2, rev))
+# studentTable1 <- studentTable1[, c(1,5,2)]
+# names(studentTable1)[2]<-"Your score"
+# names(studentTable1)[3]<-"Percentile rank"
+# row.names(studentTable1) <- NULL
+# studentTable1$`Your score` <- as.numeric(levels(studentTable1$`Your score`))[studentTable1$`Your score`]
+# 
+# is.num <- sapply(studentTable1, is.numeric)
+# studentTable1[is.num] <- sapply(studentTable1[is.num], round, 2)
+# studentTable1$`Percentile rank` <- round(as.numeric(studentTable1$`Percentile rank`), digits = 0)
+# studentTable1$`Your score` <- round(as.numeric(studentTable1$`Your score`), digits = 2)
+# studentTable1 <- rbind(studentTable1, c(" "))
+# studentTable1 <- studentTable1[,-c(1)]
+# studentTable2 <- studentTable1
+# studentTable2[1] <- NULL
+# 
+# tabData <- ggtexttable(studentTable2, rows = NULL, theme = ttheme(base_style = "blank", padding = unit(c(2, 7), "mm")))
+# showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widths = c(4.5,1.5)) # , common.legend = TRUE
 ```
 
 
 ```{r include=FALSE, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE} 
-# computes the percentile ranks next to the boxplots in Figure 1 
-
 studentTable <- melt(subset(personalized_info[,-c(1:12, 21:31)], personalized_info$rowID %in% personalized_info$rowID[i])) #rowID
 studentTable1<- studentTable
 names(studentTable1)[3]<-"Percentile rank"
@@ -123,14 +164,11 @@ showAnalysis <- ggarrange(pScore, tabData, ncol = 2, nrow = 1, align = "h", widt
 ```
 
 ```{r, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
-# displays Figure 1
-
 showAnalysis
 
 ```
      
 ```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height=1.2}
-# computes and displays Figure 2 with the study hours.
 
 #studentHours <- subset(norm.avgGradesMelt, norm.avgGradesMelt$rowID == i) #norm.avgGradesMelt$rowID %in% highRiskStudents$rowID[i])
 studentHours <- subset(studyHours, studyHours$rowID==i) #studyHours$rowID %in% highRiskStudents$rowID[i])
@@ -139,6 +177,8 @@ studentHours['DotPos'] <- 67 # where the position the dot: sample size / 2
 
 ggplot(studyHours, aes(x=rowID,y=hours)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
+  #geom_jitter(height = 0, width = 0.1) +
+  #geom_boxplot(width=0.1) + theme_minimal() +
   scale_y_continuous(breaks=seq(0,100,5), limits = c(-5,70)) +
   geom_hline(yintercept = 0) +
   annotate("text", label = "NA", x = 20, y = -4) +
@@ -162,8 +202,51 @@ ggplot(studyHours, aes(x=rowID,y=hours)) +
 
 
 
+
 \pagebreak
 
+
+```{r echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.height= 12, fig.width=15}
+
+# selecting current student and median
+# dfStudentMedian<- dfSPPscoreAddon[c(rowID,nrow(dfSPPscoreAddon)), 3:9]
+# #add rownames to identify median and individual in the plot
+# rownames(dfStudentMedian) <- c("You", "Median")
+# #convert rownames to column -needed for melt function
+# dfStudentMedian$ID <- rownames(dfStudentMedian)
+# 
+# #melt data
+# dfmelt<- reshape2::melt(dfStudentMedian)
+# dfmelt$axis1 <- 0.2
+# dfmelt$axis2 <- 0.4
+# dfmelt$axis3 <- 0.6
+# dfmelt$axis4 <- 0.8
+# dfmelt$axis5 <- 1.0
+# 
+# # radar charts
+# p<- ggplot(dfmelt, aes(x=variable, y= value))+
+#   geom_text(aes(y = axis1,label = axis1, size=2)) +
+#   geom_text(aes(y = axis2,label = axis2, size=2)) +
+#   geom_text(aes(y = axis3,label = axis3, size=2)) +
+#   geom_text(aes(y = axis4,label = axis4, size=2)) +
+#   geom_text(aes(y = axis5,label = "1.0")) +
+#   annotate("text", x= 0.0, y= 0, label = "0")+
+#   geom_polygon(aes(group=ID, color= ID, fill= ID), alpha = 0.4, size = 1, show.legend = T)+
+#   RadarTheme+
+#   xlab("")+ ylab("")+
+#   scale_y_continuous(limits = c(0, 1.20), breaks = seq(0, 1.0, 0.1))+
+#   #annotate("text", x= 0.0, y= seq(0.0, 1.0, 0.20), label = seq(0.0, 1.0, 0.20))+
+#   #geom_label_repel(aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
+#   #geom_label(data=subset(dfmelt, dfmelt$ID=="Median"), aes(color=factor(ID), y = value,label = round(value, digits = 1))) +
+#   geom_label(data=subset(dfmelt, dfmelt$ID=="You"), aes(color=factor(ID), y = value,label = round(value, digits = 2)), size=7) +
+#   guides(size=FALSE) +
+#   coord_radar()
+# 
+# p2 <- add_sub(p, "Figure 3: Radar chart of the median self-rating scores of all students in seven topics (red) \nin comparison to your score (blue).", x = 0, hjust = 0, size=25)
+# ggdraw(p2)
+
+
+```
 
 
 ## Specific Recommondations - what can you do
@@ -173,22 +256,24 @@ Keep an open mind as you consider each statement. When it seems accurate, give s
 
 
 ```{r include=FALSE}
+
 # responses in personalized_info
 personalized_info <- personalized_info[,-c(1)]
 socialIntegration <- personalized_info[i,20]
 studyingHours <- personalized_info[i,21]
 studyingHoursNA <- personalized_info[i,22]
+#relatedWork <- personalized_info[i,21] 
+#nonRelatedWork <- personalized_info[i,23]
 
 # scores and percentile ranks from table  
 HShabits <- studentTable1[2,1]
 studyHabits <- studentTable1[3,1]
 selectRecommondations <- studentTable1[1]
 
-
 # Social integration
 selectRecommondations[1,1] <- ifelse(studentTable1[1,1]<45, 
   paste("enrolled for a university degree in general and Medialogy at AAU specifically without having received a large amount of encouragement from friends, family, or other sources. Your social network can support you in times of hardship, doubt, and low morale.",
-  ifelse( grepl(c("Not at all true", "Slightly true", "Somewhat true"), socialIntegration),"You reported in the questionnaire that you do not find it so easy to meet and make friends and that you expect to do so at AAU. Make sure to dedicate some time making and strengthening bonds with fellow students who also want to achieve a university degree.", "You reported in the questionnaire that you find it easy to meet and make friends and that you expect to do so at AAU."), 
+  ifelse( grepl(c("Not at all true", "Slightly true", "Somewhat true"), socialIntegration),"Make sure to dedicate some time making and strengthening bonds with fellow students who also want to achieve a university degree.", "It is good to hear that you find it easy to meet and make friends and that you expect to do so at AAU."), 
   "Making friends with fellow students at university can be a valuable source of support to rely on throughout the education. Taking active part in student unions, being a volunteer at events, boardgame nights, game jams, sports, or other types of student environment activities can help you connect with fellow students or contribute to healthy group work activities. It will broaden your social reference beyond your own semester or education. Breaking the barrier to seek social network outside your own semester can seem daunting, but can become a significantly positive part of your years as university student. If in doubt about how to initiate or engage, consider having a chat with your student counselor or students from higher semesters."),
   
   paste(ifelse(studentTable1[1,1] >= 45 && studentTable1[1,1] <= 55, "received about average", "received an above average "),
@@ -216,16 +301,67 @@ selectRecommondations[5,1] <- ifelse(studentTable1[5,1]<50,
   "meaning that you see intelligence as something rather static and outside of your control to affect. Instead of seeing setbacks as a manifestation of inadequacy, lack of intelligence, or lack of talent, consider them an opportunity to learn and grow your mindset, to overcome academic challenges in your study life. Develop a positive learning attitude, in which challenge is not unwanted, but a logical part of the growth journey. Such challenges include lower than expected outcomes e.g. failed assignments, exams, or low grades. We all have talents and weaknesses. We naturally need to work harder on our personal weaknesses, but we are still capable.",
   "meaning that you are open to actively improving your intelligence. Seeing setbacks (failed assignments or poor exam grades) as an opportunity to learn and grow rather than inadequacy, lack of intelligence or talent helps  you overcome challenges and develop a positive learning attitude. ")
 
+#studyingHours <- 38
 # Study and work
 selectRecommondations[6,1] <- ifelse(studyingHours>=55, "are using much higher than the recommended amount of time for studying.",ifelse(studyingHours>=47, "are using sufficient amount of time for studying.",
   ifelse(studyingHours>=42 && studyingHours<=46, "are using about the recommended amount of time for studying.",
   ifelse(studyingHours>=0 && studyingHours<=41, "are using less than the recommended amount of time for studying.", "entered an unrecognized entry in the questionnaire."))))
+
+# selectRecommondations[2,2] <- ifelse(nonRelatedWork>=10,
+#   paste("You reported using ", nonRelatedWork, "hours on jobs and other obligations."
+#   ),  "")
+           
+
+# Understanding Medialogy
+# contentCreate <- ifelse(grepl("Not",personalized_info[i,23]), NA, "manual content creation,")
+# PBL <- ifelse(grepl("Disgree",personalized_info[i,25]), NA, "Although you have group responsibilities related to you project, the group is not responsible for the individual learning goals, defined in the study plan.") 
+# aes <- ifelse(grepl("Not",personalized_info[i,25]), NA, "work with aesthetics,")
+# makeMovie <- ifelse(grepl("Not",personalized_info[i,26]), NA, "professional movie making,") 
+# rigging <- ifelse(grepl("Not",personalized_info[i,27]), NA, "working as a rigging artist,") 
+# adobe <- ifelse(grepl("Not",personalized_info[i,28]), NA, "using Adobe software") 
+# applySkills <- ifelse(grepl("Not",personalized_info[i,24]) || grepl("Correct",personalized_info[i,30]), 
+#   paste("but learn more about applying",
+#   ifelse(grepl("Not",personalized_info[i,24]), "math knowledge", NA),
+#   ifelse(grepl("Not",personalized_info[i,24]) && grepl("Correct",personalized_info[i,31]), "and", NA),
+#   ifelse(grepl("Correct",personalized_info[i,29]), "programming skills.", NA), 
+#   "at AAU"), "")
+# 
+# toBeMed <- rbind(
+#   ifelse(grepl("Not",personalized_info[i,23]), NA, "manual content creation"),
+#   ifelse(grepl("Not",personalized_info[i,25]), NA, "work with aesthetics"),
+#   ifelse(grepl("Not",personalized_info[i,26]), NA, "professional moving making"),
+#   ifelse(grepl("Not",personalized_info[i,27]), NA, "working as a rigging artist"),
+#   ifelse(grepl("Not",personalized_info[i,28]), NA, "using adobe software")
+# )
+# toBeMed <- na.omit(toBeMed)
+# toBeMed[nrow(toBeMed),] <- ifelse(is.na(toBeMed[2]), ".",paste("and", toBeMed[nrow(toBeMed)]))
+# 
+# toBeMedList <- paste(toBeMed, collapse = ", ")
+
+# applySkills <- ifelse(grepl("Not",personalized_info[i,24]) && !grepl("correct",personalized_info[i,30]), 
+#   ", but learn more about applying math knowledge and programming skills at AAU.",
+#     ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), 
+#       paste(", but learn more about applying",
+#       ifelse(grepl("Not",personalized_info[i,24]), "math knowledge", ""),
+#       ifelse(!grepl("Correct",personalized_info[i,30]), "programming skills", ""), 
+#       "at AAU."), "."))
+# 
+# PBL <- ifelse(grepl("Disgree",personalized_info[i,25]), "", "Although you have group responsibilities related to your project, the group is not responsible for the individual learning goals, defined in the study plan.") 
+
+# selectRecommondations[7,1] <- ifelse(studentTable1[7,1]<0.5, 
+#   paste(ifelse(studentTable1[7,1]<0.3,
+#   "your current conception of Medialogy is","your understanding of Medialogy is"), " different from the study plan. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming.", 
+#   ifelse(is.na(toBeMed), "",paste0("Contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about: ",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL), 
+#   paste("you have a pretty good idea of what you will learn at Medialogy. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming.",
+#   ifelse(is.na(toBeMed), "",paste0("However, contrary to what you indicated in the study verification questionnaire Medialogy students learn only little about: ",toBeMedList, ifelse(grepl("Not",personalized_info[i,24]) || !grepl("correct",personalized_info[i,30]), applySkills, ""))), PBL))
 
 selectRecommondations[7,1] <- ifelse(studentTable1[7,1]<50, 
   paste(ifelse(studentTable1[7,1]<0.3,
   "your current conception of Medialogy is","your understanding of Medialogy is"), " different from the study plan. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming."), 
   paste("you have a pretty good idea of what you will learn at Medialogy. Medialogy has a strong technical foundation but offers many other skills and competencies that give you opportunities to design novel technologies and this usually involves programming."))
 
+
+# selectRecommondations <- gsub("\\,\\s+”", ",", selectRecommondations)
 
 ```
 
@@ -270,7 +406,7 @@ Talent without hard work rarely amounts to anything ambitious. Making the effort
 `r selectRecommondations[4,1]` 
 
 #### Growth mindset 
-Seeing your intelligence, not as static quality or property, but as something that you can actively influence and grow is referred to as having a growth mindset. Students with high self-reported values in growth mindset are more likely to finish their degree and master exams than those with lower scores. Your self-reported score placed you in the `r studentTable1[5,1]` percentile, 
+Seeing your intelligence, not as static quality or property, but as something that you can actively influence and grow is referred to as having a growth mindset. Students with high self-reported values in growth mindset are more likely to finish their degree and master exams than those with lower scores. Your self-reported score placed you in the `r studentTable1[5,1]` percentile and suggests that you see intelligence as something rather static and outside of your control, 
 `r selectRecommondations[5,1]` 
 
 #### Time Commitments (study and other)

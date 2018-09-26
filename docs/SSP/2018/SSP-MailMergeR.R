@@ -10,75 +10,53 @@ library(reshape2)
 library(MASS)
 library(manipulate)
 library(stringr)
+#library(CTT)
+#library(gsubfn)
 library(Hmisc)
+#library(psych)
 library(ggplot2)
 library(reshape2)
 #detach("package:RMySQL", unload=TRUE)
 
 
-
-#######################################################################################################
-### Instructions for SSP download (on Moodle)
-
-# 1) Go to results in the SSP quiz in order to download both grades and answers submissions
-# 2) When downloading choose lastest and finished attempts
-
-#######################################################################################################
-
-
 ### Import SSP data
 
-# setting the working directory to the fileshare  
-setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/2019/')
+#SVNData<-if(grepl("BiancaClavio", getwd())){'C:/Users/BiancaClavio/Documents/SVN/01Projects/SSP/'} else {"~/SVN/01Projects/SSP/"}
+#setwd(SVNData)
+setwd('Z:/BNC/PBL development project/data/analysis_data/SSP/2018/')
 
-# SSP answers import
-dfSSPanswersCPH<-read.csv("SSPanswersCPHTest.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersAAL<-read.csv("SSPanswersAALTest.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPanswersCPH["Campus"]<-"CPH"
+#dfQAGrades<-read.csv("QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE)
+#dfSSPgradesCPH<-read.csv("SSPgradesTestCPH.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPgradesAAL<-read.csv("SSPgradesTestAALEdited.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+
+####################################
+###### the answers are not in use
+#dfSSPanswersCPH<-read.csv("SSPanswersTestCPH 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+dfSSPanswersAAL<-read.csv("SSPanswersTestAALMinusFive.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
+##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("No influence","Not at all true",dfSSPanswersAAL))
+##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Limited influence","Slightly true",dfSSPanswersAAL))
+##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Some influence","Some influence",dfSSPanswersAAL))
+##dfSSPanswersAAL[35:43] <- apply(dfSSPanswersAAL[35:43],2, function(dfSSPanswersAAL) gsub("Decisive influence","Completely true",dfSSPanswersAAL))
+##dfSSPanswersCPH["Campus"]<-"CPH"
 dfSSPanswersAAL["Campus"]<-"AAL"
-dfSSPanswers <- rbind(dfSSPanswersCPH,dfSSPanswersAAL) 
+#dfSSPanswers <- rbind(dfSSPanswersCPH,dfSSPanswersAAL) 
+dfSSPanswers <- dfSSPanswersAAL
+##dfSSPanswers[c('Response 93','Response 95','Response 96')] <- data.frame(lapply(dfSSPanswers[c('Response 93','Response 95','Response 96')], function(x) { gsub("-", 0, x) }))
+###################################
 
-# SSP scores import
-dfSSPgradesCPH<-read.csv("SSPgradesAALTest.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPgradesAAL<-read.csv("SSPgradesCPHTest.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
-dfSSPgradesCPH["Campus"]<-"CPH"
+#dfSSPgradesCPH["Campus"]<-"CPH"
 dfSSPgradesAAL["Campus"]<-"AAL"
-dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
 
-#dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
+#dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
+#dfSSPgrades <- dfSSPgrades[grepl("Finished", dfSSPgrades$State),]
+dfSSPgrades <- dfSSPgradesAAL
+dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
 
-
-#######################################################################################################
-### Data cleaning: study hours
-
-# creates extra column
-dfSSPanswers['studyHoursNum'] <- dfSSPanswers$`Response 113`
-
-# replaces strings containing "-" with -5 (e.g. dates)
-dfSSPanswers$studyHoursNum <- ifelse(grepl("-", dfSSPanswers$studyHoursNum), "-5", dfSSPanswers$studyHoursNum)
-
-# removes non-numeric characters, e.g. "hours"                                      
-dfSSPanswers$studyHoursNum <- gsub("[^0-9\\.]", "", dfSSPanswers$studyHoursNum)
-
-# replaces empty strings wth -5 
-dfSSPanswers$studyHoursNum[nchar(dfSSPanswers$studyHoursNum)==0] <- "-5"
-
-# changes the scores based on the new study hours column 
-dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$studyHoursNum, c(-5,29)) == 1L] <- 0
-dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$studyHoursNum, c(30,37)) == 1L] <- 0.25
-dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$studyHoursNum, c(38,41)) == 1L] <- 0.50
-dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$studyHoursNum, c(42,1000)) == 1L] <- 0.75
-
-
-
-
-
-
-
-
-
-
-
+# TODO: the students entered also text in questions 113 which I had to change manually
+dfSSPgrades$`Q. 113 /0.75` [findInterval(dfSSPanswers$`Response 113`, c(-5,29)) == 1L] <- 0
+dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$`Response 113`, c(30,37)) == 1L] <- 0.25
+dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$`Response 113`, c(38,41)) == 1L] <- 0.50
+dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$`Response 113`, c(42,1000)) == 1L] <- 0.75
 
 ###############################################
 # counts study hours for the campi (only used for p1 semester start)
@@ -95,6 +73,7 @@ studyHoursTable <- data.frame(
 ###############################################
 
 dfSSPgrades$`First name`<- gsub("-", " ", dfSSPgrades$`First name`)
+#dfSSPgrades$Surname <- gsub("-", " ", dfSSPgrades$Surname)
 dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 
 # dont remove columns, but set them to zero (will skip them in avgGrades)
