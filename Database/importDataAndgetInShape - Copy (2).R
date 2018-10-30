@@ -92,25 +92,28 @@ detach("package:RMySQL", unload=TRUE)
 
 ###########################
 
+# temp import of enrolment data from all studies 
+# replaces tbl_optag data
+dfEnrolStatusBsc <-read.csv("2008-18_ram_op_allTest.csv", header = TRUE, fill=TRUE, sep = ",", check.names=TRUE, encoding="UTF-8", stringsAsFactors=FALSE)
 
-# BC: temp merit import
+#replaces the db data from above
+personIDs <- dfEnrolStatusBsc[, c(3,15,40)] #person_id, land, studienr
+
+# BC: temp import of merit 
 # gives lowest passing grades in merit courses
 setwd('Z:/BNC/PBL development project/data/analysis_data/dropOut/data_2017cohortCPHAAL')
-merit2017<-read.csv("2008-18_merit_MED.csv", header = TRUE, fill=TRUE, sep = ",", check.names=TRUE, encoding="UTF-8", stringsAsFactors=FALSE)
-merit2017<-merge(merit2017,personIDs, by.x = "X.U.FEFF.person_id", by.y = "PERSON_ID")
-merit2017$KARAKTER <- 'B'
-merit2017$ECTS <- merit2017$staa * 60 
-merit2017$`Seneste Fors.` <- "Ja"
-merit2017$`Forsoeg nr.` <- 1
-merit2017$type <- "bachelor"
-names(merit2017)[5] <- "aktivitet"
-names(merit2017)[6] <- "bedom_dato"
-names(merit2017)[7] <- "reg_dato"
-names(merit2017)[14] <- "navn"
-merit2017 <- merit2017[,c(4:7,12,14,17:20)]
-
-#dfAAUGrades1 <- dfAAUGrades
-dfAAUGrades <- bind_rows(dfAAUGrades,merit2017)
+merit<-read.csv("2008-18_merit_MED.csv", header = TRUE, fill=TRUE, sep = ",", check.names=TRUE, encoding="UTF-8", stringsAsFactors=FALSE)
+merit<-merge(merit,personIDs, by.x = "X.U.FEFF.person_id", by.y = "PERSON_ID")
+merit$KARAKTER <- 'B'
+merit$ECTS <- merit$staa * 60 
+merit$`Seneste Fors.` <- "Ja"
+merit$`Forsoeg nr.` <- 1
+#merit$type <- "bachelor"
+names(merit)[5] <- "aktivitet"
+names(merit)[6] <- "bedom_dato"
+names(merit)[7] <- "reg_dato"
+names(merit)[14] <- "navn"
+dfAAUGrades <- bind_rows(dfAAUGrades,merit)
 
 # removes type of "kandidat"
 #dfAAUGrades <- dfAAUGrades[dfAAUGrades$type=='bachelor', ]
@@ -120,13 +123,19 @@ dfDropMedsFromAll<-dfDropAAUall[dfDropAAUall$startsn=='Medieteknologi'|dfDropAAU
 uniqueDropMedsFrAll<-sqldf('select distinct navn as fullName, studienr from dfDropMedsFromAll group by navn') 
 count(uniqueDropMedsFrAll) # check: 2581
 
-dfEnrolStatusBsc$fradatosn = as.Date(as.character(dfEnrolStatusBsc$fra_dato), "%d/%m/%Y")
+dfEnrolStatusBsc$fradatosn = as.Date(as.character(dfEnrolStatusBsc$FRA_DATO), "%d.%m.%Y")
+dfEnrolStatusBsc$slutdatosn = as.Date(as.character(dfEnrolStatusBsc$TIL_DATO), "%d.%m.%Y")
+dfEnrolStatusBsc<-dfEnrolStatusBsc[dfEnrolStatusBsc$type=='bachelor', ]
+dfEnrolStatusBsc<-dfEnrolStatusBsc[dfEnrolStatusBsc$sn=='Medieteknologi'|dfEnrolStatusBsc$fra_ramme=='Medieteknologi',] 
+count(dfEnrolStatusBsc) # 2595
 dfEnrolStatusBsc$stype<-as.factor("bachelor")
-dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
+dfEnrolStatusBsc$st $Studieordningskode<-as.factor(NA)
 dfEnrolStatus<-dfEnrolStatusBsc
 #FOR FUTURE WORK WHEN MSC data becomes relevant rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
-dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeld_begrundelse=='Afvist på grund af manglende kvalifikationer'),]
-dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeld_begrundelse=='Ikke accepteret tilbudt plads'),]
+
+# commented out due to no udmeld_begrundelse
+#dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeld_begrundelse=='Afvist på grund af manglende kvalifikationer'),]
+#dfEnrolStatus<-dfEnrolStatus[!(dfEnrolStatus$udmeld_begrundelse=='Ikke accepteret tilbudt plads'),]
 dfEnrolStatus$enrolID<-seq(1:nrow(dfEnrolStatus))
 #dfEnrolStatus$navn<-NULL
 
@@ -170,28 +179,27 @@ dfAAUGrades$reg_dato<- as.Date(as.character(dfAAUGrades$reg_dato) , "%d.%m.%Y")
 dfDropMedsFromAll$fradatosn<-as.Date(as.character(dfDropMedsFromAll$fradatosn) , "%d.%m.%Y")
 dfDropMedsFromAll$fra_dato<-dfDropMedsFromAll$fradatosn
 
-
 # BC: changed the merge to include slutdatosn for students with "tidligere-optag"
-dfEnrolStatus<-merge(dfEnrolStatus,dfDropMedsFromAll[,c("studienr","statussn","udmeldsn","fradatosn","slutdatosn")],by=c("studienr","fradatosn"),all.x=TRUE)
-count(dfEnrolStatus) # 203
+dfEnrolStatus<-merge(dfEnrolStatus,dfDropMedsFromAll[,c("studienr","udmeldsn","fradatosn")],by=c("studienr","fradatosn"),all.x=TRUE)
+dfEnrolStatus$statussn <- dfEnrolStatus$STATUS
+count(dfEnrolStatus) # 2595
 
 # BC: handling early dropouts with no registration
-dfEnrolStatus$statussn <- ifelse(is.na(dfEnrolStatus$slutdatosn), "afbrudt", dfEnrolStatus$statussn)
-dfEnrolStatus$udmeldsn <- ifelse(is.na(dfEnrolStatus$slutdatosn), dfEnrolStatus$udmeld_aarsag, dfEnrolStatus$udmeldsn)
-dfEnrolStatus$udmeld_dato<-as.Date(as.character(dfEnrolStatus$udmeld_dato) , "%d/%m/%Y")
-dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
-dfEnrolStatus$slutdatosn<-if_else(is.na(dfEnrolStatus$slutdatosn), dfEnrolStatus$udmeld_dato, dfEnrolStatus$slutdatosn)
+#dfEnrolStatus$statussn <- ifelse(is.na(dfEnrolStatus$slutdatosn), "afbrudt", dfEnrolStatus$statussn)
+#dfEnrolStatus$udmeldsn <- ifelse(is.na(dfEnrolStatus$slutdatosn), dfEnrolStatus$udmeld_aarsag, dfEnrolStatus$udmeldsn)
+dfEnrolStatus$udmeld_dato<-as.Date(as.character(dfEnrolStatus$udmeld_dato) , "%d.%m.%Y")
+#dfEnrolStatus$slutdatosn<-as.Date(as.character(dfEnrolStatus$slutdatosn) , "%d.%m.%Y")
+#dfEnrolStatus$slutdatosn<-if_else(is.na(dfEnrolStatus$slutdatosn), dfEnrolStatus$udmeld_dato, dfEnrolStatus$slutdatosn)
 
 # BC: assumming that students with slutdatosn before 2017-08-31 are active,
 # whereas students with slutdatosn after 2017-08-31 dropped out (
-dfEnrolStatus$statussn <- if_else(dfEnrolStatus$slutdatosn <= as.Date('2017-08-31'), "åben", dfEnrolStatus$statussn)
-dfEnrolStatus$statussn <- ifelse(is.na(dfEnrolStatus$slutdatosn), "åben", dfEnrolStatus$statussn)
-dfEnrolStatus$udmeldsn <- ifelse(dfEnrolStatus$statussn == "åben", "Indskrevet", dfEnrolStatus$udmeldsn)
+#dfEnrolStatus$statussn <- if_else(dfEnrolStatus$slutdatosn <= as.Date('2017-08-31'), "åben", dfEnrolStatus$statussn)
+#dfEnrolStatus$statussn <- ifelse(is.na(dfEnrolStatus$slutdatosn), "åben", dfEnrolStatus$statussn)
+#dfEnrolStatus$udmeldsn <- ifelse(dfEnrolStatus$statussn == "åben", "Indskrevet", dfEnrolStatus$udmeldsn)
 
-# only takes cohort 2017
 #match grades with enrolment data / BC: used columns from dfDropMedsFromAll instead to include statussn for Tidl-optag students (added in previous step)
 dfAAUGrades<-merge(dfAAUGrades,dfEnrolStatus[,c("studienr","startaar","fradatosn","slutdatosn","statussn","udmeldsn","stype")],by.x = c("studienr","type"),by.y = c("studienr","stype"))
-count(dfAAUGrades) #1622
+count(dfAAUGrades) #33696
 
 #################### !!!!!
 #NEEDS CHECKING this removes a few rows / BC: don't understand why we have this? Commented out, so it doesn't delete the merit grades that I added:
@@ -210,6 +218,7 @@ count(dfAAUGrades) #1622
 ################
 
 
+
 #dfAAUGrades<-dfAAUGrades[dfAAUGrades$bedom_dato>dfAAUGrades$fradatosn,]
 dfAAUGrades$isIntl<-ifelse(dfAAUGrades$Land=="Danmark",0,1)
 dfAAUGrades$rowID<-seq(1:nrow(dfAAUGrades))
@@ -218,18 +227,23 @@ dfAAUGrades$DistFromEnrol<-difftime(dfAAUGrades$bedom_dato, dfAAUGrades$fradatos
 distHelp<-sqldf("select studienr, aktiv_kode, bedom_dato, min(bedom_dato-fradatosn) As MinDistanceDays from dfAAUGrades group by studienr, aktiv_kode, bedom_dato")
 dfAAUGrades<-merge(dfAAUGrades,distHelp,all.x = TRUE)
 dfAAUGrades$aktivitetText<-as.character(dfAAUGrades$aktivitet)
+
+# removes data
 dfAAUGrades<-dfAAUGrades[dfAAUGrades$DistFromEnrol==dfAAUGrades$MinDistanceDays,]
 dfAAUGrades$startMonth <-ifelse(as.numeric(format(dfAAUGrades$fradatosn,'%m'))>4,9,2)
 dfAAUGrades$examMonth<-as.numeric(format(dfAAUGrades$bedom_dato,'%m'))
 dfAAUGrades$takenInYear<-as.numeric(format(dfAAUGrades$bedom_dato,'%Y'))
 
 #HKtodo: need to work on people who did not start in september / BC: I believe that we fixed this
-dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
+# dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, 
+#                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
+#                                                                  (as.numeric(format(dfAAUGrades$bedom_dato-14,'%Y'))-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
+#                                #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
+
+# changed dfAAUGrades$examMonth>1 to dfAAUGrades$examMonth>2
+dfAAUGrades$takenInSem<-ifelse(dfAAUGrades$startMonth==9, ifelse(dfAAUGrades$examMonth>2 & dfAAUGrades$examMonth<9, 
                                                                  (dfAAUGrades$takenInYear-dfAAUGrades$startaar)*2,
                                                                  (as.numeric(format(dfAAUGrades$bedom_dato-14,'%Y'))-dfAAUGrades$startaar)*2+ floor((as.numeric(format(dfAAUGrades$bedom_dato-14,'%m'))-2)/7)),NA )             
-                               #  continue here                                                        ifelse(dfAAUGrades$examMonth>1 & dfAAUGrades$examMonth<9, )     )                                                        
-
-
 
 
 #hard coded data corrections for three students 
@@ -375,15 +389,15 @@ SSPWide$SSPdate<-as.Date(SSPWide$`Started on`, format = "%d/%m/%Y %I:%M")
 SSPWide<-merge(SSPWide,studienrAndNames,all.x = TRUE)
 
 ###################################################
-# BC: checks student numbers - I dont understand???
+# BC: checks student numbers 
 n <- data.frame(unique(dfAAUGrades$studienr)) #189
 m <- data.frame(unique(dfEnrolStatus$studienr)) #203
 s <- data.frame(SSPWide$studienr) #190
 names(m) <- "studienr"
 names(n) <- "studienr"
 names(s) <- "studienr"
-sqldf('SELECT * FROM m EXCEPT SELECT * FROM n') #14 studienr in dfEnrolStatus
-sqldf('SELECT * FROM m EXCEPT SELECT * FROM s') #18 studienr
+#sqldf('SELECT * FROM m EXCEPT SELECT * FROM n') #14 studienr in dfEnrolStatus
+#sqldf('SELECT * FROM m EXCEPT SELECT * FROM s') #18 studienr
 
 m <- m[!n]
 m
@@ -392,11 +406,11 @@ m
 # prep enrol info dfM has Enrol status ---------------------------------------------------------
 # BC: add Q999 to dfEnrolStatus
 Q999 <- merge(Q999,uniqueDropMedsFrAll)
-dfEnrolStatus$Q999 <- ifelse(dfEnrolStatus$studienr %in% Q999$studienr, 1,0)
+#dfEnrolStatus$Q999 <- ifelse(dfEnrolStatus$studienr %in% Q999$studienr, 1,0)
 
-# BC: include CourseLocation and nationality (country) 
-dfEnrolStatus <- merge(dfEnrolStatus,dfAAUGrades[,c("CourseLocation","Land","studienr")], by = c("studienr"))
-dfEnrolStatus<- dfEnrolStatus[!duplicated(dfEnrolStatus), ]
+# BC: include CourseLocation/campus
+campusHolder <- dfAAUGrades[ ,c(1,39)]
+dfEnrolStatus <- merge(dfEnrolStatus,campusHolder[,c("CourseLocation","studienr")], by = c("studienr"))
 
 dfM<-dfEnrolStatus
 lookupDropOutsVector=c('afslutte'= 0, 'afbrudt'=1, '~ben'=0,'orlov'=0)

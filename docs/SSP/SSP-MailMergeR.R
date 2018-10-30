@@ -23,9 +23,9 @@ library(reshape2)
 # 1) Go to results in the SSP quiz in order to download both grades and answers submissions
 # 2) When downloading choose lastest and finished attempts
 
+
+
 #######################################################################################################
-
-
 ### Import SSP data
 
 # setting the working directory to the fileshare  
@@ -37,6 +37,7 @@ dfSSPanswersAAL<-read.csv("SSPanswersAALTest.csv", header = TRUE, fill=TRUE, sep
 dfSSPanswersCPH["Campus"]<-"CPH"
 dfSSPanswersAAL["Campus"]<-"AAL"
 dfSSPanswers <- rbind(dfSSPanswersCPH,dfSSPanswersAAL) 
+names(dfSSPanswers)[1] <- "Surname"
 
 # SSP scores import
 dfSSPgradesCPH<-read.csv("SSPgradesAALTest.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, encoding="UTF-8", stringsAsFactors=FALSE)
@@ -44,6 +45,7 @@ dfSSPgradesAAL<-read.csv("SSPgradesCPHTest.csv", header = TRUE, fill=TRUE, sep =
 dfSSPgradesCPH["Campus"]<-"CPH"
 dfSSPgradesAAL["Campus"]<-"AAL"
 dfSSPgrades <- rbind(dfSSPgradesCPH,dfSSPgradesAAL) 
+names(dfSSPgrades)[1] <- "Surname"
 
 #dfSSPgrades["rowID"] <- seq(1:nrow(dfSSPgrades))
 
@@ -70,35 +72,26 @@ dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$studyHoursNum, c(38,41)) ==
 dfSSPgrades$`Q. 113 /0.75`[findInterval(dfSSPanswers$studyHoursNum, c(42,1000)) == 1L] <- 0.75
 
 
-
-
-
-
-
-
-
-
-
-
 ###############################################
 # counts study hours for the campi (only used for p1 semester start)
-studyHoursTable <- data.frame(
-    c(
-      "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75`== 0.0 & dfSSPgrades$Campus == "AAL", ]),
-      "30-37" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.25 & dfSSPgrades$Campus == "AAL", ]),
-      "38-41" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.50 & dfSSPgrades$Campus == "AAL", ]),
-      "42+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.75 & dfSSPgrades$Campus == "AAL", ]),
-    "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "AAL", ])))
+# studyHoursTable <- data.frame(
+#     c(
+#       "0-29" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75`== 0.0 & dfSSPgrades$Campus == "AAL", ]),
+#       "30-37" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.25 & dfSSPgrades$Campus == "AAL", ]),
+#       "38-41" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.50 & dfSSPgrades$Campus == "AAL", ]),
+#       "42+" = nrow(dfSSPgrades[dfSSPgrades$`Q. 113 /0.75` == 0.75 & dfSSPgrades$Campus == "AAL", ]),
+#     "Total" = nrow(dfSSPgrades[dfSSPgrades$Campus == "AAL", ])))
 #names(studyHoursTable)[1]<-"AAL"
 # names(studyHoursTable)[2]<-"CPH"
 # names(dfSSPgrades)[1]<-"Surname"
-###############################################
 
-dfSSPgrades$`First name`<- gsub("-", " ", dfSSPgrades$`First name`)
-dfSSPgrades <- data.frame(lapply(dfSSPgrades, function(x) { gsub("-", 0, x) }))
 
-# dont remove columns, but set them to zero (will skip them in avgGrades)
-#dfSSPgrades <- dfSSPgrades[, -c(16,24,31,41,50,54,67,72,78,84,88,99,113,122,126,135,142,143)]
+
+
+##############################################################################################
+# Computes topic averages for each student
+
+# dont remove comment columns, but set them to zero (will skip them in the next step with avgGrades)
 dfSSPgrades[, c(16,24,31,41,50,54,67,72,78,84,88,99,113,122,126,135,142,143)] <- 0
 dfSSPgradesStat <- data.frame( lapply(dfSSPgrades[11:143], function(x) as.numeric(as.character(x))) )
 
@@ -110,16 +103,10 @@ avgGrades['Growth mindset'] <- list(rowMeans(dfSSPgradesStat[75:77]))
 avgGrades['Grit'] <- list(rowMeans(dfSSPgradesStat[69:73]))
 avgGrades['Study habits'] <- list(rowMeans(dfSSPgradesStat[79:82]))
 avgGrades['High school habits'] <- list(rowMeans(dfSSPgradesStat[45:56])) 
-avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[c(7:9,12:13,67)])) #[c(2:4,7:8,55:56)])) # removed 4, added 2
+avgGrades['Social support for studying'] <- list(rowMeans(dfSSPgradesStat[c(7:9,12:13,67)]))
 avgGrades <- data.frame( lapply(avgGrades, function(x) as.numeric(as.character(x))) )
 
-# normalizes avg scores based on minimum and maximum observations 
-# I added minimum and maximum possible score from the SSP as 0 and 1
-# normalize <- function(x) {
-#   return ((x - min(x)) / (max(x) - min(x)))
-# }
-
-# normalizes avg scores based on minimum and maximum possible score 
+# normalizes avg scores based on the maximum possible score 
 normalize <- function(x) {
   return ((x) / (0.75))
 }
@@ -128,22 +115,9 @@ norm.avgGrades <- as.data.frame(lapply(avgGrades, normalize))
 norm.avgGrades["Campus"] <- dfSSPgrades$Campus
 norm.avgGrades["rowID"] <- seq(1:nrow(norm.avgGrades))
 norm.avgGrades["Email"] <- dfSSPgrades$Email.address
-norm.avgGradesAAL <- norm.avgGrades
 
-####################################
-# Students with averages above 1 are most likely to continue Medialogy while
-# students with averages below -1 are most likely to dropout.
-# scaled.avgGrades <- avgGrades
-# scaled.avgGrades[1:14] <- scale(avgGrades[1:7])
-# 
-# # checks that we get mean of 0 and sd of 1
-# colMeans(scaled.avgGrades)
-# apply(scaled.avgGrades, 2, sd)
-# 
-# scaled.avgGrades["Campus"] <- dfSSPgrades$Campus
-# scaled.avgGrades["rowID"] <- seq(1:nrow(scaled.avgGrades))
 
-####################################
+##############################################################################################
 ## Graphs
 
 # density distribution of total SSP score

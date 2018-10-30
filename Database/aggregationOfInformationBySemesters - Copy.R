@@ -50,13 +50,20 @@ dfAAUGradesWODistEnrol$DistFromEnrol<- NULL
 #                           a.bedom_dato>=c.fradatosn and 
 #                           (a.bedom_dato<= c.slutdatosn or c.slutdatosn is Null)')
 
-dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.gradeType as gradeType, b.courseSPVID,b.fromDate, c.fradatosn as fradatoSNsemCalc, b.toDate, c.enrolID as enrolID, a.* 
-                          from dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c 
-                          where a.type=c.type and c.studienr=a.studienr and 
-                          a.aktivitetText=b.aktivitetText and 
-                          c.fradatosn>= b.fromDate and 
-                          c.fradatosn<=b.toDate and 
-                          (a.bedom_dato<= c.slutdatosn or c.slutdatosn is Null)')
+# for 2017 cohort
+# dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.gradeType as gradeType, b.courseSPVID,b.fromDate, c.fradatosn as fradatoSNsemCalc, b.toDate, c.enrolID as enrolID, a.* 
+#                           from dfAAUGradesWODistEnrol as a, dfECTSstruct as b, dfEnrolStatus as c 
+#                           where a.type=c.type and c.studienr=a.studienr and 
+#                           a.aktivitetText=b.aktivitetText and 
+#                           c.fradatosn>= b.fromDate and 
+#                           c.fradatosn<=b.toDate and 
+#                           (a.bedom_dato<= c.slutdatosn or c.slutdatosn is Null)')
+
+# for all cohorts
+# dfAAUMarriedGrades<-sqldf('select distinct b.CTdf as bctdf, b.SPV as SPV, b.gradeType as gradeType, b.courseSPVID,b.fromDate, b.toDate, a.* 
+#                           from dfAAUGradesWODistEnrol as a, dfECTSstruct as b 
+#                           a.aktivitetText=b.aktivitetText
+
 
 # the two variables are also in the import script but with different values for the grades
 gradesToGPANumsVec<-c('2'=2,'02'=2,'4'=4,'7'=7,'10'=10,'12'=12,'0'=0,'00'=0,'-3'=-3,'EB'=-4,'U'=-5)
