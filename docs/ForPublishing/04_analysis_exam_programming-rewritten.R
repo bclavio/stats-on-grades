@@ -1,3 +1,6 @@
+# Created by Ninna Vihrs 2018
+# Modified by Bianca Clavio Christensen 2018
+
 library(tidyr)
 library(glmnet)
 library(leaps)
@@ -5,18 +8,32 @@ library(hydroGOF)
 library(ggplot2)
 library(rpart)
 library(rpart.plot)
+library(xtable)
+library(gridExtra) # plotting cost function
+library(pROC)
+library(SDMTools)
+library(gridExtra)
+library(grid)
+library(lattice)
+library(pROC)
+
+#library(NMF)
+#library(bigmemory)
+#library(caret)
+
+
 ############################################
 #######preparing and loading data###########
 ############################################
-setwd('Z:/BNC/PBL development project/data/2018_SLERD_Paper_Analysis/Paper')
+setwd('Z:/BNC/PBL development project/data/2018_SLERD_Data_Analysis_Journal/Paper/') #('Y:/2018_SLERD_Paper_Analysis/Paper')
 
 ##SSP grades AAL
-#SSPAAL<-read.csv("Y:/analysis_data/SSP/SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
-SSPAAL<-read.csv("Z:/BNC/PBL development project/data/analysis_data/SSP/SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
+SSPAAL<-read.csv("SSPgradesTestAAL 02-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="UTF-8")
 SSPAAL <- SSPAAL[-nrow(SSPAAL),]
 names(SSPAAL)[1] <- 'Surname'
 SSPAAL <- unite_(SSPAAL,'Name', c("First name","Surname"), sep = ' ')
-SSPManualAAL <-read.csv("Z:/BNC/PBL development project/data/analysis_data/SSP/SSPanswersTestAAL 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="ANSI")
+SSPManualAAL <-read.csv("SSPanswersTestAAL 10-10.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE, encoding="ANSI")
+
 SSPManualAAL <- unite_(SSPManualAAL,'Name', c("First name","Surname"), sep = ' ')
 which(!SSPAAL$Name%in%SSPManualAAL$Name)
 #Removing the one person who is in progress
@@ -33,7 +50,7 @@ names(SSPAAL)[9] <- 'Grade'
 names(SSPAAL)[10:120] <- dat[,1]
 SSPAAL[,9:120]<- apply(SSPAAL[,9:120],MARGIN = 2,as.numeric)
 #Making categories
-questions<-read.csv("Z:/BNC/PBL development project/data/analysis_data/SSP/QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE)
+questions<-read.csv("QuestionsOverview.csv", header = TRUE, fill=TRUE, sep = ",", check.names=FALSE, stringsAsFactors=FALSE)
 Qnolab <- questions[,c('Category','QuestionLabel','QuestionNo')]
 Qnolab <- Qnolab[!duplicated(Qnolab),]
 lab <- Qnolab$QuestionLabel[Qnolab$QuestionNo]
@@ -133,8 +150,9 @@ dfComplete<-merge(dfComplete,AALpeerGrade,by='Email address',all.x=TRUE)
 dfComplete<-dfComplete[complete.cases(dfComplete), ]
 # SSP
 dfComplete<-merge(dfComplete,SSP,by='Email address',all.x=TRUE)
+
 ########Making additional dataset with dropout status#########
-dropoutFeb18 <- read.csv("Z:/BNC/PBL development project/data/analysis_data/dropOut/data/dropout-Feb2018-Q999.csv", encoding="UTF-8",stringsAsFactors=FALSE)
+dropoutFeb18 <- read.csv("dropout-Feb2018-Q999.csv", encoding="UTF-8",stringsAsFactors=FALSE)
 names(dropoutFeb18)[1] <- 'Name'
 names(dropoutFeb18)[5] <- 'ID number'
 names(dropoutFeb18)[2] <- 'Email address'
@@ -155,11 +173,40 @@ dfComplete$'mid-term' <- as.numeric(dfComplete$'mid-term')
 dfComplete <- dfComplete[!is.na(dfComplete$Exam),]
 #Add pass/fail variable fail=1
 dfComplete$grade <- as.numeric(dfComplete$grade)
-dfComplete$PassFail <- factor(as.numeric(dfComplete$grade<2))
+#dfComplete$PassFail <- factor(as.numeric(dfComplete$grade<2))
+dfComplete$PassFail <- factor(as.numeric(dfComplete$Exam >= 50)) # where 1 is passed and 0 is failed
+
 #Deleting unnecesarry colums
 dfComplete <- dfComplete[,-c(1,2,3,6,8,10,18)]
 names(dfComplete)[c(3,9:12)] <- c('midterm','PeerSubmissionScore','PeerFeedbackScore','PeerCombinedScore','SSPGrade')
 names(dfComplete)[123:136] <- c('AttitudeTowardsEducation', "BelongingUncertainty","Demographics", "EducationChoiceFactors", "Grit" ,"GrowthMindset","HighSchoolBehaviour","HighSchoolTrust","PerceivedAcademicAbilities","PersonalTraitComparison","ReasonsforGoingtoUniversity","Selfcontrol","StudyingandWorkingHours","ViewonMedialogy")
+
+# normalizes avg grades
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+dfComplete$Total <- as.numeric(dfComplete$Total)
+dfComplete$Tutoring <- as.numeric(dfComplete$Tutoring)
+dfComplete$PassFail <- as.numeric(dfComplete$PassFail)
+dfComplete <- as.data.frame(lapply(dfComplete, normalize))
+
+
+#######################################################
+############ Training and test samples ################
+#######################################################
+
+## 75% of the sample size (72)
+dfCompleteOLD <- dfComplete
+smp_size <- floor(0.75 * nrow(dfComplete))
+
+## set the seed to make your partition reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(dfComplete)), size = smp_size)
+
+dfComplete <- dfCompleteOLD[train_ind, ] # 54
+dfCompleteTest <- dfCompleteOLD[-train_ind, ] # 18
+
 ####################################
 ############Analysis################
 ####################################
@@ -200,17 +247,16 @@ lasso <- glmnet(x,y,family = 'gaussian')
 plot(lasso,label = T)
 CV.lasso <- cv.glmnet(x,y,family='gaussian')
 plot(CV.lasso)
-CV.lasso$lambda.min
-#3.858913 (Changes each time due to crossvalidation randomness)
-CV.lasso$lambda.1se
-#6.74356
-coef(CV.lasso,s=3.858913) # (Intercept) 1.721038e+00
-#Q82,Q22,KhanCount,midterm
-coef(CV.lasso, s=6.74356) # (Intercept) 17.7398911
-#Only midterm
+# Changes each time due to crossvalidation randomness: CV.lasso$lambda.min, CV.lasso$lambda.1se
+coef(CV.lasso,s=CV.lasso$lambda.min)
+#OLD with s=3.858913: Q82,Q22,KhanCount,midterm # NOW: Q107, Q82, Q46, PeerCombinedScore, midterm, (Intercept)= -4.36009747
+#NEW with s=2.302452: Q107, Q102, Q99, Q82, Q61, Q56, Q46, Q22, Q6, PeerCombinedScore, KhanCount, midterm (Intercept)= -16.76775275
+coef(CV.lasso, s=CV.lasso$lambda.1se)
+#OLD with s=6.74356: Only midterm #NOW: Q82, midterm, (Intercept)=18.0135222
+#NEW with s=5.837555: Q82, midterm (Intercept) = 12.8336376
 
-post.lasso.min <- lm(Exam~midterm+KhanCount+Q22+Q82, data=dfComplete)
-post.lasso.1se <- lm(Exam~midterm, data=dfComplete)
+post.lasso.min <- lm(Exam~midterm+PeerCombinedScore+Q107+Q82+Q46, data=dfComplete)
+post.lasso.1se <- lm(Exam~midterm+Q82, data=dfComplete)
 anova(post.lasso.min,post.lasso.1se)
 #Even though lasso does not choose them some seems to be significant anyway
 
@@ -221,16 +267,18 @@ lasso.cat <- glmnet(x,y,family = 'gaussian')
 plot(lasso.cat,xvar = 'lambda',label = T)
 CV.lasso.cat <- cv.glmnet(x,y,family='gaussian')
 plot(CV.lasso.cat)
-CV.lasso.cat$lambda.min
+CV.lasso.cat$lambda.min 
 #0.7935902
+# NEW: 2.412085
 CV.lasso.cat$lambda.1se
 #3.203738
-coef(CV.lasso.cat,s=0.7935902)
+# NEW: 6.71177
+coef(CV.lasso.cat,s=CV.lasso.cat$lambda.min)
 #Self-control,reasons for going to university, persona trai comparison, perceived academic abilities
 #high school trust,grit, education choice factors, demographics,PeerCombinedScore,Peersubmissionscore
 #khancount, midterm, SaNumComp
 ##That is simply too many to be relevant
-coef(CV.lasso.cat, s=6.74356)
+coef(CV.lasso.cat, s=CV.lasso.cat$lambda.1se)
 #Only midterm
 
 ######Using best subset selection
@@ -244,11 +292,18 @@ names(dfComplete[,c(1:3,8:11,13:122)])[variables[2,-1]]
 names(dfComplete[,c(1:3,8:11,13:122)])[variables[3,-1]]
 names(dfComplete[,c(1:3,8:11,13:122)])[variables[4,-1]]
 names(dfComplete[,c(1:3,8:11,13:122)])[variables[5,-1]]
+# lmfit1 <- lm(Exam~midterm,data=dfComplete)
+# lmfit2 <- lm(Exam~midterm+Q82,data=dfComplete)
+# lmfit3 <- lm(Exam~midterm+KhanCount+Q82,data=dfComplete)
+# lmfit4 <- lm(Exam~midterm+Q56+Q82+Q107,data=dfComplete)
+# lmfit5 <- lm(Exam~midterm+Q22+Q56+Q82+Q107,data=dfComplete)
+
 lmfit1 <- lm(Exam~midterm,data=dfComplete)
 lmfit2 <- lm(Exam~midterm+Q82,data=dfComplete)
-lmfit3 <- lm(Exam~midterm+KhanCount+Q82,data=dfComplete)
-lmfit4 <- lm(Exam~midterm+Q56+Q82+Q107,data=dfComplete)
-lmfit5 <- lm(Exam~midterm+Q22+Q56+Q82+Q107,data=dfComplete)
+lmfit3 <- lm(Exam~midterm+Q46+Q82,data=dfComplete)
+lmfit4 <- lm(Exam~midterm+Q46+Q61+Q82,data=dfComplete)
+lmfit5 <- lm(Exam~midterm+Q46+Q61+Q82+Q107,data=dfComplete)
+
 
 
 #Categories
@@ -262,11 +317,17 @@ names(dfComplete[,c(1:3,8:11,123:136)])[variables[3,-1]]
 names(dfComplete[,c(1:3,8:11,123:136)])[variables[4,-1]]
 names(dfComplete[,c(1:3,8:11,123:136)])[variables[5,-1]]
 
+# lmcatfit1 <- lm(Exam~midterm, data=dfComplete)
+# lmcatfit2 <- lm(Exam~midterm+KhanCount, data=dfComplete)
+# lmcatfit3 <- lm(Exam~midterm+KhanCount+HighSchoolTrust, data=dfComplete)
+# lmcatfit4 <- lm(Exam~midterm+KhanCount+HighSchoolTrust+Selfcontrol, data=dfComplete)
+# lmcatfit5 <- lm(Exam~midterm+KhanCount+HighSchoolTrust+PersonalTraitComparison+Selfcontrol, data=dfComplete)
+
 lmcatfit1 <- lm(Exam~midterm, data=dfComplete)
-lmcatfit2 <- lm(Exam~midterm+KhanCount, data=dfComplete)
-lmcatfit3 <- lm(Exam~midterm+KhanCount+HighSchoolTrust, data=dfComplete)
-lmcatfit4 <- lm(Exam~midterm+KhanCount+HighSchoolTrust+Selfcontrol, data=dfComplete)
-lmcatfit5 <- lm(Exam~midterm+KhanCount+HighSchoolTrust+Selfcontrol+PersonalTraitComparison, data=dfComplete)
+lmcatfit2 <- lm(Exam~midterm+PeerCombinedScore, data=dfComplete)
+lmcatfit3 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust, data=dfComplete)
+lmcatfit4 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust+Selfcontrol, data=dfComplete)
+lmcatfit5 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust+PersonalTraitComparison+Selfcontrol, data=dfComplete)
 
 #########Forwards and backwards selection
 ##Questions
@@ -282,12 +343,13 @@ add[which(add$`Pr(>Chi)`<0.01),]
 
 #Forwards and backwards selection
 #Sig.level 0.05
-lmfit05 <- step(lmnull,scope=scope,direction='both',k=3.84)
-#midterm,Q82,KhanCount,Q60,Q33,Q107,Q50,Q20,Q7,Q66,Q22,Q34,Q92,Q9,Q86,Q54, 
-#Q4,Q80,Q99,Q17, Q108, Q76, Q31
+lmfit05 <- step(lmnull,scope=scope,direction='both',k=CV.lasso$lambda.min)
+#OLD: midterm,Q82,KhanCount,Q60,Q33,Q107,Q50,Q20,Q7,Q66,Q22,Q34,Q92,Q9,Q86,Q54,Q4,Q80,Q99,Q17, Q108, Q76, Q31
+#NEW: midterm, Q82, Q46, Q61, Q107, Q22, Q94, Q56, Q75, Q79, Q102, Q36, Q4, Q100, Q5, Q104, Q91, Q39, Q85, Q69, Q99, Q67, saNumComp, Q71, Q57, Q54, Q23, Q103, Q6, Q89, Q24, Q43, Q93, Q19, Q26, Q8, Q16, Q34, Q40, Q83, Q64, Q7, Q18, Q25, Q17, Q33, Q27, Q12, Q14, Q28, Q108, Q68, saRowAvg
 #Sig.level 0.01
-lmfit01 <- step(lmnull,scope=scope,direction='both',k=6.63)
-#midterm, Q82, KhanCount, Q60
+lmfit01 <- step(lmnull,scope=scope,direction='both',k=CV.lasso$lambda.1se)
+#OLD: midterm, Q82, KhanCount, Q60 
+#NEW: midterm, Q82, Q46, Q61, Q107, Q22, Q94, Q56, Q75, Q79, Q102
 
 ##Categories
 xdata <- dfComplete[,c(1:4,8:11,123:136)]
@@ -301,12 +363,13 @@ add[which(add$`Pr(>Chi)`<0.01),]
 
 #Forwards and backwards selection
 #Sig.level 0.05
-lmfitcat05 <- step(lmnull,scope=scope,direction='both',k=3.84)
-#midterm,KhanCount,HighSchoolTrust,Selfcontrol,PersonalTraitComparison,ReasonsforGoingtoUniversity,Demographics
+lmfitcat05 <- step(lmnull,scope=scope,direction='both',k=CV.lasso.cat$lambda.min)
+#OLD: midterm,KhanCount,HighSchoolTrust,Selfcontrol,PersonalTraitComparison,ReasonsforGoingtoUniversity,Demographics
+#NEW: midterm, PeerCombinedScore, HighSchoolTrust, Selfcontrol, PersonalTraitComparison, ReasonsforGoingtoUniversity, KhanCount
 #Sig.level 0.01
-lmfitcat01 <- step(lmnull,scope=scope,direction='both',k=6.63)
-#midterm, KhanCount
-
+lmfitcat01 <- step(lmnull,scope=scope,direction='both',k=CV.lasso.cat$lambda.1se)
+#OLD: midterm, KhanCount
+#NEW: midterm
 #Doing crossvalidation for all models
 CVlm <- function(lmfit,data,k=10){
   idx <- sample(1:k,nrow(data),replace = T)
@@ -350,7 +413,7 @@ Parametre <- c(1,2,3,4,5,6,3,4,5,6)
 (ggplot()+ylab('Cross validation score')+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
   +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
 #lmQ5 is very stable in the bottom
-library(xtable)
+
 xtable(AIC(null.model,post.lasso.1se,lmfit2,lmfit3,lmfit4,lmfit5,lmcatfit2,lmcatfit3,lmcatfit4,lmcatfit5))
 #It also has the lowest AIC
 xtable(AIC(null.model,post.lasso.1se,lmfit2,lmfit3,lmfit4,lmfit5,lmcatfit2,lmcatfit3,lmcatfit4,lmcatfit5,k=log(nrow(dfComplete))))
@@ -359,15 +422,15 @@ xtable(summary(lmfit5)$coefficients)
 #Everything is significant
 xtable(confint(lmfit5))
 
-
+###############################################################
 ##Trying to predict passed failed with classification tree
 Qdatapf <- dfComplete[,c(1:3,8:11,13:122,137)]
 treeQ <- rpart(PassFail~.,data = Qdatapf)
 rpart.plot(treeQ)
-summary(dfComplete$grade[dfComplete$midterm<54])
-#All students with midterm score less than 54 failed
-summary(dfComplete$grade[dfComplete$midterm>=72])
-dfComplete$grade[dfComplete$midterm>=72]
+summary(dfComplete$grade[dfComplete$midterm<52])
+#All students with midterm score less than 52 failed
+summary(dfComplete$grade[dfComplete$midterm>=74])
+dfComplete$grade[dfComplete$midterm>=74]
 #Only six percent of students with more than 72 in midterm failed
 treeQ$variable.importance
 summary(treeQ)
@@ -395,55 +458,62 @@ FPtree <- mean(FP)
 sdFPtree <- sd(FP)
 FNtree <- mean(FN)
 sdFNtree <- sd(FN)
+###############################################################
+
 
 ####Trying to predict total score excluding midterm as predictor since it is part of the total score.
 #Choosing with lasso (single questions and other predictors)
-dfComplete$Total <- as.numeric(dfComplete$Total)
+dfComplete$Exam <- as.numeric(dfComplete$Exam)
 x <- as.matrix(dfComplete[,c(1:2,8:11,13:122)])
-y <- dfComplete$Total
+y <- dfComplete$Exam
 lassoTotal <- glmnet(x,y,family = 'gaussian')
 plot(lasso,label = T)
 CV.lasso <- cv.glmnet(x,y,family='gaussian')
 plot(CV.lasso)
 CV.lasso$lambda.min
 #4.414971 (Changes each time due to crossvalidation randomness)
+# NEW: 3.44983
 CV.lasso$lambda.1se
 #8.467519
-coef(CV.lasso,s=4.414971)
-#PeerSubmissionScore, Q6, Q82, Q98
-coef(CV.lasso, s=8.467519)
-#Q82, PeerSubmissionScore
+#NEW: 7.607327
+coef(CV.lasso,s=CV.lasso$lambda.min)
+#OLD: PeerSubmissionScore, Q6, Q82, Q98 
+# NEW: Q99, Q82, Q57, Q56, Q46, Q43, Q36, Q25, Q6, Q2, PeerCombinedScore, PeerSubmissionScore, KhanCount, saRowAvg
+coef(CV.lasso, s=CV.lasso$lambda.1se)
+#OLD: Q82, PeerSubmissionScore
+# NEW: Q82
 
-post.lasso.min.total <- lm(Total~PeerSubmissionScore+Q6+Q82+Q98, data=dfComplete)
-post.lasso.1se.total <- lm(Total~Q82+PeerSubmissionScore, data=dfComplete)
-anova(post.lasso.min,post.lasso.1se)
+post.lasso.min.total <- lm(Exam~Q99+Q82+Q57+Q56+Q46+Q43+Q36+Q25+Q6+Q2+PeerCombinedScore+PeerSubmissionScore+KhanCount+saRowAvg, data=dfComplete)
+post.lasso.1se.total <- lm(Exam~Q82, data=dfComplete)
+anova(post.lasso.min.total,post.lasso.1se.total) 
 #Even though lasso does not choose them some seems to be significant anyway
 
 #Choosing with lasso (categories and other predictors)
 x <- as.matrix(dfComplete[,c(1:2,8:11,123:136)])
-y <- dfComplete$Total
+y <- dfComplete$Exam
 lasso.cat <- glmnet(x,y,family = 'gaussian')
 plot(lasso.cat,xvar = 'lambda',label = T)
 CV.lasso.cat <- cv.glmnet(x,y,family='gaussian')
 plot(CV.lasso.cat)
 CV.lasso.cat$lambda.min
 #2.396323
+#NEW: 4.86215
 CV.lasso.cat$lambda.1se
 #8.814586
-coef(CV.lasso.cat,s=2.396323)
-#Self-control,reasons for going to university, 
-#high school trust,grit, education choice factors,PeerSubmissionScore
-#khancount, saRowAvg
-coef(CV.lasso.cat, s=8.814586)
-#No predictors at all
+#NEW: 7.741917
+coef(CV.lasso.cat,s=CV.lasso.cat$lambda.min)
+#OLD: Self-control,reasons for going to university, high school trust,grit, education choice factors,PeerSubmissionScore, khancount, saRowAvg
+#NEW: PeerCombinedScore, PeerSubmissionScore, saNumComp, saRowAvg
+coef(CV.lasso.cat, s=CV.lasso.cat$lambda.1se)
+#OLD & NEW: No predictors at all
 
-post.lasso.min.cat.total <- lm(Total~Selfcontrol+ReasonsforGoingtoUniversity+HighSchoolTrust+Grit+EducationChoiceFactors+PeerSubmissionScore+saRowAvg,data = dfComplete)
-null.model <- lm(Total~1,data = dfComplete)
+post.lasso.min.cat.total <- lm(Exam~PeerCombinedScore+PeerSubmissionScore+saNumComp+saRowAvg,data = dfComplete)
+null.model <- lm(Exam~1,data = dfComplete)
 
 ######Using best subset selection
 #single questions
 x <- as.matrix(dfComplete[,c(1:2,8:11,13:122)])
-y <- dfComplete$Total
+y <- dfComplete$Exam
 subsets <- regsubsets(x,y,nvmax = 5,method = 'exhaustive', really.big = T)
 variables <- summary(subsets)$which
 names(dfComplete[,c(1:2,8:11,13:122)])[variables[1,-1]]
@@ -451,16 +521,23 @@ names(dfComplete[,c(1:2,8:11,13:122)])[variables[2,-1]]
 names(dfComplete[,c(1:2,8:11,13:122)])[variables[3,-1]]
 names(dfComplete[,c(1:2,8:11,13:122)])[variables[4,-1]]
 names(dfComplete[,c(1:2,8:11,13:122)])[variables[5,-1]]
-lmfittotal1 <- lm(Total~Q82,data=dfComplete)
-lmfittotal2 <- lm(Total~PeerSubmissionScore+Q82,data=dfComplete)
-lmfittotal3 <- lm(Total~PeerSubmissionScore+Q56+Q82,data=dfComplete)
-lmfittotal4 <- lm(Total~PeerSubmissionScore+Q6+Q82+Q98,data=dfComplete)
-lmfittotal5 <- lm(Total~PeerSubmissionScore+Q6+Q56+Q82+Q98,data=dfComplete)
 
+# lmfittotal1 <- lm(Exam~Q82,data=dfComplete)
+# lmfittotal2 <- lm(Exam~Q82+Q98,data=dfComplete)
+# lmfittotal3 <- lm(Exam~Q6+Q82+Q98,data=dfComplete)
+# lmfittotal4 <- lm(Exam~PeerSubmissionScore+Q46+Q56+Q82,data=dfComplete)
+# lmfittotal5 <- lm(Exam~PeerSubmissionScore+Q6+Q56+Q82+Q98,data=dfComplete)
+
+lmfittotal1 <- lm(Exam~Q82,data=dfComplete)
+lmfittotal2 <- lm(Exam~Q56+Q82,data=dfComplete)
+lmfittotal3 <- lm(Exam~PeerSubmissionScore+Q56+Q82,data=dfComplete)
+lmfittotal4 <- lm(Exam~Q46+Q56+Q82+Q99,data=dfComplete)
+lmfittotal5 <- lm(Exam~PeerSubmissionScore+Q46+Q56+Q82+Q99,data=dfComplete)
 AIC(lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5)
+
 #Categories
 x <- as.matrix(dfComplete[,c(1:2,8:11,123:136)])
-y <- dfComplete$Total
+y <- dfComplete$Exam
 subsets <- regsubsets(x,y,nvmax = 5,method = 'exhaustive', really.big = T)
 variables <- summary(subsets)$which
 names(dfComplete[,c(1:2,8:11,123:136)])[variables[1,-1]]
@@ -469,11 +546,17 @@ names(dfComplete[,c(1:2,8:11,123:136)])[variables[3,-1]]
 names(dfComplete[,c(1:2,8:11,123:136)])[variables[4,-1]]
 names(dfComplete[,c(1:2,8:11,123:136)])[variables[5,-1]]
 
-lmcatfittotal1 <- lm(Total~PeerSubmissionScore, data=dfComplete)
-lmcatfittotal2 <- lm(Total~PeerSubmissionScore+Selfcontrol, data=dfComplete)
-lmcatfittotal3 <- lm(Total~saRowAvg+PeerSubmissionScore+Selfcontrol, data=dfComplete)
-lmcatfittotal4 <- lm(Total~saRowAvg+PeerSubmissionScore+HighSchoolTrust+Selfcontrol, data=dfComplete)
-lmcatfittotal5 <- lm(Total~saRowAvg+PeerSubmissionScore+HighSchoolTrust+ReasonsforGoingtoUniversity+Selfcontrol, data=dfComplete)
+# lmcatfittotal1 <- lm(Exam~PeerSubmissionScore, data=dfComplete)
+# lmcatfittotal2 <- lm(Exam~PeerSubmissionScore+Selfcontrol, data=dfComplete)
+# lmcatfittotal3 <- lm(Exam~PeerSubmissionScore+HighSchoolTrust+Selfcontrol, data=dfComplete)
+# lmcatfittotal4 <- lm(Exam~saRowAvg+PeerSubmissionScore+HighSchoolTrust+Selfcontrol, data=dfComplete)
+# lmcatfittotal5 <- lm(Exam~KhanCount+PeerSubmissionScore+HighSchoolTrust+PersonalTraitComparison+Selfcontrol, data=dfComplete)
+
+lmcatfittotal1 <- lm(Exam~PeerSubmissionScore, data=dfComplete)
+lmcatfittotal2 <- lm(Exam~saRowAvg+PeerSubmissionScore, data=dfComplete)
+lmcatfittotal3 <- lm(Exam~saRowAvg+PeerSubmissionScore+Selfcontrol, data=dfComplete)
+lmcatfittotal4 <- lm(Exam~saRowAvg+PeerSubmissionScore+HighSchoolTrust+Selfcontrol, data=dfComplete)
+lmcatfittotal5 <- lm(Exam~saRowAvg+PeerSubmissionScore+HighSchoolTrust+PerceivedAcademicAbilities+Selfcontrol, data=dfComplete)
 
 AIC(lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5)
 
@@ -499,6 +582,7 @@ se <-(1/sqrt(10))*c(sd(CVlassoTotal1se),sd(CVnull),sd(CVQ1),sd(CVQ2),sd(CVQ3),sd
 Parametre <- c(3,1,2,3,4,5,6,2,3,4,5,6)
 (ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
   +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
+
 #none seems to be a clear improvement to the null model
 xtable(AIC(null.model,post.lasso.1se.total,lmfittotal1,lmfittotal2,lmfittotal3,lmfittotal4,lmfittotal5,lmcatfittotal1,lmcatfittotal2,lmcatfittotal3,lmcatfittotal4,lmcatfittotal5))
 #lmfittotal5 lavest AIC
@@ -521,11 +605,18 @@ plot(res~dfComplete$Q98)
 
 
 ###Q82 shows up pretty often so making some plots with this
-plot(Total~Q82, data = dfComplete)
+# plot(Total~Q82, data = dfComplete)
+# abline(lmfittotal1)
+# plot(Total~factor(Q82),data = dfComplete)
+# #It seems to make sense
+# lmfitQ82asfactor <- lm(Total~factor(Q82),data = dfComplete)
+# summary(lmfitQ82asfactor)
+
+plot(Exam~Q82, data = dfComplete)
 abline(lmfittotal1)
-plot(Total~factor(Q82),data = dfComplete)
+plot(Exam~factor(Q82),data = dfComplete)
 #It seems to make sense
-lmfitQ82asfactor <- lm(Total~factor(Q82),data = dfComplete)
+lmfitQ82asfactor <- lm(Exam~factor(Q82),data = dfComplete)
 summary(lmfitQ82asfactor)
 
 ##Checking residuals for one model
@@ -540,21 +631,227 @@ plot(res~factor(dfComplete$Q107))
 hist(res)
 qqnorm(res)
 qqline(res)
+
 ###############################################################
 #######Trying to predict dropout based on exam results#########
 ###############################################################
 table(dfdropoutgrade$Status)
 #Not many who have taken the exam has dropped out yet
 
-MedData <- read.csv('Z:/BNC/PBL development project/data/analysis_data/dropOut/data/MedDataBSc.csv',encoding="UTF-8")
+MedData <- read.csv('MedDataBSc.csv',encoding="UTF-8")
 MedData$dropout <- factor(as.numeric(MedData$statussn=='afbrudt'))
 logdropout <- glm(dropout~X1_T_mGPA, data = MedData, family = binomial)
 summary(logdropout)
 data2017 <- dfdropoutgrade[,c('grade','Status')]
 names(data2017)[1] <- 'X1_T_mGPA'
+data2017$X1_T_mGPA <- as.numeric(data2017$X1_T_mGPA)
+data2017$X1_T_mGPA <- ifelse(is.na(data2017$X1_T_mGPA), -3, data2017$X1_T_mGPA) # Bianca added
+
 predprop <- predict(logdropout,newdata = data2017, type = 'response')
 predclass <- as.numeric(predprop>0.5)
-predclass
+# confusion matrix
 xtable(table(predclass,data2017$Status))
 #The model actually identifies most of the dropout students. 25 active student are also predicted to
 #dropout and it is yet unknown how acurate this is.
+
+# IGNORE: confusion matrix with Q999 considered as dropout 
+obs <- ifelse(data2017$Status == "active", 1,0)
+confusion.matrix(obs,predprop,threshold=0.5)
+#TP:1(DO), FP:25, TN:40, FN:11 # this doesn't seem to be fit with the above
+
+#######################################################################
+####### Extra analysis: ROC, confusion matrix, (cost function)#########
+#######################################################################
+
+# 1) create ROC on each prediction models (in one graph)
+
+# for the most interesting prediction model from ROC:
+# 2) create confusion matrix and 
+# 3) create a Sensitivity and specificity versus criterion value 
+# (ala Ninna's graph Accuracy, FP and FN rates from 10-fold crossvalidation in updated_analysis_2017_new.R) 
+
+# test with dropout data (one predictor) - worked!
+DOstatus <- ifelse(data2017$Status == "active", 1, 0)
+predictions <- data.frame(DOstatus, predprop)
+
+# predicting dropouts
+# calculate ROC and cost function
+calculate_roc <- function(data2017, cost_of_fp, cost_of_fn, n=100) {
+  tpr <- function(data2017, threshold) {
+    sum(predprop >= threshold & DOstatus == 0) / sum(DOstatus == 0)
+  }
+  
+  fpr <- function(data2017, threshold) {
+    sum(predprop >= threshold & DOstatus == 1) / sum(DOstatus == 1)
+  }
+  
+  cost <- function(data2017, threshold, cost_of_fp, cost_of_fn) {
+    sum(predprop >= threshold & DOstatus <= 1) * cost_of_fp + 
+      sum(predprop < threshold & DOstatus >= 0) * cost_of_fn
+  }
+  
+  roc <- data.frame(threshold = seq(0,1,length.out=n), tpr=NA, fpr=NA)
+  roc$tpr <- sapply(roc$threshold, function(th) tpr(data2017, th))
+  roc$fpr <- sapply(roc$threshold, function(th) fpr(data2017, th))
+  roc$cost <- sapply(roc$threshold, function(th) cost(data2017, th, cost_of_fp, cost_of_fn))
+  
+  return(roc)
+}
+roc <- calculate_roc(predictions, 1, 2, n = 100)
+
+# plot ROC and cost function
+plot_roc <- function(roc, threshold, cost_of_fp, cost_of_fn) {
+  norm_vec <- function(v) (v - min(v))/diff(range(v))
+  
+  idx_threshold = which.min(abs(roc$threshold-threshold))
+  
+  col_ramp <- colorRampPalette(c("green","orange","red","black"))(100)
+  col_by_cost <- col_ramp[ceiling(norm_vec(roc$cost)*99)+1]
+  p_roc <- ggplot(roc, aes(fpr,tpr)) + 
+    geom_line(color=rgb(0,0,1,alpha=0.3)) +
+    geom_point(color=col_by_cost, size=4, alpha=0.5) +
+    coord_fixed() +
+    geom_line(aes(threshold,threshold), color=rgb(0,0,1,alpha=0.5)) +
+    labs(title = sprintf("ROC")) + xlab("FPR") + ylab("TPR") +
+    geom_hline(yintercept=roc[idx_threshold,"tpr"], alpha=0.5, linetype="dashed") +
+    geom_vline(xintercept=roc[idx_threshold,"fpr"], alpha=0.5, linetype="dashed")
+  
+  p_cost <- ggplot(roc, aes(threshold, cost)) +
+    geom_line(color=rgb(0,0,1,alpha=0.3)) +
+    geom_point(color=col_by_cost, size=4, alpha=0.5) +
+    labs(title = sprintf("cost function")) +
+    geom_vline(xintercept=threshold, alpha=0.5, linetype="dashed")
+  
+  sub_title <- sprintf("threshold at %.2f - cost of FP = %d, cost of FN = %d", threshold, cost_of_fp, cost_of_fn)
+  
+  grid.arrange(p_roc, p_cost, ncol=2, sub=textGrob(sub_title, gp=gpar(cex=1), just="bottom"))
+}
+plot_roc(roc, 0.7, 1, 2)
+
+# area under the curve
+auc(predictions$DOstatus, predictions$predprop)
+# 0.8730769
+
+
+
+#############
+# same method but with GPRO data
+
+# predprop <- predict(logdropout,newdata = data2017, type = 'response')
+#dfComplete$pass <- ifelse(dfComplete$grade >= 2, 1,0)
+#dfCompleteTest$pass <- ifelse(dfCompleteTest$grade >= 2, 1,0)
+
+# TOGGLE: changed from grade to the fianl exam score:
+#dfComplete$pass <- ifelse(dfComplete$Exam >= 52, 1,0)
+#dfCompleteTest$pass <- ifelse(dfCompleteTest$Exam >= 52, 1,0)
+
+# for model lmfittotal1
+# passStudents <- data.frame(dfCompleteTest$Q82, dfCompleteTest$pass)
+# names(passStudents) <- c("Q82","passed")
+# lmfittotal5Pred <- predict(lmfittotal1, newdata=passStudents, type="response") # not sure this is correct.. need a number btw. 0 and 1?
+# lmfittotal5Pred <- lmfittotal5Pred/100
+# passed <- passStudents$passed
+# lmfittotal5Predictions <- data.frame(dfCompleteTest$pass, lmfittotal5Pred)
+# names(lmfittotal5Predictions) <- c("passed", "pred")
+
+# for model lmfittotal5
+passStudents <- data.frame(dfCompleteTest$PeerSubmissionScore, dfCompleteTest$Q46, dfCompleteTest$Q56, dfCompleteTest$Q82, dfCompleteTest$Q99,
+                           dfCompleteTest$PassFail)
+names(passStudents) <- c("PeerSubmissionScore", "Q46", "Q56", "Q82","Q99", "passed")
+
+#linkinv <- family(lmfittotal5)$linkinv
+lmfittotal5Pred <- predict(lmfittotal5, newdata=passStudents, type="response") # not sure this is correct.. need a number btw. 0 and 1?
+#linkinv(lmfittotal5Pred)
+#lmfittotal5Pred <- lmfittotal5Pred/100
+passed <- passStudents$passed
+lmfittotal5Predictions <- data.frame(dfCompleteTest$PassFail, lmfittotal5Pred)
+names(lmfittotal5Predictions) <- c("passed", "pred")
+
+dfComplete$pred <- lmfittotal5Pred
+# Distribution of the predictions
+plot_pred_type_distribution <- function(df, threshold) {
+  v <- rep(NA, nrow(df))
+  v <- ifelse(lmfittotal5Pred >= threshold & dfCompleteTest$PassFail == 1, "TP", v)
+  v <- ifelse(lmfittotal5Pred >= threshold & dfCompleteTest$PassFail == 0, "FP", v)
+  v <- ifelse(lmfittotal5Pred < threshold & dfCompleteTest$PassFail == 1, "FN", v)
+  v <- ifelse(lmfittotal5Pred < threshold & dfCompleteTest$PassFail == 0, "TN", v)
+  
+  dfComplete$pred_type <- v
+  
+  ggplot(data=dfComplete, aes(x=pass, y=pred)) + 
+    geom_violin(fill=rgb(1,1,1,alpha=0.6), color=NA) + 
+    geom_jitter(aes(color=pred_type), alpha=0.6) +
+    geom_hline(yintercept=threshold, color="red", alpha=0.6) +
+    scale_color_discrete(name = "type") +
+    labs(title=sprintf("Threshold at %.2f", threshold))
+}
+#threshold <- 59.6725 # using the absolute value of the intercept as threshold
+plot_pred_type_distribution(lmfittotal5Predictions, 0.7) 
+
+dfCompleteTest$pred <- lmfittotal5Pred
+# confusion matrix for predicting GPRO pass/fail
+confusion.matrix(dfCompleteTest$PassFail,dfCompleteTest$pred,threshold=0.7)
+# 00=4, 11=4, 01=4, 10=6 , where 1=passed
+
+# predicting passed GPRO
+# calculate ROC and cost function
+calculate_roc <- function(passStudents, cost_of_fp, cost_of_fn, n=100) {
+  tpr <- function(passStudents, threshold) {
+    sum(lmfittotal5Pred >= threshold & passed == 1) / sum(passed == 1)
+  }
+  
+  fpr <- function(passStudents, threshold) {
+    sum(lmfittotal5Pred >= threshold & passed == 0) / sum(passed == 0)
+  }
+  
+  cost <- function(passStudents, threshold, cost_of_fp, cost_of_fn) {
+    sum(lmfittotal5Pred >= threshold & passed <= 0) * cost_of_fp + 
+      sum(lmfittotal5Pred < threshold & passed >= 1) * cost_of_fn
+  }
+  
+  roc <- data.frame(threshold = seq(0,1,length.out=n), tpr=NA, fpr=NA)
+  roc$tpr <- sapply(roc$threshold, function(th) tpr(passStudents, th))
+  roc$fpr <- sapply(roc$threshold, function(th) fpr(passStudents, th))
+  roc$cost <- sapply(roc$threshold, function(th) cost(passStudents, th, cost_of_fp, cost_of_fn))
+  
+  return(roc)
+}
+roc <- calculate_roc(lmfittotal5Predictions, 1, 2, n = 100)
+
+# plot ROC and cost function
+plot_roc <- function(roc, threshold, cost_of_fp, cost_of_fn) {
+  norm_vec <- function(v) (v - min(v))/diff(range(v))
+  
+  idx_threshold = which.min(abs(roc$threshold-threshold))
+  
+  col_ramp <- colorRampPalette(c("green","orange","red","black"))(100)
+  col_by_cost <- col_ramp[ceiling(norm_vec(roc$cost)*99)+1]
+  p_roc <- ggplot(roc, aes(fpr,tpr)) + 
+    geom_line(color=rgb(0,0,1,alpha=0.3)) +
+    geom_point(color=col_by_cost, size=4, alpha=0.5) +
+    coord_fixed() +
+    geom_line(aes(threshold,threshold), color=rgb(0,0,1,alpha=0.5)) +
+    labs(title = sprintf("ROC")) + xlab("FPR") + ylab("TPR") +
+    geom_hline(yintercept=roc[idx_threshold,"tpr"], alpha=0.5, linetype="dashed") +
+    geom_vline(xintercept=roc[idx_threshold,"fpr"], alpha=0.5, linetype="dashed")
+  
+  p_cost <- ggplot(roc, aes(threshold, cost)) +
+    geom_line(color=rgb(0,0,1,alpha=0.3)) +
+    geom_point(color=col_by_cost, size=4, alpha=0.5) +
+    labs(title = sprintf("cost function")) +
+    geom_vline(xintercept=threshold, alpha=0.5, linetype="dashed")
+  
+  sub_title <- sprintf("threshold at %.2f - cost of FP = %d, cost of FN = %d", threshold, cost_of_fp, cost_of_fn)
+  
+  grid.arrange(p_roc, p_cost, ncol=2, sub=textGrob(sub_title, gp=gpar(cex=1), just="bottom"))
+}
+plot_roc(roc, 0.70, 1, 2)
+
+# area under the curve
+auc(lmfittotal5Predictions$passed, lmfittotal5Predictions$pred)
+# 0.55
+
+
+
+
+

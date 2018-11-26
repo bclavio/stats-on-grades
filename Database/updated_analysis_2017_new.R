@@ -160,6 +160,7 @@ resAIC <- lapply(thresholds, logCV,fit=fitAIC,data=MedData0,k=10)
 
 res2AIC <- sapply(resAIC, f)
 
+# interesting graph, sensitivity and specificity versus criterion value (ala ROC curve)
 ggplot()+geom_point(aes(x=thresholds,y=res2AIC[1,],col='accuracy'))+
   geom_point(aes(x=thresholds,y=res2AIC[3,],col='FN'))+
   geom_point(aes(x=thresholds,y=res2AIC[5,],col='FP'))+
