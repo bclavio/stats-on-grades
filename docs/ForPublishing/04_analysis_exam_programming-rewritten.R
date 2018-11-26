@@ -174,7 +174,7 @@ dfComplete <- dfComplete[!is.na(dfComplete$Exam),]
 #Add pass/fail variable fail=1
 dfComplete$grade <- as.numeric(dfComplete$grade)
 #dfComplete$PassFail <- factor(as.numeric(dfComplete$grade<2))
-dfComplete$PassFail <- factor(as.numeric(dfComplete$Exam >= 50)) # where 1 is passed and 0 is failed
+dfComplete$PassFail <- factor(as.numeric(dfComplete$Exam >= 54)) # where 1 is passed and 0 is failed
 
 #Deleting unnecesarry colums
 dfComplete <- dfComplete[,-c(1,2,3,6,8,10,18)]

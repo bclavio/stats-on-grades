@@ -221,7 +221,7 @@ dfComplete <- dfComplete[!is.na(dfComplete$Exam),]
 #Add pass/fail variable fail=1
 dfComplete$grade <- as.numeric(dfComplete$grade)
 #dfComplete$PassFail <- factor(as.numeric(dfComplete$grade<2))
-dfComplete$PassFail <- factor(as.numeric(dfComplete$Exam >= 50)) # where 1 is passed and 0 is failed
+dfComplete$PassFail <- factor(as.numeric(dfComplete$Exam >= 54)) # where 1 is passed and 0 is failed
 ```
 
 Deleting unnecesarry colums
@@ -491,7 +491,7 @@ Parametre <- c(1,2,3,4,5,6,3,4,5,6)
 
 ```
 
-```{r}
+```{r fig.width=10}
 (ggplot()+ylab('Cross validation score')+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
   +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
 ```
@@ -694,8 +694,8 @@ CVcat4 <- CVlm(lmcatfittotal4,dfComplete)
 CVcat5 <- CVlm(lmcatfittotal5,dfComplete)
 ```
 
-```{r}
-Model <- c('lasso.total','nullmodel','lmQ1total','lmQ2total','lmQ3total','lmQ4total','lmQ5total','lmcat1total','lmcat2total','lmcat3total','lmcat4total','lmcat5total')
+```{r fig.width=10}
+Model <- c('lasso.v2','nullmodel.v2','lmQ1.v2','lmQ2.v2','lmQ3.v2','lmQ4.v2','lmQ5.v2','lmcat1.v2','lmcat2.v2','lmcat3.v2','lmcat4.v2','lmcat5.v2')
 CVmean <- c(mean(CVlassoTotal1se),mean(CVnull),mean(CVQ1),mean(CVQ2),mean(CVQ3),mean(CVQ4),mean(CVQ5),mean(CVcat1),mean(CVcat2),mean(CVcat3),mean(CVcat4),mean(CVcat5))
 se <-(1/sqrt(10))*c(sd(CVlassoTotal1se),sd(CVnull),sd(CVQ1),sd(CVQ2),sd(CVQ3),sd(CVQ4),sd(CVQ5),sd(CVcat1),sd(CVcat2),sd(CVcat3),sd(CVcat4),sd(CVcat5))
 Parametre <- c(3,1,2,3,4,5,6,2,3,4,5,6)
