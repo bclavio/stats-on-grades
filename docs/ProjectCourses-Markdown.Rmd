@@ -241,14 +241,14 @@ SNdata$wAvg[9] <- mean(subset(SNdata1617w, SNdata1617w$CourseLocation=='K')$weig
 
 ```
 
-The dataset contains Medialogy project and course exams which are graded on the 7-point scale. It includes exams taken in 2014 and after, meaning that the dataset also has entries from students enrolled earlier than 2014, down to 2009. We only use the last attempt that a students received for a particular exam, i.e. their highest grade. Table 1 shows the number of students on each campus and each semester. Note that cohort 2015 and 2016 haven't finished their bachelor when data was collected in August 2017. Moreover, no students enrolled to the Medialogy bachelor at Esbjerg after 2014. Table 2 shows the grade average, weighted average, median, and standard deviations for each campi and each year. The weighted grade average is calculated for each student and weights a grade based on ETCS for an exam (e.g. a 5-ECTS exam grade weights 1, whereas a 15-ECTS exam grade weights 3).
+The data consists of Medialogy exams after 2014. This means that students can be enrolled earlier than 2014, down to 2009. We only included the last attempt for an exam activity of a student, i.e. typically their highest grade. Table 1 shows the number of students on each campus and each semester. Note that cohort 2015 and 2016 haven't finished their bachelor when data was collected in August 2017. Moreover, no students enrolled in the Medialogy bachelor at Esbjerg after 2014. Table 2  shows the average exam grade, average weighted by ECTS, median, and standard deviations for each campi and each year.
 
-Excluded from the analysis:
-
+We excluded the following grades from the analysis:
 - 10 pass/fail course exams
 - 7 students who changed campus
 - students with merit from other educations
-- the students' previous attempt in an exam
+- the students' previous attempts in an exam
+
 
 ```{r}
 kable(table(GradesBsc$CourseLocation,GradesBsc$takenInSem), digits = 2, caption = "Number of students on each campus and each semester.") %>%
@@ -257,7 +257,7 @@ kable(table(GradesBsc$CourseLocation,GradesBsc$takenInSem), digits = 2, caption 
 
 
 ```{r}
-kable(SNdata[c(1:2,6:7,3,8,4:5)], digits = 2, caption = "Number of students, number of exams, grade average (Avg), weighted grade average (wAvg), grade median, and standard deviation of grades (SD) for each campus and each year. The grades are retrieved from the students' last exam in projects or courses. The weighted grade is based on the ECTS of an exam (e.g. a 5-ECTS exam grade weights 1, whereas a 15-ECTS exam grade weights 3), and the weighted average is first calculated for each student in a particular year and then for the campus-year group. The other measures are calculated for the all exam grades.") %>%
+kable(SNdata[c(1:2,6:7,3,8,4:5)], digits = 2, caption = "Number of students, number of exams, grade average (Avg), weighted grade average (wAvg), grade median, and standard deviation of grades (SD) for each campus and each year. The grades are retrieved from the students' last exam attempt in projects or courses. Weighted grades are based on their ECTS  (e.g. a 5-ECTS exam grade weighs 1, a 15-ECTS exam 3), and the weighted average is first calculated for each student in a particular year and then for the campus-year group. The other measures are calculated for the all exam grades.") %>%
    kable_styling(latex_options = "hold_position")
 ```
 
