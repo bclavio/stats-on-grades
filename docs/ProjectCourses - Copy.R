@@ -1,6 +1,9 @@
 # created by Ninna Vihrs
 # edited by Bianca Clavio Christensen by request from the study board. Deadline in December 2018.
 
+
+# OLD: see the markdown file
+
 library(ggplot2)
 library(reshape2)
 library(ggpmisc)
@@ -31,8 +34,8 @@ beforeGrades <- count(GradesBsc) # 27731
 GradesBsc <- GradesBsc[GradesBsc$gradeType =="scale", ] 
 GradesBsc <- GradesBsc[GradesBsc$aktivitet != "Screen Media", ]
 
-# take the highest grade
-GradesBsc <- sqldf("SELECT enrolID, aktiv_kode, ECTS, bedom_dato, startaar, CourseLocation, isIntl,
+# subset and take the highest grade
+GradesBsc <- sqldf("SELECT enrolID, aktiv_kode, ECTS, bedom_dato, startaar, takenInSem, CourseLocation, isIntl,
                 max(gradeNum) as finalGrade FROM GradesBsc WHERE gradeNum > -4 group by enrolID, aktiv_kode, ECTS")
 
 # filters out exams before 2014 using bedom-dato
@@ -72,6 +75,7 @@ table(GradesBsc$CourseLocation,GradesBsc$snYear)
 
 GradesBsc$examID <- seq(1:nrow(GradesBsc))
 GradesBsc$ECTsWeight <- GradesBsc$ECTS / 5
+GradesBsc$normGradeWeight <- GradesBsc$ECTS / 60 * GradesBsc$finalGrade 
 GradesBsc1 <- GradesBsc
 
 # examID <- GradesBsc$examID
@@ -83,32 +87,197 @@ GradesBsc1 <- GradesBsc
 # code snippet used to count number of students
 ID <- levels(factor(GradesBsc$enrolID))
 Data <- data.frame(ID)
-count(Data) # 1020 students in total
+count(Data) # 1093 students in total
 Data <- merge(Data,Fixed, by.y='enrolID', by.x='ID')
 table(Data$CourseLocation) # number of students on each campus
 
+################################
+# hardcoded
+# rewrite later
+# without weigthing ECTs
+
+SNdata1415 <- subset(GradesBsc,GradesBsc$snYear == '14/15')
+SNdata1516 <- subset(GradesBsc,GradesBsc$snYear == '15/16')
+SNdata1617 <- subset(GradesBsc,GradesBsc$snYear == '16/17')
+
+SNdata <- data.frame(Type="Bachelor", Uddannelse ="Medialogi", Campus=c("AAL","AAL","AAL", "ESB","ESB","ESB", "CPH","CPH","CPH"), 
+                     År=c("14/15","15/16","16/17","14/15","15/16","16/17","14/15","15/16","16/17") ) 
+
+# average
+SNdata$Gennemsnit[1] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='A')$finalGrade)
+SNdata$Gennemsnit[2] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='A')$finalGrade)
+SNdata$Gennemsnit[3] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='A')$finalGrade)
+
+SNdata$Gennemsnit[4] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='E')$finalGrade)
+SNdata$Gennemsnit[5] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='E')$finalGrade)
+SNdata$Gennemsnit[6] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='E')$finalGrade)
+
+SNdata$Gennemsnit[7] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='K')$finalGrade)
+SNdata$Gennemsnit[8] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='K')$finalGrade)
+SNdata$Gennemsnit[9] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='K')$finalGrade)
+
+#Median
+SNdata$Median[1] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='A')$finalGrade)
+SNdata$Median[2] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='A')$finalGrade)
+SNdata$Median[3] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='A')$finalGrade)
+
+SNdata$Median[4] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='E')$finalGrade)
+SNdata$Median[5] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='E')$finalGrade)
+SNdata$Median[6] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='E')$finalGrade)
+
+SNdata$Median[7] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='K')$finalGrade)
+SNdata$Median[8] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='K')$finalGrade)
+SNdata$Median[9] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='K')$finalGrade)
+
+# SD
+SNdata$SD[1] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='A')$finalGrade)
+SNdata$SD[2] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='A')$finalGrade)
+SNdata$SD[3] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='A')$finalGrade)
+
+SNdata$SD[4] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='E')$finalGrade)
+SNdata$SD[5] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='E')$finalGrade)
+SNdata$SD[6] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='E')$finalGrade)
+
+SNdata$SD[7] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='K')$finalGrade)
+SNdata$SD[8] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='K')$finalGrade)
+SNdata$SD[9] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='K')$finalGrade)
+
+# count activities
+SNdata$Count[1] <- nrow(subset(SNdata1415, SNdata1415$CourseLocation=='A'))
+SNdata$Count[2] <- nrow(subset(SNdata1516, SNdata1516$CourseLocation=='A'))
+SNdata$Count[3] <- nrow(subset(SNdata1617, SNdata1617$CourseLocation=='A'))
+
+SNdata$Count[4] <- nrow(subset(SNdata1415, SNdata1415$CourseLocation=='E'))
+SNdata$Count[5] <- nrow(subset(SNdata1516, SNdata1516$CourseLocation=='E'))
+SNdata$Count[6] <- nrow(subset(SNdata1617, SNdata1617$CourseLocation=='E'))
+
+SNdata$Count[7] <- nrow(subset(SNdata1415, SNdata1415$CourseLocation=='K'))
+SNdata$Count[8] <- nrow(subset(SNdata1516, SNdata1516$CourseLocation=='K'))
+SNdata$Count[9] <- nrow(subset(SNdata1617, SNdata1617$CourseLocation=='K'))
+
+############################################
+# grades weighted based on norminal ects
+
+SNdata$normWeightAVG[1] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='A')$normGradeWeight)
+SNdata$normWeightAVG[2] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='A')$normGradeWeight)
+SNdata$normWeightAVG[3] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='A')$normGradeWeight)
+
+SNdata$normWeightAVG[4] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='E')$normGradeWeight)
+SNdata$normWeightAVG[5] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='E')$normGradeWeight)
+SNdata$normWeightAVG[6] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='E')$normGradeWeight)
+
+SNdata$normWeightAVG[7] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='K')$normGradeWeight)
+SNdata$normWeightAVG[8] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='K')$normGradeWeight)
+SNdata$normWeightAVG[9] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='K')$normGradeWeight)
+
+SNdata$normWeightMedian[1] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='A')$normGradeWeight)
+SNdata$normWeightMedian[2] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='A')$normGradeWeight)
+SNdata$normWeightMedian[3] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='A')$normGradeWeight)
+
+SNdata$normWeightMedian[4] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='E')$normGradeWeight)
+SNdata$normWeightMedian[5] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='E')$normGradeWeight)
+SNdata$normWeightMedian[6] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='E')$normGradeWeight)
+
+SNdata$normWeightMedian[7] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='K')$normGradeWeight)
+SNdata$normWeightMedian[8] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='K')$normGradeWeight)
+SNdata$normWeightMedian[9] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='K')$normGradeWeight)
+
+SNdata$normWeightSD[1] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='A')$normGradeWeight)
+SNdata$normWeightSD[2] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='A')$normGradeWeight)
+SNdata$normWeightSD[3] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='A')$normGradeWeight)
+
+SNdata$normWeightSD[4] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='E')$normGradeWeight)
+SNdata$normWeightSD[5] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='E')$normGradeWeight)
+SNdata$normWeightSD[6] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='E')$normGradeWeight)
+
+SNdata$normWeightSD[7] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='K')$normGradeWeight)
+SNdata$normWeightSD[8] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='K')$normGradeWeight)
+SNdata$normWeightSD[9] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='K')$normGradeWeight)
+
 # count how many exams in a snYear for each student
+# i <- 1
+# for(I in ID){
+#   Data$courseAVGallsem[i] <- mean(GradesBsc$finalGrade[GradesBsc$enrolID==I&GradesBsc$isProj!=1&GradesBsc$gradeType=='scale'])
+#   Data$projectAVGallsem[i] <- mean(GradesBsc$finalGrade[GradesBsc$enrolID==I&GradesBsc$isProj==1&GradesBsc$gradeType=='scale'])
+# 
+#   Data$courseAVGallsemWeight[i] <- mean(GradesBsc$gradeweighted[GradesBsc$enrolID==I & GradesBsc$isProj!=1 & GradesBsc$gradeType=='scale'])
+#   Data$projectAVGallsemWeight[i] <- mean(GradesBsc$gradeweighted[GradesBsc$enrolID==I & GradesBsc$isProj==1 & GradesBsc$gradeType=='scale'])
+# 
+#   for(sem in 1:6){
+#     Data[i,sem+4] <- mean(GradesBsc$gradeNum[GradesBsc$enrolID==I & GradesBsc$isProj!=1 & GradesBsc$takenInSem==sem&GradesBsc$gradeType=='scale'])
+#     Data[i,sem+11] <- mean(GradesBsc$gradeNum[GradesBsc$enrolID==I & GradesBsc$isProj==1 & GradesBsc$takenInSem==sem&GradesBsc$gradeType=='scale'])
+# 
+#     Data[i,sem+18] <- mean(GradesBsc$gradeweighted[GradesBsc$enrolID==I & GradesBsc$isProj!=1 & GradesBsc$takenInSem==sem&GradesBsc$gradeType=='scale'])
+#     Data[i,sem+25] <- mean(GradesBsc$gradeweighted[GradesBsc$enrolID==I & GradesBsc$isProj==1 & GradesBsc$takenInSem==sem&GradesBsc$gradeType=='scale'])
+#   }
+#   i <- i+1
+# }
+
+
+################################
+# with weigthing ECTs for each student
+# look at the attained ECTS point for that semester
+
+# sum ECTS for enrolID where year is the same
 i <- 1
-for(I in ID){
-  Data$courseAVGallsem[i] <- mean(GradesBsc$gradeNum[GradesBsc$enrolID==I&GradesBsc$isProj!=1&GradesBsc$gradeType=='scale'])
-  Data$projectAVGallsem[i] <- mean(GradesBsc$gradeNum[GradesBsc$enrolID==I&GradesBsc$isProj==1&GradesBsc$gradeType=='scale'])
-  
-  Data$courseAVGallsemWeight[i] <- mean(GradesBsc$gradeweighted[GradesBsc$enrolID==I & GradesBsc$isProj!=1 & GradesBsc$gradeType=='scale'])
-  Data$projectAVGallsemWeight[i] <- mean(GradesBsc$gradeweighted[GradesBsc$enrolID==I & GradesBsc$isProj==1 & GradesBsc$gradeType=='scale'])
-  
-  for(sem in 1:6){
-    Data[i,sem+4] <- mean(GradesBsc$gradeNum[GradesBsc$enrolID==I & GradesBsc$isProj!=1 & GradesBsc$takenInSem==sem&GradesBsc$gradeType=='scale'])
-    Data[i,sem+11] <- mean(GradesBsc$gradeNum[GradesBsc$enrolID==I & GradesBsc$isProj==1 & GradesBsc$takenInSem==sem&GradesBsc$gradeType=='scale'])
-    
-    Data[i,sem+18] <- mean(GradesBsc$gradeweighted[GradesBsc$enrolID==I & GradesBsc$isProj!=1 & GradesBsc$takenInSem==sem&GradesBsc$gradeType=='scale'])
-    Data[i,sem+25] <- mean(GradesBsc$gradeweighted[GradesBsc$enrolID==I & GradesBsc$isProj==1 & GradesBsc$takenInSem==sem&GradesBsc$gradeType=='scale'])
-  }
-  i <- i+1
+for(i in 1:nrow(SNdata1415)){
+  SNdata1415$attainedECTS[i] <- sum(SNdata1415$ECTS[SNdata1415$enrolID[i]==SNdata1415$enrolID])
+  SNdata1415$attainGradeWeight <- SNdata1415$ECTS / SNdata1415$attainedECTS * SNdata1415$finalGrade
 }
 
+i <- 1
+for(i in 1:nrow(SNdata1516)){
+  SNdata1516$attainedECTS[i] <- sum(SNdata1516$ECTS[SNdata1516$enrolID[i]==SNdata1516$enrolID])
+  SNdata1516$attainGradeWeight <- SNdata1516$ECTS / SNdata1516$attainedECTS * SNdata1516$finalGrade
+}
+
+i <- 1
+for(i in 1:nrow(SNdata1617)){
+  SNdata1617$attainedECTS[i] <- sum(SNdata1617$ECTS[SNdata1617$enrolID[i]==SNdata1617$enrolID])
+  SNdata1617$attainGradeWeight <- SNdata1617$ECTS / SNdata1617$attainedECTS * SNdata1617$finalGrade
+}
+
+############################################
+# grades weighted based on a student's attained ects in a year
+
+SNdata$attainWeightAVG[1] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='A')$attainGradeWeight)
+SNdata$attainWeightAVG[2] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='A')$attainGradeWeight)
+SNdata$attainWeightAVG[3] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='A')$attainGradeWeight)
+
+SNdata$attainWeightAVG[4] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='E')$attainGradeWeight)
+SNdata$attainWeightAVG[5] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='E')$attainGradeWeight)
+SNdata$attainWeightAVG[6] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='E')$attainGradeWeight)
+
+SNdata$attainWeightAVG[7] <- mean(subset(SNdata1415, SNdata1415$CourseLocation=='K')$attainGradeWeight)
+SNdata$attainWeightAVG[8] <- mean(subset(SNdata1516, SNdata1516$CourseLocation=='K')$attainGradeWeight)
+SNdata$attainWeightAVG[9] <- mean(subset(SNdata1617, SNdata1617$CourseLocation=='K')$attainGradeWeight)
+
+SNdata$attainWeightMedian[1] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='A')$attainGradeWeight)
+SNdata$attainWeightMedian[2] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='A')$attainGradeWeight)
+SNdata$attainWeightMedian[3] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='A')$attainGradeWeight)
+
+SNdata$attainWeightMedian[4] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='E')$attainGradeWeight)
+SNdata$attainWeightMedian[5] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='E')$attainGradeWeight)
+SNdata$attainWeightMedian[6] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='E')$attainGradeWeight)
+
+SNdata$attainWeightMedian[7] <- median(subset(SNdata1415, SNdata1415$CourseLocation=='K')$attainGradeWeight)
+SNdata$attainWeightMedian[8] <- median(subset(SNdata1516, SNdata1516$CourseLocation=='K')$attainGradeWeight)
+SNdata$attainWeightMedian[9] <- median(subset(SNdata1617, SNdata1617$CourseLocation=='K')$attainGradeWeight)
+
+SNdata$attainWeightSD[1] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='A')$attainGradeWeight)
+SNdata$attainWeightSD[2] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='A')$attainGradeWeight)
+SNdata$attainWeightSD[3] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='A')$attainGradeWeight)
+
+SNdata$attainWeightSD[4] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='E')$attainGradeWeight)
+SNdata$attainWeightSD[5] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='E')$attainGradeWeight)
+SNdata$attainWeightSD[6] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='E')$attainGradeWeight)
+
+SNdata$attainWeightSD[7] <- sd(subset(SNdata1415, SNdata1415$CourseLocation=='K')$attainGradeWeight)
+SNdata$attainWeightSD[8] <- sd(subset(SNdata1516, SNdata1516$CourseLocation=='K')$attainGradeWeight)
+SNdata$attainWeightSD[9] <- sd(subset(SNdata1617, SNdata1617$CourseLocation=='K')$attainGradeWeight)
 
 
-
+table(SNdata)
 
 
 
@@ -116,42 +285,36 @@ for(I in ID){
 
 # code snippet for data analysis
 # ID is when enrolID are snYear are unique
-ID <- unique(data.frame(GradesBsc$enrolID, GradesBsc$snYear))
-names(ID) <- c("enrolID", "snYear")
-ID$gradeID <- seq(1:nrow(ID))
-GradesBsc <- merge(GradesBsc, ID)
-
-Data <- data.frame(ID)
-Data <- merge(Data, Fixed)
-Data <- Data[order(Data$gradeID),] 
-
-# bookmark
-
+# ID <- unique(data.frame(GradesBsc$enrolID, GradesBsc$snYear))
+# names(ID) <- c("enrolID", "snYear")
+# ID$gradeID <- seq(1:nrow(ID))
+# GradesBsc <- merge(GradesBsc, ID)
 # 
+# Data <- data.frame(ID)
+# Data <- merge(Data, Fixed)
+# Data <- Data[order(Data$gradeID),] 
+# 
+# 
+# Data$gradesAvg <- rep(NA, nrow(Data))
+# Data$ECTsWeight <- rep(NA, nrow(Data))
+# #Data$gradesAvgWeighted <- rep(NA, nrow(Data))
 
-
-
-
-Data$gradesAvg <- rep(NA, nrow(Data))
-Data$ECTsWeight <- rep(NA, nrow(Data))
-#Data$gradesAvgWeighted <- rep(NA, nrow(Data))
-
-# for each year we need to calculate the sum of obtained ECTS points per student and the sum of gradeNum
-ID <- ID[,-c(1:3)]
-i <- 1
-for(I in ID){
-    #Data$gradeSum[i] <- sum(GradesBsc$gradeNum[GradesBsc$gradeID == I])
-    #Data$ETCsSum[i] <- sum(GradesBsc$ECTS[GradesBsc$gradeID == I])
-    
-    Data$gradesAvg[i] <- sum(GradesBsc$gradeNum[GradesBsc$gradeID == I])
-    Data$ECTsWeight[i] <- sum(GradesBsc$gradeNum[GradesBsc$gradeID == I])
-    
-    i <- i+1
-}
-
-Data$AvgECTsWeight <- Data$gradeSum * (Data$ETCsSum/5)
-
-gradesOverview <- dcast(Data, snYear + CourseLocation ~ type + mean(value), fun=mean, na.rm=TRUE)
+# # for each year we need to calculate the sum of obtained ECTS points per student and the sum of gradeNum
+# ID <- ID[,-c(1:3)]
+# i <- 1
+# for(I in ID){
+#     #Data$gradeSum[i] <- sum(GradesBsc$gradeNum[GradesBsc$gradeID == I])
+#     #Data$ETCsSum[i] <- sum(GradesBsc$ECTS[GradesBsc$gradeID == I])
+#     
+#     Data$gradesAvg[i] <- sum(GradesBsc$gradeNum[GradesBsc$gradeID == I])
+#     Data$ECTsWeight[i] <- sum(GradesBsc$gradeNum[GradesBsc$gradeID == I])
+#     
+#     i <- i+1
+# }
+# 
+# Data$AvgECTsWeight <- Data$gradeSum * (Data$ETCsSum/5)
+# 
+# gradesOverview <- dcast(Data, snYear + CourseLocation ~ type + mean(value), fun=mean, na.rm=TRUE)
 
 # final table
 #Data['År(01.10-30.09)'] <- rep(NA, nrow(Data))
