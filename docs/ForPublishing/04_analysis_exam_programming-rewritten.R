@@ -197,45 +197,45 @@ dfComplete <- as.data.frame(lapply(dfComplete, normalize))
 #######################################################
 
 ## 75% of the sample size (72)
-dfCompleteOLD <- dfComplete
-smp_size <- floor(0.75 * nrow(dfComplete))
-
-## set the seed to make your partition reproducible
-set.seed(123)
-train_ind <- sample(seq_len(nrow(dfComplete)), size = smp_size)
-
-dfComplete <- dfCompleteOLD[train_ind, ] # 54
-dfCompleteTest <- dfCompleteOLD[-train_ind, ] # 18
+# dfCompleteOLD <- dfComplete
+# smp_size <- floor(0.75 * nrow(dfComplete))
+# 
+# ## set the seed to make your partition reproducible
+# set.seed(123)
+# train_ind <- sample(seq_len(nrow(dfComplete)), size = smp_size)
+# 
+# dfComplete <- dfCompleteOLD[train_ind, ] # 54
+# dfCompleteTest <- dfCompleteOLD[-train_ind, ] # 18
 
 ####################################
 ############Analysis################
 ####################################
 mean(dfComplete$PassFail==1)
 #34.7 percent failed the course
-plot(dfComplete$Exam~dfComplete$saNumComp)
-plot(dfComplete$Exam~dfComplete$saRowAvg)
-plot(dfComplete$Exam~dfComplete$midterm)
-#There seems to be a tendency
-plot(dfComplete$Exam~dfComplete$KhanCount)
-#There could be a tendency
-plot(dfComplete$Exam~dfComplete$PeerSubmissionScore)
-plot(dfComplete$Exam~dfComplete$PeerFeedbackScore)
-plot(dfComplete$Exam~dfComplete$PeerCombinedScore)
-plot(dfComplete$Exam~dfComplete$SSPGrade)
-plot(dfComplete$Exam~factor(dfComplete$Q33))
-plot(dfComplete$Exam~factor(dfComplete$Q78))
-
-#If only interested in passed failed
-plot(dfComplete$saNumComp~factor(dfComplete$PassFail))
-plot(dfComplete$saRowAvg~factor(dfComplete$PassFail))
-plot(dfComplete$midterm~factor(dfComplete$PassFail))
-plot(dfComplete$KhanCount~factor(dfComplete$PassFail))
-plot(dfComplete$PeerSubmissionScore~factor(dfComplete$PassFail))
-plot(dfComplete$PeerFeedbackScore~factor(dfComplete$PassFail))
-plot(dfComplete$PeerCombinedScore~factor(dfComplete$PassFail))
-plot(dfComplete$SSPGrade~factor(dfComplete$PassFail))
-plot(dfComplete$Q33~factor(dfComplete$PassFail))
-plot(dfComplete$Q78~factor(dfComplete$PassFail))
+# plot(dfComplete$Exam~dfComplete$saNumComp)
+# plot(dfComplete$Exam~dfComplete$saRowAvg)
+# plot(dfComplete$Exam~dfComplete$midterm)
+# #There seems to be a tendency
+# plot(dfComplete$Exam~dfComplete$KhanCount)
+# #There could be a tendency
+# plot(dfComplete$Exam~dfComplete$PeerSubmissionScore)
+# plot(dfComplete$Exam~dfComplete$PeerFeedbackScore)
+# plot(dfComplete$Exam~dfComplete$PeerCombinedScore)
+# plot(dfComplete$Exam~dfComplete$SSPGrade)
+# plot(dfComplete$Exam~factor(dfComplete$Q33))
+# plot(dfComplete$Exam~factor(dfComplete$Q78))
+# 
+# #If only interested in passed failed
+# plot(dfComplete$saNumComp~factor(dfComplete$PassFail))
+# plot(dfComplete$saRowAvg~factor(dfComplete$PassFail))
+# plot(dfComplete$midterm~factor(dfComplete$PassFail))
+# plot(dfComplete$KhanCount~factor(dfComplete$PassFail))
+# plot(dfComplete$PeerSubmissionScore~factor(dfComplete$PassFail))
+# plot(dfComplete$PeerFeedbackScore~factor(dfComplete$PassFail))
+# plot(dfComplete$PeerCombinedScore~factor(dfComplete$PassFail))
+# plot(dfComplete$SSPGrade~factor(dfComplete$PassFail))
+# plot(dfComplete$Q33~factor(dfComplete$PassFail))
+# plot(dfComplete$Q78~factor(dfComplete$PassFail))
 
 ##########################################
 ########Analysis with linear models#######
@@ -280,6 +280,10 @@ coef(CV.lasso.cat,s=CV.lasso.cat$lambda.min)
 ##That is simply too many to be relevant
 coef(CV.lasso.cat, s=CV.lasso.cat$lambda.1se)
 #Only midterm
+
+
+
+
 
 ######Using best subset selection
 #single questions
@@ -424,40 +428,40 @@ xtable(confint(lmfit5))
 
 ###############################################################
 ##Trying to predict passed failed with classification tree
-Qdatapf <- dfComplete[,c(1:3,8:11,13:122,137)]
-treeQ <- rpart(PassFail~.,data = Qdatapf)
-rpart.plot(treeQ)
-summary(dfComplete$grade[dfComplete$midterm<52])
-#All students with midterm score less than 52 failed
-summary(dfComplete$grade[dfComplete$midterm>=74])
-dfComplete$grade[dfComplete$midterm>=74]
-#Only six percent of students with more than 72 in midterm failed
-treeQ$variable.importance
-summary(treeQ)
-plotcp(treeQ)
-#cp=0.037
-#Cross validation
-CVtree <- rep(NA,10)
-FP <- rep(NA,10)
-FN <- rep(NA,10)
-idx <- sample(1:10,nrow(Qdatapf),replace = TRUE)
-for (i in 1:10){
-  train <- Qdatapf[idx!=i,]
-  test <- Qdatapf[idx==i,]
-  tree <- rpart(PassFail~., data = train)
-  pred <- predict(tree,test,type = 'class')
-  CVtree[i] <- mean(pred==test$PassFail)
-  tab <- table(factor(pred, levels = c(0,1)),test$PassFail)
-  FP[i] <- tab[2,1]/sum(tab[,1])
-  if(sum(tab[,2])==0){FN[i] <- 0}
-  else{FN[i] <- tab[1,2]/sum(tab[,2])}
-}
-accuracy <- mean(CVtree)
-sda <- sd(CVtree)
-FPtree <- mean(FP)
-sdFPtree <- sd(FP)
-FNtree <- mean(FN)
-sdFNtree <- sd(FN)
+# Qdatapf <- dfComplete[,c(1:3,8:11,13:122,137)]
+# treeQ <- rpart(PassFail~.,data = Qdatapf)
+# rpart.plot(treeQ)
+# summary(dfComplete$grade[dfComplete$midterm<52])
+# #All students with midterm score less than 52 failed
+# summary(dfComplete$grade[dfComplete$midterm>=74])
+# dfComplete$grade[dfComplete$midterm>=74]
+# #Only six percent of students with more than 72 in midterm failed
+# treeQ$variable.importance
+# summary(treeQ)
+# plotcp(treeQ)
+# #cp=0.037
+# #Cross validation
+# CVtree <- rep(NA,10)
+# FP <- rep(NA,10)
+# FN <- rep(NA,10)
+# idx <- sample(1:10,nrow(Qdatapf),replace = TRUE)
+# for (i in 1:10){
+#   train <- Qdatapf[idx!=i,]
+#   test <- Qdatapf[idx==i,]
+#   tree <- rpart(PassFail~., data = train)
+#   pred <- predict(tree,test,type = 'class')
+#   CVtree[i] <- mean(pred==test$PassFail)
+#   tab <- table(factor(pred, levels = c(0,1)),test$PassFail)
+#   FP[i] <- tab[2,1]/sum(tab[,1])
+#   if(sum(tab[,2])==0){FN[i] <- 0}
+#   else{FN[i] <- tab[1,2]/sum(tab[,2])}
+# }
+# accuracy <- mean(CVtree)
+# sda <- sd(CVtree)
+# FPtree <- mean(FP)
+# sdFPtree <- sd(FP)
+# FNtree <- mean(FN)
+# sdFNtree <- sd(FN)
 ###############################################################
 
 
@@ -591,17 +595,17 @@ AIC(null.model,post.lasso.1se.total,lmfittotal1,lmfittotal2,lmfittotal3,lmfittot
 xtable(summary(lmfittotal5)$coefficients)
 #Everything significant
 xtable(confint(lmfittotal5))
-res <- residuals(lmfittotal5)
-hist(res)
-qqnorm(res)
-qqline(res)
-plot(res)
-plot(res~lmfittotal5$fitted.values)
-plot(res~dfComplete$PeerSubmissionScore)
-plot(res~dfComplete$Q6)
-plot(res~dfComplete$Q56)
-plot(res~dfComplete$Q82)
-plot(res~dfComplete$Q98)
+# res <- residuals(lmfittotal5)
+# hist(res)
+# qqnorm(res)
+# qqline(res)
+# plot(res)
+# plot(res~lmfittotal5$fitted.values)
+# plot(res~dfComplete$PeerSubmissionScore)
+# plot(res~dfComplete$Q6)
+# plot(res~dfComplete$Q56)
+# plot(res~dfComplete$Q82)
+# plot(res~dfComplete$Q98)
 
 
 ###Q82 shows up pretty often so making some plots with this
@@ -612,25 +616,25 @@ plot(res~dfComplete$Q98)
 # lmfitQ82asfactor <- lm(Total~factor(Q82),data = dfComplete)
 # summary(lmfitQ82asfactor)
 
-plot(Exam~Q82, data = dfComplete)
-abline(lmfittotal1)
-plot(Exam~factor(Q82),data = dfComplete)
-#It seems to make sense
-lmfitQ82asfactor <- lm(Exam~factor(Q82),data = dfComplete)
-summary(lmfitQ82asfactor)
+# plot(Exam~Q82, data = dfComplete)
+# abline(lmfittotal1)
+# plot(Exam~factor(Q82),data = dfComplete)
+# #It seems to make sense
+# lmfitQ82asfactor <- lm(Exam~factor(Q82),data = dfComplete)
+# summary(lmfitQ82asfactor)
 
 ##Checking residuals for one model
-res <- residuals(lmfit5)
-plot(res)
-plot(res~lmfit5$fitted.values)
-plot(res~dfComplete$midterm)
-plot(res~factor(dfComplete$Q22))
-plot(res~factor(dfComplete$Q56))
-plot(res~factor(dfComplete$Q82))
-plot(res~factor(dfComplete$Q107))
-hist(res)
-qqnorm(res)
-qqline(res)
+# res <- residuals(lmfit5)
+# plot(res)
+# plot(res~lmfit5$fitted.values)
+# plot(res~dfComplete$midterm)
+# plot(res~factor(dfComplete$Q22))
+# plot(res~factor(dfComplete$Q56))
+# plot(res~factor(dfComplete$Q82))
+# plot(res~factor(dfComplete$Q107))
+# hist(res)
+# qqnorm(res)
+# qqline(res)
 
 ###############################################################
 #######Trying to predict dropout based on exam results#########
