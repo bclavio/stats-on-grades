@@ -242,7 +242,7 @@ normalize <- function(x) {
 dfComplete$Total <- as.numeric(dfComplete$Total)
 dfComplete$Tutoring <- as.numeric(dfComplete$Tutoring)
 dfComplete$PassFail <- as.numeric(dfComplete$PassFail)
-dfComplete <- as.data.frame(lapply(dfComplete, normalize))
+dfComplete <- as.data.frame(lapply(dfComplete, normalize),na.action=na.omit)
 ```
 
 ###Training and test samples
@@ -361,11 +361,11 @@ names(dfComplete[,c(1:3,8:11,13:122)])[variables[5,-1]]
 
 Fits a linear regression based on the single questions from above:
 ```{r echo=FALSE}
-lmfit1 <- lm(Exam~midterm,data=dfComplete)
-lmfit2 <- lm(Exam~midterm+Q82,data=dfComplete)
-lmfit3 <- lm(Exam~midterm+Q46+Q82,data=dfComplete)
-lmfit4 <- lm(Exam~midterm+Q46+Q61+Q82,data=dfComplete)
-lmfit5 <- lm(Exam~midterm+Q46+Q61+Q82+Q107,data=dfComplete)
+lmfit1 <- lm(Exam~midterm,data=dfComplete,na.action=na.omit)
+lmfit2 <- lm(Exam~midterm+Q82,data=dfComplete,na.action=na.omit)
+lmfit3 <- lm(Exam~midterm+Q46+Q82,data=dfComplete,na.action=na.omit)
+lmfit4 <- lm(Exam~midterm+Q46+Q61+Q82,data=dfComplete,na.action=na.omit)
+lmfit5 <- lm(Exam~midterm+Q46+Q61+Q82+Q107,data=dfComplete,na.action=na.omit)
 ```
 
 Secondly for the SSP categories:
@@ -383,11 +383,11 @@ names(dfComplete[,c(1:3,8:11,123:136)])[variables[5,-1]]
 
 Fits a linear regression based on the categories from above:
 ```{r echo=FALSE}
-lmcatfit1 <- lm(Exam~midterm, data=dfComplete)
-lmcatfit2 <- lm(Exam~midterm+PeerCombinedScore, data=dfComplete)
-lmcatfit3 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust, data=dfComplete)
-lmcatfit4 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust+Selfcontrol, data=dfComplete)
-lmcatfit5 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust+PersonalTraitComparison+Selfcontrol, data=dfComplete)
+lmcatfit1 <- lm(Exam~midterm, data=dfComplete, na.action=na.omit)
+lmcatfit2 <- lm(Exam~midterm+PeerCombinedScore, data=dfComplete, na.action=na.omit)
+lmcatfit3 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust, data=dfComplete, na.action=na.omit)
+lmcatfit4 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust+Selfcontrol, data=dfComplete, na.action=na.omit)
+lmcatfit5 <- lm(Exam~midterm+PeerCombinedScore+HighSchoolTrust+PersonalTraitComparison+Selfcontrol, data=dfComplete, na.action=na.omit)
 
 ```
 
@@ -460,7 +460,8 @@ post.lasso.1selmfit1 and lmcatfit1 are the same model so only one
 ```{r include=FALSE}
 CVpostlassomin <- CVlm(post.lasso.min,dfComplete)
 CVpostlasso1se <- CVlm(post.lasso.1se,dfComplete)
-CVsub2 <- CVlm(lmfit2,dfComplete)
+CVsub2 <- CVlm(lmfit2,dfComplete) 
+CVsub2 <- CVlm(lmfit2,dfComplete) 
 CVsub3 <- CVlm(lmfit3,dfComplete)
 CVsub4 <- CVlm(lmfit4,dfComplete)
 CVsub5 <- CVlm(lmfit5,dfComplete)
@@ -492,8 +493,9 @@ Parametre <- c(1,2,3,4,5,6,3,4,5,6)
 ```
 
 ```{r fig.width=10}
-(ggplot()+ylab('Cross validation score')+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
-  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
+(ggplot()+ylab('Cross validation error') + xlab('')+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
+  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))+ 
+  theme(axis.text=element_text(size=11), legend.position="top")
 ```
 
 
@@ -582,13 +584,14 @@ CV.lasso$lambda.1se
 
 ```{r include=FALSE}
 coef(CV.lasso,s=CV.lasso$lambda.min)
-coef(CV.lasso, s=CV.lasso$lambda.1se)
+coef(CV.lasso, s=CV.lasso$lambda.1se) # lasso model
 ```
 
 
 Even though lasso does not choose them some seems to be significant anyway:
 ```{r}
-post.lasso.min.total <- lm(Exam~Q99+Q82+Q57+Q56+Q46+Q43+Q36+Q25+Q6+Q2+PeerCombinedScore+PeerSubmissionScore+KhanCount+saRowAvg, data=dfComplete)
+#post.lasso.min.total <- lm(Exam~Q99+Q82+Q57+Q56+Q46+Q43+Q36+Q25+Q6+Q2+PeerCombinedScore+PeerSubmissionScore+KhanCount+saRowAvg, data=dfComplete)
+post.lasso.min.total <- lm(Exam~Q56+Q46+Q82+Q99+PeerCombinedScore, data=dfComplete)
 post.lasso.1se.total <- lm(Exam~Q82, data=dfComplete)
 anova(post.lasso.min.total,post.lasso.1se.total) 
 ```
@@ -682,6 +685,7 @@ CVlassoTotalmin <- CVlm(post.lasso.min.total,dfComplete)
 CVlassoTotal1se <- CVlm(post.lasso.1se.total,dfComplete)
 CVlassoTotalcatmin <- CVlm(post.lasso.min.cat.total,dfComplete)
 CVnull <- CVlm(lmnull,dfComplete)
+CVnull <- CVlm(lmnull,dfComplete)
 CVQ1 <- CVlm(lmfittotal1,dfComplete)
 CVQ2 <- CVlm(lmfittotal2,dfComplete)
 CVQ3 <- CVlm(lmfittotal3,dfComplete)
@@ -699,8 +703,9 @@ Model <- c('lasso.v2','nullmodel.v2','lmQ1.v2','lmQ2.v2','lmQ3.v2','lmQ4.v2','lm
 CVmean <- c(mean(CVlassoTotal1se),mean(CVnull),mean(CVQ1),mean(CVQ2),mean(CVQ3),mean(CVQ4),mean(CVQ5),mean(CVcat1),mean(CVcat2),mean(CVcat3),mean(CVcat4),mean(CVcat5))
 se <-(1/sqrt(10))*c(sd(CVlassoTotal1se),sd(CVnull),sd(CVQ1),sd(CVQ2),sd(CVQ3),sd(CVQ4),sd(CVQ5),sd(CVcat1),sd(CVcat2),sd(CVcat3),sd(CVcat4),sd(CVcat5))
 Parametre <- c(3,1,2,3,4,5,6,2,3,4,5,6)
-(ggplot()+geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
-  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))
+(ggplot()+ylab('Cross validation error') + xlab('') +geom_point(aes(Model,CVmean, size=Parametre)) + geom_errorbar(aes(x=Model, ymin=CVmean-se, ymax=CVmean+se),width=0.25) 
+  +scale_colour_discrete(name="Measure")+scale_size_continuous(name="Parameters",breaks = seq(1,8,1)))+ 
+  theme(axis.text=element_text(size=11), legend.position="top")
 
 ```
 
@@ -888,7 +893,7 @@ plot_roc <- function(roc, threshold, cost_of_fp, cost_of_fn) {
 ```
 
 ```{r}
-plot_roc(roc, 0.70, 1, 2)
+plot_roc(roc, 0.7, 1, 2)
 ```
 
 
