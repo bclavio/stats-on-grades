@@ -16,6 +16,7 @@ library(splines)
 library(car)
 library(sandwich)
 library(RcmdrMisc)
+library(RJDBC)
 #library(DBI)
 
 
@@ -130,7 +131,7 @@ dfEnrolStatusBsc<-dfEnrolStatusBsc[dfEnrolStatusBsc$type=='bachelor', ]
 dfEnrolStatusBsc<-dfEnrolStatusBsc[dfEnrolStatusBsc$sn=='Medieteknologi'|dfEnrolStatusBsc$fra_ramme=='Medieteknologi',] 
 count(dfEnrolStatusBsc) # 2595
 dfEnrolStatusBsc$stype<-as.factor("bachelor")
-dfEnrolStatusBsc$st $Studieordningskode<-as.factor(NA)
+dfEnrolStatusBsc$Studieordningskode<-as.factor(NA)
 dfEnrolStatus<-dfEnrolStatusBsc
 #FOR FUTURE WORK WHEN MSC data becomes relevant rbind(dfEnrolStatusMsc,dfEnrolStatusBsc)
 
