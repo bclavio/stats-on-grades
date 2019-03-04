@@ -9,11 +9,7 @@
 # 3. Prepare a dataset for prediction analysis
 # 4. Automate the prediction analysis using a list of possible predictors (LA.tbl_predictors)
 # 5. Automate the process of sending the prediction results to the database.
-# 6. Automate the process of retrieving the data for the prototype (Bastian)
-
-# Here:
-# filter and merge the queiries to make it fit with the import and aggregation script (hendrik started)
-
+# 6. Automate the process of retrieving the data for the prototype
 
 
 ###############################
@@ -102,21 +98,19 @@ rag_udmeld<-dbGetQuery(jdbcConnection,'select * from vueudv.rag_udmeld')
 # Data before AAU, e.g. high school grades 
 
 #description of zip code, test
-#aau_postnr_hdk<-dbGetQuery(jdbcConnection,'select * from vueudv.aau_postnr_hdk') 
-
 # adgangsgivende institution(STADS) you will have to lookup the zip code outside STADS 
 #(The ’KODE’ is the national code related to the institution)
-VYS_ADGANGSGIV_INST<-dbGetQuery(jdbcConnection,'select * from vueudv.VYS_ADGANGSGIV_INST') 
+#VYS_ADGANGSGIV_INST<-dbGetQuery(jdbcConnection,'select * from vueudv.VYS_ADGANGSGIV_INST') 
 
 #fra optagelsessystemet
-OPG_ADGEX<-dbGetQuery(jdbcConnection,'select * from vueudv.OPG_ADGEX') 
+#OPG_ADGEX<-dbGetQuery(jdbcConnection,'select * from vueudv.OPG_ADGEX') 
 
-OPS_GYMFAG<-dbGetQuery(jdbcConnection,'select * from vueudv.OPS_GYMFAG') 
+#OPS_GYMFAG<-dbGetQuery(jdbcConnection,'select * from vueudv.OPS_GYMFAG') 
 
-OPS_GYMFAG_NIVEAU<-dbGetQuery(jdbcConnection,'select * from vueudv.OPS_GYMFAG_NIVEAU') 
+#OPS_GYMFAG_NIVEAU<-dbGetQuery(jdbcConnection,'select * from vueudv.OPS_GYMFAG_NIVEAU') 
 
 #person_id related to ’adgangseksamen’, ’resultat’ from institution/SKOLE
-RAG_ADGANG<-dbGetQuery(jdbcConnection,'select * from vueudv.RAG_ADGANG') 
+#RAG_ADGANG<-dbGetQuery(jdbcConnection,'select * from vueudv.RAG_ADGANG') 
 
 ###############################
 # AAU data (campus, activities, grades, merit)
@@ -126,17 +120,18 @@ RAG_ADGANG<-dbGetQuery(jdbcConnection,'select * from vueudv.RAG_ADGANG')
 #seems like we are missing campus data on dropout students
 
 # students and 'sted'
-rag_stu_sted <-dbGetQuery(jdbcConnection,'select * from vueudv.rag_stu_sted') 
+#rag_stu_sted <-dbGetQuery(jdbcConnection,'select * from vueudv.rag_stu_sted') 
 #nrow(rag_stu_sted) #44905, seems like we still are missing campus data on students?
 
 # campus data description
-vyg_sted <-dbGetQuery(jdbcConnection,'select * from vueudv.vyg_sted') 
+#vyg_sted <-dbGetQuery(jdbcConnection,'select * from vueudv.vyg_sted') 
 
 #name of all education activities 
 beg_uddelement<-dbGetQuery(jdbcConnection,'select * from vueudv.beg_uddelement') # used
 
 #relation between person and AAU grade
 reg_karakter<-dbGetQuery(jdbcConnection,'select * from vueudv.reg_karakter')
+#We should use this view instead of the grade vectors
 
 #relation between person and AAU grade
 ret_resultat<-dbGetQuery(jdbcConnection,'select person_id, aktivitet_id, bedoemmelsesdato from vueudv.ret_resultat')
