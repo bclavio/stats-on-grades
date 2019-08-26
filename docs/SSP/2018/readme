@@ -1,0 +1,12 @@
+History:
+SSP v.1: short questionnaire, answered by AAL and CPH students.
+SSP v.2: longer questionnaire, answered by AAL students only, while CHP students answered the SSP v.1 (by mistake).
+
+Files: 
+- SSP-MailMerge.Rmd: the Rmarkdown file which works for the SSP v.1 and a subset from the SSP v.2. 
+- SSP-MailMergeCPHR.R: R file created for the SSP v.1 * 
+- SSP-MailMerge.R: R file created for the SSP v.2. *
+
+* Both R files include: data cleaning, data analysis, automatically runs the Rmarksdown file, and send email to student (should be commented out).
+
+OBS! Before running the whole scripts, make sure to commment out the part that sends emails to students.
